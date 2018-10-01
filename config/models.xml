@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<methods>
+    <method>
+        <name>ranger</name>
+        <description>Random Forest For High Dimensional Data</description>
+        <family>Random Forests Methods</family>
+        <dependences>
+            <name>e1071</name>
+            <name>ranger</name>
+            <name>dplyr</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>knn</name>
+        <description>K-Nearest Neighbours</description>
+        <family>Clustering Methods</family>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>lda</name>
+        <description>Latent Dirichlet Allocation</description>
+        <family>Clustering Methods</family>
+        <dependences>
+            <name>MASS</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>glmnet</name>
+        <description>Regularized Generalized Linear Models</description>
+        <family>Linear Methods</family>
+        <dependences>
+            <name>glmnet</name>
+            <name>Matrix</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>bayesglm</name>
+        <description>Bayesian Generalized Linear Model</description>
+        <family>Linear Methods</family>
+        <dependences>
+            <name>arm</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>multinom</name>
+        <description>Penalized Multinomial Regression</description>
+        <family>Linear Methods</family>
+        <dependences>
+            <name>nnet</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>svmRadial</name>
+        <description>SVM with Radial Kernel</description>
+        <family>Support Vector Machines</family>
+        <dependences>
+            <name>kernlab</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>svmLinear</name>
+        <description>SVM with Linear Kernel</description>
+        <family>Support Vector Machines</family>
+        <dependences>
+            <name>kernlab</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>false</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>svmRadialWeights</name>
+        <description>SVM with Class Weights</description>
+        <family>Support Vector Machines</family>
+        <dependences>
+            <name>kernlab</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>svmPoly</name>
+        <description>SVM with Polynomial Kernel</description>
+        <family>Support Vector Machines</family>
+        <dependences>
+            <name>kernlab</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>false</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>adaboost</name>
+        <description>Adaboost</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>fastAdaboost</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>ada</name>
+        <description>Asymmetric Adaboost</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>ada</name>
+            <name>plyr</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>AdaBag</name>
+        <description>Bagged AdaBoost</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>adabag</name>
+            <name>plyr</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>treebag</name>
+        <description>Bagged CART</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>ipred</name>
+            <name>plyr</name>
+            <name>e1071</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>gbm</name>
+        <description>Stochastic Gradient Boosting</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>gbm</name>
+            <name>plyr</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>xgbTree</name>
+        <description>Extreme Gradient Boosting</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>xgboost</name>
+            <name>plyr</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>glmboost</name>
+        <description>Boosted Generalized Linear Model</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>mboost</name>
+            <name>plyr</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>J48</name>
+        <description>C4.5 like Trees</description>
+        <family>Tree Models</family>
+        <dependences>
+            <name>RWeka</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>rpart1SE</name>
+        <description>CART - RPART1SE</description>
+        <family>Tree Models</family>
+        <dependences>
+            <name>rpart</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>rpart2</name>
+        <description>CART - RPART2</description>
+        <family>Tree Models</family>
+        <dependences>
+            <name>rpart</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>hdda</name>
+        <description>High Dimensional Discriminant Analysis</description>
+        <family>High Dimensional Data Models</family>
+        <dependences>
+            <name>HDclassif</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>hdrda</name>
+        <description>High Dimensional Regularized Discriminat Analysis</description>
+        <family>High Dimensional Data Models</family>
+        <dependences>
+            <name>sparsediscrim</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>rda</name>
+        <description>Regularized Discriminat Analysis</description>
+        <family>High Dimensional Data Models</family>
+        <dependences>
+            <name>klaR</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>nnet</name>
+        <description>Neural Networks</description>
+        <family>Neural Networks Models</family>
+        <dependences>
+            <name>nnet</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>pcaNNet</name>
+        <description>Neural Networks with Feature Extraction</description>
+        <family>Neural Networks Models</family>
+        <dependences>
+            <name>nnet</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>nb</name>
+        <description>klaR Naive Bayes</description>
+        <family>Probabilistic Models</family>
+        <dependences>
+            <name>klaR</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>naive_bayes</name>
+        <description>Naive Bayes Classifier</description>
+        <family>Probabilistic Models</family>
+        <dependences>
+            <name>naivebayes</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>sdwd</name>
+        <description>Sparse Distance Weighted Discrimination</description>
+        <family>Distance Discrimintation Models</family>
+        <dependences>
+            <name>sdwd</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>dwdLinear</name>
+        <description>Distance Weighted Discrimination with Lineal Basis Function Kernel</description>
+        <family>Distance Discrimintation Models</family>
+        <dependences>
+            <name>kerndwd</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>rfRules</name>
+        <description>Random Forest Rule-Based Model</description>
+        <family>Rule-Based Models</family>
+        <dependences>
+            <name>randomForest</name>
+            <name>inTrees</name>
+            <name>plyr</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>false</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>JRip</name>
+        <description>JRip Rule-Based Classifier</description>
+        <family>Rule-Based Models</family>
+        <dependences>
+            <name>RWeka</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>false</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>PART</name>
+        <description>Conditional Inference Random Forest</description>
+        <family>Rule-Based Models</family>
+        <dependences>
+            <name>RWeka</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>false</probabilistic>
+        </configuration>
+    </method>
+</methods>
