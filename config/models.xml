@@ -14,10 +14,62 @@
           <probabilistic>true</probabilistic>
         </configuration>
     </method>
+    <!--NEW-->
+    <method>
+        <name>rFerns</name>
+        <description>Random Ferns</description>
+        <family>Random Forests Methods</family>
+        <dependences>
+            <name>rFerns</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <!--NEW-->
+    <method>
+        <name>Rborist</name>
+        <description>Random Forest</description>
+        <family>Random Forests Methods</family>
+        <dependences>
+            <name>Rborist</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <!--NEW-->
+    <method>
+        <name>extraTrees</name>
+        <description>Random Forest by Randomization</description>
+        <family>Random Forests Methods</family>
+        <dependences>
+            <name>extraTrees</name>
+        </dependences>
+        <configuration>
+          <fitting>formula</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
     <method>
         <name>knn</name>
         <description>K-Nearest Neighbours</description>
         <family>Clustering Methods</family>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <!--NEW-->
+    <method>
+        <name>ownn</name>
+        <description>Optimal Weighted Nearest Neighbor Classifier</description>
+        <family>Clustering Methods</family>
+        <dependences>
+            <name>snn</name>
+        </dependences>
         <configuration>
           <fitting>recipe</fitting>
           <probabilistic>true</probabilistic>
@@ -132,6 +184,32 @@
           <probabilistic>true</probabilistic>
         </configuration>
     </method>
+    <!--NEW-->
+    <method>
+        <name>amdai</name>
+        <description>Adaptive Mixture Discriminant Analysis</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>adaptDA</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <method>
+        <name>bartMachine</name>
+        <description>Bayesian Additive Regression Trees</description>
+        <family>Boosting and Bagging Models</family>
+        <dependences>
+            <name>bartMachine</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <!--
     <method>
         <name>ada</name>
         <description>Asymmetric Adaboost</description>
@@ -158,6 +236,7 @@
           <probabilistic>true</probabilistic>
         </configuration>
     </method>
+    -->
     <method>
         <name>treebag</name>
         <description>Bagged CART</description>
@@ -205,6 +284,19 @@
         <dependences>
             <name>mboost</name>
             <name>plyr</name>
+        </dependences>
+        <configuration>
+          <fitting>recipe</fitting>
+          <probabilistic>true</probabilistic>
+        </configuration>
+    </method>
+    <!-- NEW-->
+    <method>
+        <name>chaid</name>
+        <description>CHi-squared Automated Interaction Detection</description>
+        <family>Tree Models</family>
+        <dependences>
+            <name>CHAID</name>
         </dependences>
         <configuration>
           <fitting>recipe</fitting>
@@ -259,7 +351,7 @@
           <probabilistic>true</probabilistic>
         </configuration>
     </method>
-    <method>
+    <!--<method>
         <name>hdrda</name>
         <description>High Dimensional Regularized Discriminat Analysis</description>
         <family>High Dimensional Data Models</family>
@@ -282,7 +374,7 @@
           <fitting>recipe</fitting>
           <probabilistic>true</probabilistic>
         </configuration>
-    </method>
+    </method>-->
     <method>
         <name>nnet</name>
         <description>Neural Networks</description>
@@ -369,7 +461,7 @@
           <probabilistic>false</probabilistic>
         </configuration>
     </method>
-    <method>
+    <!--<method>
         <name>JRip</name>
         <description>JRip Rule-Based Classifier</description>
         <family>Rule-Based Models</family>
@@ -392,5 +484,5 @@
           <fitting>formula</fitting>
           <probabilistic>false</probabilistic>
         </configuration>
-    </method>
+    </method>-->
 </methods>

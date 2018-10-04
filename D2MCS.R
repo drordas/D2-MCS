@@ -108,11 +108,11 @@ D2MCS <- R6Class(
                                                           performance= model.type$getPerformance(),
                                                           path= model.type$getPath() )
             }
+            private$executedModels$saveAt(paste0(model.savePath,"/.executed"),i)
           }
         }) ##APPLY
         private$bestClusterModel$save()
         private$bestModels$insertAt(i,private$bestClusterModel)
-        private$executedModels$saveAt(paste0(model.savePath,"/.executed"),i)
         private$models.weights <- c( private$models.weights,private$bestClusterModel$getPerformance() )
       }
       #private$bestModels$saveAll()
@@ -183,7 +183,7 @@ D2MCS <- R6Class(
         stop("[D2MCS][ERROR] Performance not computed yet. ComputeFinalPerformance method should be executed first\n")
       private$performance
     },
-    plotMeasures = function(){
+    plotTestPerformance = function(){
       df <- data.frame(cluster = as.character(), name = as.character(), performance = as.numeric(), stringsAsFactors = FALSE )
       for( i in 1:private$executedModels$size() ){
         bestModel.name <- private$executedModels$getAt(i)$getNames()[which.max(private$executedModels$getAt(1)$getPerformances())]
@@ -199,13 +199,13 @@ D2MCS <- R6Class(
                    geom_segment(aes(x=df$cluster,y=measure, xend=df$cluster[length(df$cluster)], yend=measure ), color="blue", alpha=0.25  ) + 
                    annotate("text", x=(1 + nrow(df))/2, y=round(measure,digits = 2), label=round(measure,digits=2), color="blue" ) + 
                    xlab("Performance") + ylab( paste0("Performance (",private$metric,")") ) + 
-                   labs( color= "Performance\n" ) + 
+                   labs( color= "Achieved performance\n" ) + 
                    scale_color_manual(values = c("black","blue")) + 
                    scale_y_continuous( limits=  c(min(df$performance-0.05), 1) )
-      ggsave(filename = file.path(getwd(),"plots",paste0("D2MCS_",toupper(private$metric),"_Performance.pdf")), 
+      ggsave(filename = file.path(getwd(),"plots",paste0("TEST_",toupper(private$metric),"_Performance.pdf")), 
              plot=last_plot(),device="pdf", limitsize = FALSE)
     },
-    plotClassifiers = function(){
+    plotTrainPerformances = function(){
       if ( is.null(private$executedModels ) || private$executedModels$size() < 1 )
         cat("[D2MCS][ERROR] Models were not trained. Please run 'executeTrain' method first\n")
       else{
@@ -217,7 +217,7 @@ D2MCS <- R6Class(
           max <- data.frame( x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]) )
           avg <- round(mean(summary$measure ), digits = 2)
           measure <- private$metric
-          plotPath <- here::here("plots",paste0(toupper(measure),"_C[",i,"-",private$executedModels$size(),"].pdf"))
+          plotPath <- here::here("plots",paste0("TRAIN_",toupper(measure),"_C[",i,"-",private$executedModels$size(),"].pdf"))
           plot <- ggplot(summary, aes(model,measure, group=1)) + geom_line() + geom_point() +
             geom_point(aes(x,y), min, fill="transparent", color="red", shape=21, size=3,stroke=1) +
             geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='red' ) +
@@ -229,6 +229,7 @@ D2MCS <- R6Class(
             theme (axis.text.x = element_text(angle = 75, hjust = 1),
                    plot.title = element_text(hjust = 0.5))
           plot
+          cat("[D2MCS][INFO] Plot saved at: '",plotPath,"'\n")
           ggsave(filename = plotPath, plot=last_plot(),device=file_ext(plotPath), limitsize = FALSE)
         }
       }
@@ -265,6 +266,13 @@ D2MCS <- R6Class(
         )
       }
       cat("[D2MCS][INFO] Classification results succesfully saved at: ",path,"\n")
+    },
+    removeAll = function(){
+      if(!is.null(private$path) && dir.exists(private$path)){
+        if(!unlink(private$path,recursive = TRUE,force = TRUE))
+          cat("[D2MCS][INFO] Path '",private$path,"' succesfully removed\n")
+        else cat("[D2MCS][ERROR] Path '",private$path,"' could not be removed\n")
+      }
     }
   ),
   private = list(

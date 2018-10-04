@@ -28,7 +28,7 @@ Cluster <- R6Class(
     getDistribution = function(group = NULL, includeClass = FALSE, classPosition = NULL){
       stop("[CLUSTER][Error] Function 'gestBestDistribution must be implemented in inherited class\n'")
     },
-    plot = function(savePath){
+    plot = function(file.name){
       stop("[CLUSTER][Error] Function 'printPlot must be implemented in inherited class\n'")
     }
   ),

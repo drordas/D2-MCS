@@ -26,7 +26,7 @@ Model <- R6Class(
         cat("[Model][INFO] Save directory not exist. Creating...\n")
         dir.create(dir,showWarnings = FALSE,recursive = TRUE)
       }
-      if(!is.null(pkgName)){
+      if(!is.null(pkgName) && !is.na(pkgName) && !pkgName %in% "NA" ){
         private$loadPackages(pkgName)
         private$packages <- pkgName
       }

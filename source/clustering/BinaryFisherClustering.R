@@ -48,7 +48,7 @@ BinaryFisherClustering <- R6Class(
       private$min <- min(private$all.distribution$getClusterDist()$k)
       private$max <- max(private$all.distribution$getClusterDist()$k)
     },
-    plot = function(savePath = NULL){
+    plot = function(file.name = NULL){
       summary <- data.frame(k=private$all.distribution$getClusterDist()[,1],
                             dispersion=private$all.distribution$getClusterDist()[,2], 
                             row.names = NULL)
@@ -64,7 +64,11 @@ BinaryFisherClustering <- R6Class(
           labs(x = "Number of clusters", y = "Dispersion")
       
       last_plot()
-      if( !is.null(savePath) ) ggsave(savePath,plot=last_plot(),device=file_ext(savePath), limitsize = FALSE)
+      if( !is.null(file.name) ){
+        save.path <- file.path(getwd(),"plots",paste0(file.name,".pdf") )
+        cat("[BinaryCluster][INFO] Plot has been succesfully saved at: ",save.path,"\n",sep="")
+        ggsave(save.path,plot=last_plot(),device="pdf", limitsize = FALSE)
+      } 
     },
     getDistribution = function(cluster, group , includeClass = "NONE" ){
       if( is.null(private$best.distribution) || is.null(private$all.distribution) ){
@@ -133,7 +137,7 @@ BinaryFisherClustering <- R6Class(
       } ) )
       cluster.dist
     },
-    getNumClusters = function(){
+    getBestDistribution = function(){
       if( is.null(private$distribution) ){
         warning("[BinaryCluster][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
         self$execute()
