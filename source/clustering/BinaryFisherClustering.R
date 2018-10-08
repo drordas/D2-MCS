@@ -136,14 +136,15 @@ BinaryFisherClustering <- R6Class(
         cluster.dist$add(subset$getInstances(features = c(subset$getClassName(),unlist(group)) ), classIndex = 1)
       } ) )
       cluster.dist
-    },
-    getBestDistribution = function(){
-      if( is.null(private$distribution) ){
-        warning("[BinaryCluster][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
-        self$execute()
-      }
-      nrow(private$distribution)
     }
+    # },
+    # getNumClusters = function(){
+    #   if( is.null(private$distribution) ){
+    #     warning("[BinaryCluster][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
+    #     self$execute()
+    #   }
+    #   nrow(private$distribution)
+    # }
   ),
   private = list(
     computeFisherTable = function(corpus){
@@ -189,39 +190,5 @@ BinaryFisherClustering <- R6Class(
     best.distribution = NULL,
     min = NULL,
     max = NULL
-  )
-)
-
-BinaryFisherData <- R6Class(
-  classname = "BinaryFisherData",
-  portable = TRUE,                   
-  public = list(
-    initialize = function(){
-      private$bestK <- integer(1)
-      private$clustered <- data.frame( k=integer(), homogeneity=numeric(), dist=I(list()) )
-    },
-    setClusterDist = function(distribution){
-      private$clustered <- clustered
-    },
-    addNewCluster = function(k,homogeneity,distribution){
-      private$clustered <- rbind(private$clustered,
-                                 data.frame(k=k,homogeneity=homogeneity,dist=I(list(distribution))))
-    },
-    setBestK = function(k){
-      private$bestK <- k
-    },
-    getBestK = function(){
-      private$bestK
-    },
-    getBestHomogeneity = function(){
-      private$clustered$homogeneity[which.min(private$clustered$homogeneity)]
-    },
-    getClusterDist = function(){
-      private$clustered
-    }
-  ),
-  private = list(
-    bestK = NA,
-    clustered = NA
   )
 )

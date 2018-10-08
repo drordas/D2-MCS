@@ -1,7 +1,9 @@
-source("pkgChecker.R", chdir = TRUE)
+#source("pkgChecker.R", chdir = TRUE)
 source("source/data/Dataset.R", chdir=TRUE)
 source("source/clustering/Cluster.R", chdir=TRUE)
 source("source/clustering/ClusterDistribution.R", chdir=TRUE)
+source("source/clustering/BinaryFisherData.R", chdir=TRUE)
+source("source/clustering/MultiTypeClustering.R", chdir=TRUE)
 source("source/models/utility/ModelFit.R", chdir = TRUE)
 source("source/models/utility/DefaultModelFit.R", chdir = TRUE)
 source("source/clustering/BinaryFisherClustering.R", chdir=TRUE)
@@ -30,3 +32,15 @@ source("source/prediction/ProbMajorityVoting.R", chdir=TRUE)
 source("source/prediction/PerformanceMeasures.R", chdir=TRUE)
 source("source/prediction/ClassWeightedVoting.R", chdir = TRUE)
 source("D2MCS.R",chdir=TRUE)
+
+#Required for dual plot
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+
+#Required for recode()
+library(car)
+
+#Required for strcmpi()
+library(pracma)
