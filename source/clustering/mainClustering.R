@@ -1,6 +1,6 @@
 
 setwd("/Users/mpegea/GitKraken/D2-MCS")
-  
+
 source("sources.R")
 
 data <- Dataset$new(filepath ="/Users/mpegea/GitKraken/Datasets/FCFP_6/TRAINNING/full_set_FCFP_6_physchem.csv", header=TRUE, sep="\t",skip = 1, classIndex = 1)
@@ -20,7 +20,6 @@ subset.cluster <- data$getSubset(c(1,2))
 
 
 multiC <- MultiTypeClustering$new(subset.cluster)
-multiC$execute()
-multiC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/MutiTypeClustering_Dispersion.pdf")
-# multiC$getDistribution(fisherK = 3, corK = 7, includeClass = "END")
-multiC$getDistribution(fisherK = 2, corK = 3, includeClass = "BEGIN")
+multiC$execute(positiveElement = "Active", method = "kendall")
+multiC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/MutiTypeClustering_Dispersion.pdf", method = "kendall")
+multiC$getDistribution(fisherK = 2, includeClass = "BEGIN")

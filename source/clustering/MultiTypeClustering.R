@@ -20,11 +20,14 @@ MultiTypeClustering <- R6Class(
       private$class <- dataset$getClass()
       private$className <- dataset$getClassName()
       private$dataset <- dataset$getInstances(ignore.class = TRUE)
-      
     },
     
     
-    execute = function(){
+    execute = function(positiveElement, method){
+      if(missing(positiveElement))
+        stop("[MultiTypeClustering][ERROR] positiveElement parameter must be defined\n")
+      if(missing(method))
+        stop("[MultiTypeClustering][ERROR] method parameter must be defined\n")
       binaryIndex <- sapply( private$dataset, function(e){
         ( super$isBinary(e) || length( unique(e) ) == 2) 
       })
@@ -39,7 +42,7 @@ MultiTypeClustering <- R6Class(
         private$fisher.best.distribution <- rbind(private$fisher.best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))))
       }
       if(nrow(private$data.unbinary) > 0 ){
-        private$cor.all.distribution <- private$computeCorrelationTest(private$data.unbinary, "Active")
+        private$cor.all.distribution <- private$computeCorrelationTest(private$data.unbinary, positiveElement, method) # ---
         private$cor.best.distribution <- data.frame(cluster=integer(),features=I(list())) 
         aux <- unlist(private$cor.all.distribution$getClusterDist()[private$cor.all.distribution$getClusterDist()$k==private$cor.all.distribution$getBestK(), ]$dist) 
         for(i in 1:private$cor.all.distribution$getBestK() ){
@@ -47,12 +50,13 @@ MultiTypeClustering <- R6Class(
         }
         private$best.distribution <- rbind(private$fisher.best.distribution,private$cor.best.distribution)
       }
-      private$min <- min(private$fisher.all.distribution$getClusterDist()$k) 
-      private$max <- max(private$fisher.all.distribution$getClusterDist()$k) 
-    }, 
+      private$min <- min(private$fisher.all.distribution$getClusterDist()$k)
+      private$max <- max(private$fisher.all.distribution$getClusterDist()$k)
+    },
     
     
-    plot = function(savePath = NULL){
+    plot = function(savePath = NULL, method){
+      
       #Fisher Plot
       summary <- data.frame(k=private$fisher.all.distribution$getClusterDist()[,1],
                             dispersion=private$fisher.all.distribution$getClusterDist()[,2],
@@ -69,22 +73,35 @@ MultiTypeClustering <- R6Class(
         labs(title = "Binary Data", x = "Number of clusters", y = "Dispersion")
       
       #Cor Plot
-      summary <- data.frame(k=private$cor.all.distribution$getClusterDist()[,1],
-                            dispersion=private$cor.all.distribution$getClusterDist()[,2], 
-                            row.names = NULL)
-      min <- data.frame(x=summary[which.min(summary[,2]), ][, 1],y= min(summary[,2]))
-      max <- data.frame(x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]))
-      fisherCorPlot <- ggplot(summary, aes(k,dispersion)) + geom_line() + geom_point() +
-        geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) + 
-        geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='blue' ) +
-        geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) + 
-        geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) + 
-        scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) + 
-        scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
-        labs(title = "Unbinary Data", x = "Number of clusters", y = "Dispersion")
+      switch (method,
+              "pearson" = {
+                summary <- data.frame(k=private$cor.all.distribution$getClusterDist()[,1],
+                                      dispersion=private$cor.all.distribution$getClusterDist()[,2], 
+                                      row.names = NULL)
+                min <- data.frame(x=summary[which.min(summary[,2]), ][, 1],y= min(summary[,2]))
+                max <- data.frame(x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]))
+                CorPlot <- ggplot(summary, aes(k,dispersion)) + geom_line() + geom_point() +
+                  geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) + 
+                  geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='blue' ) +
+                  geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) + 
+                  geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) + 
+                  scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) + 
+                  scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
+                  labs(title = "Unbinary Data", x = "Number of clusters", y = "Dispersion")
+              },
+              "kendall" = { 
+                df <- data.frame(interval=c("Negative", "Positive"),
+                                 value=c(private$meanNegativeTau, private$meanPositiveTau))
+                CorPlot<-ggplot(data=df, aes(x=interval, y=value)) +
+                  geom_bar(stat="identity", width = 0.5, fill="steelblue")+
+                  geom_text(aes(label=sprintf("%.3f",value)), vjust=-0.3, size=5)+
+                  labs(title = "Unbinary Data", x = "Interval", y = "Mean Tau Value")
+              }
+      )
       
-      dualPlot <-  grid.arrange(fisherPlot, fisherCorPlot, nrow = 1)
-      if( !is.null(savePath) ) ggsave(savePath,plot=dualPlot,device=file_ext(savePath), limitsize = FALSE)
+      dualPlot <-  grid.arrange(fisherPlot, CorPlot, nrow = 1)
+      if( !is.null(savePath) )
+        ggsave(savePath,plot=dualPlot,device=file_ext(savePath), limitsize = FALSE)
     },
     
     
@@ -207,26 +224,39 @@ MultiTypeClustering <- R6Class(
     #---------------------------------------------------------------------------------------
     
     
-    computeCorrelationTable = function(corpus, positiveElement){
-      if(missing(positiveElement))
-        stop("[MultiTypeClustering][ERROR] positiveElement parameter must be defined\n")
+    computeCorrelationTable = function(corpus, positiveElement, method){
       binaryClass <- sapply(private$class,function(elem){
         if(strcmpi(toString(elem), positiveElement))
           elem <- 1
         else
           elem <- 0
       })
-      print(private$class)
-      print(binaryClass)
-      correlationTest <- sapply(corpus, function(c){ 
-        cor.test(c,binaryClass,method = "spearman", exact = FALSE)$p.value
-      }) 
-    },
+      switch (method,
+              "pearson" = { correlationTest <- sapply(corpus, function(c){cor.test(c,binaryClass,method = "spearman", exact = FALSE)$p.value })},
+              "kendall" = { 
+                correlationTest <- sapply(corpus, function(c){
+                  estimateValue <- cor.test(c,binaryClass,method = "kendall")$estimate
+                  if(estimateValue < 0){
+                    private$sumatoryNegativeEstimate <- private$sumatoryNegativeEstimate + estimateValue
+                    private$negativeValues <- private$negativeValues + 1
+                  }
+                  else{
+                    private$sumatoryPositiveEstimate <- private$sumatoryPositiveEstimate + estimateValue
+                    private$positiveValues <- private$positiveValues + 1
+                  }
+                  estimateValue
+                })}
+      )
+      },
     
     
-    computeCorrelationTest = function(corpus, positiveElement){
+    computeCorrelationTest = function(corpus, positiveElement, method){
       unbinary.data <- BinaryFisherData$new()
-      correlation.table <- private$computeCorrelationTable(corpus, positiveElement)
+      correlation.table <- private$computeCorrelationTable(corpus, positiveElement, method)
+      
+      private$meanNegativeTau <- abs(private$sumatoryNegativeEstimate)/private$negativeValues
+      private$meanPositiveTau <- abs(private$sumatoryPositiveEstimate)/private$positiveValues
+      
       cor.index <- order(correlation.table, decreasing = TRUE) 
       cor.size <- length(correlation.table)
       totalGroups <- 2:super$getMaxClusters()
@@ -270,6 +300,14 @@ MultiTypeClustering <- R6Class(
     cor.all.distribution = NULL,
     cor.best.distribution = NULL,
     best.distribution = NULL,
+    
+    sumatoryNegativeEstimate = 0,
+    sumatoryPositiveEstimate = 0,
+    negativeValues = 0,
+    positiveValues = 0,
+    
+    meanPositiveTau = NULL,
+    meanNegativeTau = NULL,
     
     min = NULL,
     max = NULL
