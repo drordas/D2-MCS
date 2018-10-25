@@ -287,12 +287,8 @@ MultiTypeClustering <- R6Class(
               "kendall" = {
                 private$meanNegativeTau <- abs(private$sumatoryNegativeEstimate)/private$negativeValues
                 private$meanPositiveTau <- abs(private$sumatoryPositiveEstimate)/private$positiveValues
-                #negativeTauCluster <- integer(length = private$negativeValues)
-                #positiveTauCluster <- integer(length = private$positiveValues)
                 negativeTauCluster <- character(length = private$negativeValues)
                 positiveTauCluster <- character(length = private$positiveValues)
-                #negativeTauClusterNames <- X <- vector(mode = "character", length = private$negativeValues)
-                #positiveTauClusterNames <- X <- vector(mode = "character", length = private$positiveValues)
                 kendallEnv <- new.env()
                 kendallEnv$negativeValues <- 0
                 kendallEnv$positiveValues <- 0
@@ -301,26 +297,17 @@ MultiTypeClustering <- R6Class(
                 kendallEnv$i <- 1
                 invisible(lapply(correlation.table, function(elem){
                   if(elem < 0){
-                    #print(elem)
-                   # print( names(correlation.table[i]))
-                   # print(gsub("\\.tau",replacement = "" ,x = names(correlation.table[kendallEnv$i])))
-                    #negativeTauCluster[negativeValues+1] <- elem
-                    #negativeTauClusterNames[negativeValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[i]))
                     kendallEnv$negativeTauCluster[kendallEnv$negativeValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[kendallEnv$i]))
                     kendallEnv$negativeValues <- kendallEnv$negativeValues + 1
                     kendallEnv$negativeSum <- kendallEnv$negativeSum + elem
                   }
                   else{
-                    #positiveTauCluster[positiveValues+1] <- elem
-                    #positiveTauClusterNames[positiveValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[i]))
                     kendallEnv$positiveTauCluster[kendallEnv$positiveValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[kendallEnv$i]))
                     kendallEnv$positiveValues <- kendallEnv$positiveValues + 1
                     kendallEnv$positiveSum <- kendallEnv$positiveSum + elem
                   }
                   kendallEnv$i <- kendallEnv$i+1
                 }))
-                #names(negativeTauCluster) <- negativeTauClusterNames
-                #names(positiveTauCluster) <- positiveTauClusterNames
                 kendallCluster <- list(kendallEnv$negativeTauCluster, kendallEnv$positiveTauCluster)
                 aux <- sort(c(abs(kendallEnv$negativeSum), abs(kendallEnv$positiveSum)))
                 deltha <- aux[2]-aux[1]
