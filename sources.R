@@ -2,7 +2,7 @@
 source("source/data/Dataset.R", chdir=TRUE)
 source("source/clustering/Cluster.R", chdir=TRUE)
 source("source/clustering/ClusterDistribution.R", chdir=TRUE)
-source("source/clustering/BinaryFisherData.R", chdir=TRUE)
+source("source/clustering/ClusterData.R", chdir=TRUE)
 source("source/clustering/MultiTypeClustering.R", chdir=TRUE)
 source("source/models/utility/ModelFit.R", chdir = TRUE)
 source("source/models/utility/DefaultModelFit.R", chdir = TRUE)

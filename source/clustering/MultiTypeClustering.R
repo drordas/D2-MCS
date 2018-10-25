@@ -15,7 +15,7 @@ MultiTypeClustering <- R6Class(
       private$fisher.best.distribution <- NULL
       private$cor.all.distribution <- NULL
       private$cor.best.distribution <- NULL
-      private$best.distribution <- NULL #Contains this clustering method's best distribution (Fisher's best distribution clusters & Correlation's best distribution clusters)
+      private$best.distribution <- NULL
       
       private$class <- dataset$getClass()
       private$className <- dataset$getClassName()
@@ -23,14 +23,21 @@ MultiTypeClustering <- R6Class(
     },
     
     
-    execute = function(positiveElement, method){
-      if(missing(positiveElement))
-        stop("[MultiTypeClustering][ERROR] positiveElement parameter must be defined\n")
+    execute = function(positive.class, method){
+      if(missing(positive.class))
+        stop("[MultiTypeClustering][ERROR] positive.class parameter must be defined\n")
       if(missing(method))
         stop("[MultiTypeClustering][ERROR] method parameter must be defined\n")
       binaryIndex <- sapply( private$dataset, function(e){
         ( super$isBinary(e) || length( unique(e) ) == 2) 
       })
+      private$positive.class <- positive.class
+      private$method <- method
+      i <- 1
+      while(strcmpi(toString(private$class[i]), private$positive.class)){
+        i <- i+1
+      }
+      private$negative.class <- toString(private$class[i])
       if( dim(private$dataset[,!binaryIndex])[2] > 0 ){
         private$data.unbinary <- private$removeUnnecesary(private$dataset[,!binaryIndex])
       }
@@ -42,11 +49,14 @@ MultiTypeClustering <- R6Class(
         private$fisher.best.distribution <- rbind(private$fisher.best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))))
       }
       if(nrow(private$data.unbinary) > 0 ){
-        private$cor.all.distribution <- private$computeCorrelationTest(private$data.unbinary, positiveElement, method) # ---
-        private$cor.best.distribution <- data.frame(cluster=integer(),features=I(list())) 
-        aux <- unlist(private$cor.all.distribution$getClusterDist()[private$cor.all.distribution$getClusterDist()$k==private$cor.all.distribution$getBestK(), ]$dist) 
-        for(i in 1:private$cor.all.distribution$getBestK() ){
-          private$cor.best.distribution <- rbind(private$cor.best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))))
+        private$cor.all.distribution <- private$computeCorrelationTest(private$data.unbinary)
+        
+        if(strcmp(private$method, "pearson")){
+          private$cor.best.distribution <- data.frame(cluster=integer(),features=I(list())) 
+          aux <- unlist(private$cor.all.distribution$getClusterDist()[private$cor.all.distribution$getClusterDist()$k==private$cor.all.distribution$getBestK(), ]$dist) 
+          for(i in 1:private$cor.all.distribution$getBestK() ){
+            private$cor.best.distribution <- rbind(private$cor.best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))))
+          }
         }
         private$best.distribution <- rbind(private$fisher.best.distribution,private$cor.best.distribution)
       }
@@ -55,8 +65,7 @@ MultiTypeClustering <- R6Class(
     },
     
     
-    plot = function(savePath = NULL, method){
-      
+    plot = function(savePath = NULL){
       #Fisher Plot
       summary <- data.frame(k=private$fisher.all.distribution$getClusterDist()[,1],
                             dispersion=private$fisher.all.distribution$getClusterDist()[,2],
@@ -73,7 +82,7 @@ MultiTypeClustering <- R6Class(
         labs(title = "Binary Data", x = "Number of clusters", y = "Dispersion")
       
       #Cor Plot
-      switch (method,
+      switch (private$method,
               "pearson" = {
                 summary <- data.frame(k=private$cor.all.distribution$getClusterDist()[,1],
                                       dispersion=private$cor.all.distribution$getClusterDist()[,2], 
@@ -90,15 +99,14 @@ MultiTypeClustering <- R6Class(
                   labs(title = "Unbinary Data", x = "Number of clusters", y = "Dispersion")
               },
               "kendall" = { 
-                df <- data.frame(interval=c("Negative", "Positive"),
-                                 value=c(private$meanNegativeTau, private$meanPositiveTau))
+                df <- data.frame(interval=c(private$positive.class, private$negative.class),
+                                 value=c(private$meanPositiveTau, private$meanNegativeTau))
                 CorPlot<-ggplot(data=df, aes(x=interval, y=value)) +
                   geom_bar(stat="identity", width = 0.5, fill="steelblue")+
                   geom_text(aes(label=sprintf("%.3f",value)), vjust=-0.3, size=5)+
-                  labs(title = "Unbinary Data", x = "Interval", y = "Mean Tau Value")
+                  labs(title = "Unbinary Data", x = "Class", y = "Mean Tau Value")
               }
       )
-      
       dualPlot <-  grid.arrange(fisherPlot, CorPlot, nrow = 1)
       if( !is.null(savePath) )
         ggsave(savePath,plot=dualPlot,device=file_ext(savePath), limitsize = FALSE)
@@ -110,7 +118,11 @@ MultiTypeClustering <- R6Class(
         warning("[MultiTypeCluster][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
         self$execute()
       }
-      if( !toupper(includeClass) %in% c("NONE","BEGIN","END") ){
+      if(strcmp(private$method, "kendall")){
+       cat("[MultiTypeCluster][INFO] Setting Correlation distribution k to k=2. \n")
+        corK=2
+      }
+      if(!toupper(includeClass) %in% c("NONE","BEGIN","END") ){
         cat("[MultiTypeCluster][INFO] Class parameter not included. Assuming class not included\n")
         class <- "NONE"
       }else class <- toupper(includeClass)
@@ -119,7 +131,7 @@ MultiTypeClustering <- R6Class(
       if(missing(corK))
         corK <- private$cor.all.distribution$getBestK()
       if( ( is.numeric(fisherK) && (fisherK == private$fisher.all.distribution$getBestK()) ) && ( is.numeric(corK) && (corK == private$cor.all.distribution$getBestK()) ) ){
-        final.distr <- rbind(private$fisher.best.distribution, private$cor.best.distribution) 
+        final.distr <- rbind(private$fisher.best.distribution, private$cor.best.distribution)
       }
       else{
         if( ( is.numeric(fisherK) && (fisherK == private$fisher.all.distribution$getBestK()) ) || ( is.numeric(corK) && (corK == private$cor.all.distribution$getBestK()) )){
@@ -130,7 +142,7 @@ MultiTypeClustering <- R6Class(
               corKDistribution <- rbind(corKDistribution, data.frame(cluster=i,dist=I(list(names(aux[aux == i])))) )
             final.distr <- rbind( private$fisher.best.distribution, corKDistribution) 
           }
-          else {
+          else{
             fisherKDistribution <- data.frame(cluster=integer(),features=I(list()))
             aux <- unlist(private$fisher.all.distribution$getClusterDist()[private$fisher.all.distribution$getClusterDist()$k==fisherK, ]$dist)
             for( i in 1:fisherK )
@@ -160,28 +172,32 @@ MultiTypeClustering <- R6Class(
       )
       if( !missing(group) && !is.null(group) && is.numeric(group) && group <= length(final.distr))
         final.distr[[group]]
-      else 
+      else
         final.distr
     },
     
     
-    createSubset = function(cluster = NULL, subset = NULL){ # --- RECODE --- (Not Working!!)
-      if( is.null(private$cor.all.distribution) ){
-        cat("[MultiTypeClustering][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
+    createSubset = function(fisherK = NULL, corK = NULL, subset = NULL){
+      if( is.null(private$fisher.all.distribution) || is.null(private$cor.all.distribution)){
+        warning("[MultiTypeCluster][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
         self$execute()
       }
-      
       if( missing(subset) || is.null(subset) || !"Subset" %in% class(subset)  )
         stop("[MultiTypeClustering][ERROR] Subset parameter must be defined as 'Subset' object\n")
       
-      if( is.null(cluster) || missing(cluster) || !is.numeric(cluster) || 
-          (is.numeric(cluster) && !cluster %in% c(private$min:private$max ) ) ){
-        cat("[MultiTypeClustering][WARNING] Incorrect cluster parameter. Should be between: ",private$min," <= cluster <= ",private$max,"\n", sep="")
-        cat("                         Assuming best cluster configuration (",private$cor.all.distribution$getBestK(),")\n", sep="")
-        cluster <- private$cor.all.distribution$getBestK()
-      }
       
-      distribution <- self$getDistribution(cluster = cluster,includeClass = "NONE")
+      if( (is.null(fisherK) || missing(fisherK) || !is.numeric(fisherK) || 
+          (is.numeric(fisherK) && !fisherK %in% c(private$min:private$max ) ))){
+        cat("[MultiTypeClustering][WARNING] Incorrect fisherK parameter. Should be between: ",private$min," <= cluster <= ",private$max,"\n", sep="")
+        cat("                         Assuming best cluster configuration (",private$fisher.all.distribution$getBestK(),")\n", sep="")
+        fisherK <- private$fisher.all.distribution$getBestK()
+      }
+        if ((is.null(corK) || missing(corK) || !is.numeric(corK) || (is.numeric(corK) && !corK %in% c(private$min:private$max ) ))){
+        cat("[MultiTypeClustering][WARNING] Incorrect corK parameter. Should be between: ",private$min," <= cluster <= ",private$max,"\n", sep="")
+        cat("                         Assuming best cluster configuration (",private$cor.all.distribution$getBestK(),")\n", sep="")
+        corK <- private$cor.all.distribution$getBestK()
+      }
+      distribution <- self$getDistribution(fisherK = fisherK, corK = corK, includeClass = "NONE")
       cluster.dist <- ClusterDistribution$new()
       invisible(lapply(distribution, function(group){
         cluster.dist$add(subset$getInstances(features = c(subset$getClassName(),unlist(group)) ), classIndex = 1)
@@ -192,46 +208,41 @@ MultiTypeClustering <- R6Class(
   
   
   private = list(
-    #---------------------------------------------------------------------------------------
-    computeFisherTable = function(corpus){ # --- REFACTOR ---
+    computeFisherTable = function(corpus){ 
       fisherTest <- sapply(corpus, function(c){fisher.test(table(c,private$class))$p.value })
     },
-    computeFisherTest = function(corpus){ #BinaryCorpus
-      binary.data <- BinaryFisherData$new()
+    computeFisherTest = function(corpus){
+      binary.data <- ClusterData$new()
       fisher.table <- private$computeFisherTable(corpus)
       fisher.index <- order(fisher.table, decreasing = TRUE)
       fisher.size <- length(fisher.table)
-      
       totalGroups <- 2:super$getMaxClusters()
       for(k in totalGroups) {
         clustering <- rep(c(1:k,(k:1)),fisher.size/(2*k)+1)[1:fisher.size]
         cluster <- integer(length = length(fisher.table))
         names(cluster) <- names(corpus)
         sumGroup <- vector(k,mode="list")
-        
         for (i in 1:k){ 
           sumGroup[[i]] <- fisher.table[fisher.index[clustering==i]]
           cluster[fisher.index[clustering==i]] <- i
         }
         groupMeasure <- lapply(sumGroup,sum)
-        
         deltha <- max(unlist(groupMeasure)) - min(unlist(groupMeasure))
         binary.data$addNewCluster(k,deltha,cluster)
       }
       binary.data$setBestK(  binary.data$getClusterDist()[which.min(binary.data$getClusterDist()[,2]),1])
       binary.data
     },
-    #---------------------------------------------------------------------------------------
+
     
-    
-    computeCorrelationTable = function(corpus, positiveElement, method){
+    computeCorrelationTable = function(corpus){
       binaryClass <- sapply(private$class,function(elem){
-        if(strcmpi(toString(elem), positiveElement))
+        if(strcmpi(toString(elem), private$positive.class))
           elem <- 1
         else
           elem <- 0
       })
-      switch (method,
+      switch (private$method,
               "pearson" = { correlationTest <- sapply(corpus, function(c){cor.test(c,binaryClass,method = "spearman", exact = FALSE)$p.value })},
               "kendall" = { 
                 correlationTest <- sapply(corpus, function(c){
@@ -247,33 +258,80 @@ MultiTypeClustering <- R6Class(
                   estimateValue
                 })}
       )
-      },
+    },
     
     
-    computeCorrelationTest = function(corpus, positiveElement, method){
-      unbinary.data <- BinaryFisherData$new()
-      correlation.table <- private$computeCorrelationTable(corpus, positiveElement, method)
-      
-      private$meanNegativeTau <- abs(private$sumatoryNegativeEstimate)/private$negativeValues
-      private$meanPositiveTau <- abs(private$sumatoryPositiveEstimate)/private$positiveValues
-      
-      cor.index <- order(correlation.table, decreasing = TRUE) 
-      cor.size <- length(correlation.table)
-      totalGroups <- 2:super$getMaxClusters()
-      for(k in totalGroups) {
-        clustering <- rep(c(1:k,(k:1)),cor.size/(2*k)+1)[1:cor.size]
-        cluster <- integer(length = length(correlation.table))
-        names(cluster) <- names(corpus)
-        sumGroup <- vector(k,mode="list")
-        for (i in 1:k){ 
-          sumGroup[[i]] <- correlation.table[cor.index[clustering==i]]
-          cluster[cor.index[clustering==i]] <- i
-        }
-        groupMeasure <- lapply(sumGroup,sum)
-        deltha <- max(unlist(groupMeasure)) - min(unlist(groupMeasure))
-        unbinary.data$addNewCluster(k,deltha,cluster)
-      }
-      unbinary.data$setBestK(unbinary.data$getClusterDist()[which.min(unbinary.data$getClusterDist()[,2]),1])
+    computeCorrelationTest = function(corpus){
+      unbinary.data <- ClusterData$new()
+      correlation.table <- private$computeCorrelationTable(corpus)
+      switch (private$method,
+              "pearson" = {
+                cor.index <- order(correlation.table, decreasing = TRUE) 
+                cor.size <- length(correlation.table)
+                totalGroups <- 2:super$getMaxClusters()
+                for(k in totalGroups) {
+                  clustering <- rep(c(1:k,(k:1)),cor.size/(2*k)+1)[1:cor.size]
+                  cluster <- integer(length = length(correlation.table))
+                  names(cluster) <- names(corpus)
+                  sumGroup <- vector(k,mode="list")
+                  for (i in 1:k){ 
+                    sumGroup[[i]] <- correlation.table[cor.index[clustering==i]]
+                    cluster[cor.index[clustering==i]] <- i
+                  }
+                  groupMeasure <- lapply(sumGroup,sum)
+                  deltha <- max(unlist(groupMeasure)) - min(unlist(groupMeasure))
+                  unbinary.data$addNewCluster(k,deltha,cluster)
+                }
+                unbinary.data$setBestK(unbinary.data$getClusterDist()[which.min(unbinary.data$getClusterDist()[,2]),1])
+              },
+              "kendall" = {
+                private$meanNegativeTau <- abs(private$sumatoryNegativeEstimate)/private$negativeValues
+                private$meanPositiveTau <- abs(private$sumatoryPositiveEstimate)/private$positiveValues
+                #negativeTauCluster <- integer(length = private$negativeValues)
+                #positiveTauCluster <- integer(length = private$positiveValues)
+                negativeTauCluster <- character(length = private$negativeValues)
+                positiveTauCluster <- character(length = private$positiveValues)
+                #negativeTauClusterNames <- X <- vector(mode = "character", length = private$negativeValues)
+                #positiveTauClusterNames <- X <- vector(mode = "character", length = private$positiveValues)
+                kendallEnv <- new.env()
+                kendallEnv$negativeValues <- 0
+                kendallEnv$positiveValues <- 0
+                kendallEnv$negativeSum <- 0
+                kendallEnv$positiveSum <- 0
+                kendallEnv$i <- 1
+                invisible(lapply(correlation.table, function(elem){
+                  if(elem < 0){
+                    #print(elem)
+                   # print( names(correlation.table[i]))
+                   # print(gsub("\\.tau",replacement = "" ,x = names(correlation.table[kendallEnv$i])))
+                    #negativeTauCluster[negativeValues+1] <- elem
+                    #negativeTauClusterNames[negativeValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[i]))
+                    kendallEnv$negativeTauCluster[kendallEnv$negativeValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[kendallEnv$i]))
+                    kendallEnv$negativeValues <- kendallEnv$negativeValues + 1
+                    kendallEnv$negativeSum <- kendallEnv$negativeSum + elem
+                  }
+                  else{
+                    #positiveTauCluster[positiveValues+1] <- elem
+                    #positiveTauClusterNames[positiveValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[i]))
+                    kendallEnv$positiveTauCluster[kendallEnv$positiveValues+1] <- gsub("\\.tau",replacement = "" ,x = names(correlation.table[kendallEnv$i]))
+                    kendallEnv$positiveValues <- kendallEnv$positiveValues + 1
+                    kendallEnv$positiveSum <- kendallEnv$positiveSum + elem
+                  }
+                  kendallEnv$i <- kendallEnv$i+1
+                }))
+                #names(negativeTauCluster) <- negativeTauClusterNames
+                #names(positiveTauCluster) <- positiveTauClusterNames
+                kendallCluster <- list(kendallEnv$negativeTauCluster, kendallEnv$positiveTauCluster)
+                aux <- sort(c(abs(kendallEnv$negativeSum), abs(kendallEnv$positiveSum)))
+                deltha <- aux[2]-aux[1]
+                unbinary.data$addNewCluster(2,deltha, kendallCluster)
+                unbinary.data$setBestK(2)
+                kendallDistribution <- data.frame(cluster=c(1,2),dist=I(kendallCluster))
+                private$cor.all.distribution <- kendallDistribution
+                private$cor.best.distribution <- kendallDistribution
+                rm(kendallEnv)
+              }
+      )
       unbinary.data
     },
     
@@ -294,6 +352,11 @@ MultiTypeClustering <- R6Class(
     dataset = NULL,
     class = NULL,
     className = NULL,
+    
+    method = NULL,
+    
+    positive.class = NULL,
+    negative.class = NULL,
     
     fisher.all.distribution = NULL,
     fisher.best.distribution = NULL,

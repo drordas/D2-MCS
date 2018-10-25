@@ -129,7 +129,6 @@ BinaryFisherClustering <- R6Class(
         cat("                         Assuming best cluster configuration (",private$all.distribution$getBestK(),")\n", sep="")
         cluster <- private$all.distribution$getBestK()
       }
-      
       distribution <- self$getDistribution(cluster = cluster,includeClass = "NONE")
       cluster.dist <- ClusterDistribution$new()
       invisible(lapply(distribution, function(group){
@@ -151,7 +150,7 @@ BinaryFisherClustering <- R6Class(
       fisherTest <- sapply(corpus, function(c){ fisher.test(table(c,private$class))$p.value } )
     },
     computeFisherTest = function(corpus){
-      binary.data <- BinaryFisherData$new()
+      binary.data <- ClusterData$new()
       fisher.table <- private$computeFisherTable(corpus)
       fisher.index <- order(fisher.table, decreasing = TRUE)
       fisher.size <- length(fisher.table)

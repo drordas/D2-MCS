@@ -1,5 +1,5 @@
-BinaryFisherData <- R6Class(
-  classname = "BinaryFisherData",
+ClusterData <- R6Class(
+  classname = "ClusterData",
   portable = TRUE,                   
   public = list(
     initialize = function(){
