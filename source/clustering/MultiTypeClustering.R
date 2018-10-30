@@ -110,6 +110,7 @@ MultiTypeClustering <- R6Class(
       dualPlot <-  grid.arrange(fisherPlot, CorPlot, nrow = 1)
       if( !is.null(savePath) )
         ggsave(savePath,plot=dualPlot,device=file_ext(savePath), limitsize = FALSE)
+      cat("[MultiTypeClustering][INFO] Plot has been succesfully saved at: ",savePath,"\n",sep="")
     },
     
     
