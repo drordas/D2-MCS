@@ -5,7 +5,7 @@ MultiTypeClustering <- R6Class(
   portable = TRUE,
   inherit = Cluster,
   public = list(
-    initialize = function(dataset, maxClusters = 50){
+    initialize = function(dataset, maxClusters = 25){
       if (class(dataset)[1] != "Subset" || class(dataset)[2]!= "R6" )
         stop("[CLUSTER][Error] Input corpus should be R6 Subset type\n")
       super$initialize( maxClusters )
@@ -93,7 +93,8 @@ MultiTypeClustering <- R6Class(
                   geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) + 
                   geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='blue' ) +
                   geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) + 
-                  geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) + 
+                  #geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) + 
+                  geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=1.45, color='red' ) + 
                   scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) + 
                   scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
                   labs(title = "Unbinary Data", x = "Number of clusters", y = "Dispersion")

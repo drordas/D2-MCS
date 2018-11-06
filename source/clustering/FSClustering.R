@@ -6,7 +6,7 @@ FSClustering <- R6Class(
   portable = TRUE,
   inherit = Cluster,
   public = list(
-    initialize = function(dataset, maxClusters = 50){
+    initialize = function(dataset, maxClusters = 25){
       if (class(dataset)[1] != "Subset" || class(dataset)[2]!= "R6" )
         stop("[CLUSTER][Error] Input corpus should be R6 Subset type\n")
       super$initialize( maxClusters )
@@ -18,33 +18,14 @@ FSClustering <- R6Class(
     },
     
     
-    execute = function(){ # --- ToDo ---
-      # binaryIndex <- sapply( private$dataset, function(e){
-      #   ( super$isBinary(e) || length( unique(e) ) == 2) 
-      # })
-      # 
-      # if( dim(private$dataset[,!binaryIndex])[2] > 0 ){
-      #   private$data.unbinary <- private$removeUnnecesary(private$dataset[,!binaryIndex])
-      # }
-      # 
-      # onlyBinary <- private$dataset[,binaryIndex]
-      
-      private$all.distribution <- private$computeTest(private$dataset) # --- ToDo ---
-      
+    execute = function(){
+      private$all.distribution <- private$computeTest(private$dataset)
       private$best.distribution <- data.frame(cluster=integer(),features=I(list()))
       aux <- unlist(private$all.distribution$getClusterDist()[private$all.distribution$getClusterDist()$k==private$all.distribution$getBestK(), ]$dist)
-      
       for(i in 1:private$all.distribution$getBestK() ){
         private$best.distribution <- rbind(private$best.distribution, 
                                            data.frame(cluster=i,dist=I(list(names(aux[aux==i])))) )
       }
-      
-      # if(nrow(private$data.unbinary) > 0 ){
-      #   private$best.distribution <- rbind( private$best.distribution,
-      #                                       data.frame( cluster=(nrow(private$best.distribution)+1),
-      #                                                   dist=I(list(names(private$data.unbinary) )) ) )
-      # }
-      
       private$min <- min(private$all.distribution$getClusterDist()$k)
       private$max <- max(private$all.distribution$getClusterDist()$k)
     },
@@ -64,7 +45,6 @@ FSClustering <- R6Class(
         scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) + 
         scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
         labs(x = "Number of clusters", y = "Dispersion")
-      #print(hola)
       if( !is.null(savePath) ){
         ggsave(savePath,plot=last_plot(),device=file_ext(savePath), limitsize = FALSE)
         cat("[FSClustering][INFO] Plot has been succesfully saved at: ",savePath,"\n",sep="")
@@ -77,33 +57,24 @@ FSClustering <- R6Class(
         warning("[FSClustering][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
         self$execute()
       }
-      
       if( !toupper(includeClass) %in% c("NONE","BEGIN","END") ){
         cat("[FSClustering][INFO] Class parameter not included. Assuming class not included\n")
         class <- "NONE"
       }else class <- toupper(includeClass)
-      
       if( missing(cluster) || ( is.numeric(cluster) && (cluster == private$all.distribution$getBestK()) ) ){
-        
         switch (class,
                 "NONE" = { final.distr <- private$best.distribution[,2] },
                 "END" =  { final.distr <- lapply(private$best.distribution[,2], function(x) {append(x,private$className)} ) },
                 "BEGIN" = { final.distr <- lapply(private$best.distribution[,2], function(x) {append(x,private$className,0)} ) }
         )
-        
         if( !missing(group) && !is.null(group) && is.numeric(group) && group <= length(final.distr))
           final.distr[[group]]
         else final.distr
-        
       }else{
         distribution <- data.frame(cluster=integer(),features=I(list()))
         aux <- unlist(private$all.distribution$getClusterDist()[private$all.distribution$getClusterDist()$k==cluster, ]$dist)
         for( i in 1:cluster )
           distribution <- rbind(distribution, data.frame(cluster=i,dist=I(list(names(aux[aux == i])))) )
-        
-        if(nrow(private$data.unbinary) > 0 )
-          distribution <- rbind( distribution, data.frame( cluster=cluster+1,
-                                                           dist=I(list(names(private$data.unbinary) )) ) )
         switch (class,
                 "NONE" = { final.distr <- distribution[,2] },
                 "END" = { final.distr <- lapply(distribution[,2], function(x) {append(x,private$className)} ) },
@@ -121,7 +92,6 @@ FSClustering <- R6Class(
         cat("[FSClustering][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
         self$execute()
       }
-      
       if( missing(subset) || is.null(subset) || !"Subset" %in% class(subset)  )
         stop("[FSClustering][ERROR] Subset parameter must be defined as 'Subset' object\n")
       
@@ -144,10 +114,18 @@ FSClustering <- R6Class(
   private = list(
     computeTable = function(corpus){
       igTest <- information.gain(as.formula(sprintf("`%s` ~.", subset.cluster$getClassName())), subset.cluster$getInstances(ignore.class = FALSE)) #OK
-      igTestVector <- igTest$attr_importance
-      names(igTestVector) <- row.names(igTest)
+      length(igTest)
+      
+      # Incluyendo features con resultado 0
+      # igTestVector <- igTest$attr_importance
+      # names(igTestVector) <- row.names(igTest)
+      
+      # Sin features con resultado 0
+      igTestVector <- igTest$attr_importance[igTest$attr_importance!=0]
+      names(igTestVector) <- row.names(igTest)[which(igTest$attr_importance != 0, arr.ind = TRUE)]
+      
       igTestVector
-       },
+    },
     
     computeTest = function(corpus){
       clusteredData <- ClusterData$new()
@@ -158,15 +136,13 @@ FSClustering <- R6Class(
       for(k in totalGroups) {
         clustering <- rep(c(1:k,(k:1)),fs.size/(2*k)+1)[1:fs.size]
         cluster <- integer(length = length(fs.table))
-        names(cluster) <- names(corpus)
+        names(cluster) <- names(fs.table)
         sumGroup <- vector(k,mode="list")
-        
         for (i in 1:k){ 
           sumGroup[[i]] <- fs.table[fs.index[clustering==i]]
           cluster[fs.index[clustering==i]] <- i
         }
         groupMeasure <- lapply(sumGroup,sum)
-        
         deltha <- max(unlist(groupMeasure)) - min(unlist(groupMeasure))
         clusteredData$addNewCluster(k,deltha,cluster)
       }
@@ -185,7 +161,7 @@ FSClustering <- R6Class(
       names(corpus[,!sapply(corpus, function(c){
         length(unique(c)) >= 2 }) ])
     },
-
+    
     dataset = NULL,
     class = NULL,
     className = NULL,

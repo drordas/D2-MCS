@@ -45,3 +45,7 @@ library(car)
 
 #Required for strcmpi()
 library(pracma)
+
+#Required for information.gain()
+library("rJava")
+library("FSelector")
