@@ -1,9 +1,4 @@
-library("R6")
-library("mltools")
-library("caret")
-library("ModelMetrics")
 source("SummaryFunction.R")
-
 UseProbability <- R6Class(
   classname = "UseProbability",
   inherit = SummaryFunction,

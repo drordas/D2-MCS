@@ -1,5 +1,4 @@
 library("R6")
-library("tictoc")
 ClusterDistribution <- R6Class(
   classname = "ClusterDistribution",
   portable = TRUE,                   

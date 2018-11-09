@@ -1,4 +1,4 @@
-packages.list <- c("R6","caret","tictoc","mltools","here","parallel","XML","RWeka","devtools","ggrepel")
+packages.list <- c("R6","plyr","dplyr","caret","tictoc","mltools","here","parallel","RWeka","devtools","ggrepel","ModelMetrics","tools","tictoc")
 
 cat("[PkgChecker][INFO] Package Manager\n")
 
@@ -15,8 +15,8 @@ loadPackages <- function(packages){
   if(length(unload.packages) > 0){ 
     cat("[PkgChecker][INFO] ",length(unload.packages)," required packages not loaded\n Loading packages ...\n", sep="")
     for( lib in unload.packages ){
-      cat("[PkgChecker][INFO] ",lib,"\n", sep="")
-      library(lib, verbose = FALSE, quietly = FALSE, character.only = TRUE) 
+      cat("[PkgChecker][INFO] Loading: '",lib,"'\n", sep="")
+      suppressWarnings(suppressMessages(suppressPackageStartupMessages(library(lib, verbose = FALSE, quietly = FALSE, warn.conflicts = FALSE,character.only = TRUE) )))
     }
   }else cat("[PkgChecker][INFO] All packages are loaded\n")
 }

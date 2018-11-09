@@ -1,5 +1,4 @@
 library("R6")
-library("tictoc")
 Model <- R6Class(
   classname = "Model",
   portable = TRUE,                   
@@ -26,11 +25,10 @@ Model <- R6Class(
         cat("[Model][INFO] Save directory not exist. Creating...\n")
         dir.create(dir,showWarnings = FALSE,recursive = TRUE)
       }
-      if(!is.null(pkgName) && !is.na(pkgName) && !pkgName %in% "NA" ){
-        private$loadPackages(pkgName)
-        private$packages <- pkgName
-      }
       
+      #if(!is.null(pkgName) && !is.na(pkgName) && !pkgName %in% "NA" ) 
+      
+      private$packages <- pkgName
       private$dir <- dir
       private$metric <- metric
       private$method <- method
@@ -48,20 +46,20 @@ Model <- R6Class(
       }
 
       if( file.exists( private$RDSpath ) ){
-        cat("[",private$method,"][INFO] '",private$family,"' '",private$description,"' already exists. Loading!\n", sep="")
+        #cat("[",private$method,"][INFO] '",private$family,"' '",private$description,"' already exists. Loading!\n", sep="")
         private$modelInfo <- readRDS( private$RDSpath )
         private$isTrained <- TRUE
       }else{
         private$modelInfo <- ModelData$new( dir= dir, method = method, family = family, 
                                             description = description, metric = metric )
         private$isTrained <- FALSE
-        cat("[",private$method,"][INFO] '",family,"' '",description,"' has been succesfully created !\n", sep="")
+        cat("[",private$method,"][INFO] '",family,"' '",description,"' loaded!\n", sep="")
       }
     },
     getDir = function(){
       private$dir
     },
-    exists = function(){
+    trained = function(){
       private$isTrained
     },
     getPath = function(){
@@ -85,7 +83,7 @@ Model <- R6Class(
     train = function(dataset=NULL, fitting = NULL){
       data <- dataset
       
-      if( missing(dataset) || is.null(dataset) || ( !"Subset" %in% class(dataset) && !is.data.frame(dataset) )  )
+      if( ( !"Subset" %in% class(dataset) && !is.data.frame(dataset) )  )
         stop("[",private$method,"][ERROR] Dataset not defined, null, or invalid type (data.frame of Subset object)\n")
 
       if( !class(fitting) %in% c("recipe", "formula") )
@@ -95,15 +93,35 @@ Model <- R6Class(
         data <- dataset$getInstances()
       
       if( !private$isTrained ){
+        
+        if(!is.null(private$packages) && !is.na(private$packages) && !private$packages %in% "NA" ){
+          cat("[",private$method,"][INFO] Loading required packages...\n", sep="")
+          private$loadPackages(private$packages)
+        }
+        
         cat("[",private$method,"][INFO] Performing model training and hyperparameter optimization stage...\n", sep="")
         tic(quiet = TRUE)
-        trainedModel <- caret::train(fitting,data=data, method=private$method,
-                                      trControl=private$trainFunction$getTrFunction(), metric=private$metric)
+        
+        repeat{
+          trainedModel <- tryCatch({caret::train(fitting,data=data, method=private$method,
+                                           trControl=private$trainFunction$getTrFunction(), metric=private$metric)
+                                    }, error = function(e) {
+                                      cat("[",private$method,"][INFO] Some error/s happened while training model\n", sep="")
+                                      return(NULL)
+                                    })
+          if( !is.null(trainedModel) ) {break}
+          cat("[",private$method,"][INFO] Trying to retrain model\n", sep="")
+        }
         time <- toc(quiet=TRUE)
         private$modelInfo$setTrainInfo(trainedModel, (time$toc - time$tic) )
         private$isTrained <- TRUE
-        #private$performance <- private$modelInfo$getBestModelPerformance(private$metric)
         cat("[",private$method,"][INFO] Finished [",(time$toc - time$tic),"s]\n", sep="")
+        
+        if(!is.null(private$packages) && !is.na(private$packages) && !private$packages %in% "NA" ){
+          cat("[",private$method,"][INFO] Detaching used packages...\n", sep="")
+          private$unloadPackages(private$packages)
+        }
+        
       }else cat("[",private$method,"][WARNING] Retraining not implemented yet. Avoid execution\n", sep="")
     },
     getTrainedModel = function(){
@@ -134,17 +152,16 @@ Model <- R6Class(
             cat("[",private$method,"][INFO] Model '",private$method,"' already exists. Replacing previous model\n", sep="")
             saveRDS (object = private$modelInfo, file=private$RDSpath )
             cat("[",private$method,"][INFO] Model '",private$method,"' succesfully saved at:", private$RDSpath,"\n", sep="")
-            #write.table(self$getModelConfiguration(),file = private$CSVpath, append = FALSE)
           }else cat("[",private$method,"][INFO] Model '",private$method,"' already exists. Model not saved\n", sep="")
         }else{
           saveRDS (object = private$modelInfo, file=private$RDSpath )
           cat("[",private$method,"][INFO] Model '",private$method,"' succesfully saved at: ", private$RDSpath,"\n", sep="")
-          #write.table(self$getModelConfiguration(),file = private$CSVpath, append = FALSE)
         }
       }
     },
     removeModel = function(){
       if(file.exists( private$RDSpath ) )
+        cat("path_to_remove: =",private$RDSpath,"\n")
         file.remove(private$RDSpath)
     }
   ),
@@ -153,15 +170,21 @@ Model <- R6Class(
       new.packages <- pkgName[!(pkgName %in% installed.packages()[,"Package"])]
       if(length(new.packages)){ 
         cat("[Model][INFO]",length(new.packages),"packages needed to execute aplication\n Installing packages ...")
-        suppressMessages(install.packages(new.packages,repos="https://ftp.cixug.es/CRAN/"))
+        suppressMessages(install.packages(new.packages,repos="https://ftp.cixug.es/CRAN/", dependencies = TRUE))
       }
-      lapply(pkgName,require,character.only=TRUE)
+      lapply(pkgName, function(pkg){
+        if (! pkg %in% loaded_packages() )
+          library(pkg,character.only = TRUE,warn.conflicts = FALSE,quietly = TRUE)
+      })
     },
-    saveSummary = function (){
-      path <- paste0(private$path,"/",private$metric,"_summary.txt")
-      if (file.exists(path)){
-        
-      }
+    unloadPackages = function(pkgName){
+      loaded.dlls <- getLoadedDLLs()
+      lapply(pkgName, function(pkg){
+        if( pkg %in% loaded_packages()$package ){
+          pck.name <- paste0("package:",pkg)
+          try(detach(pck.name, character.only = TRUE), silent = TRUE)
+        }
+      })
     },
     dir = NULL,
     packages = NULL,

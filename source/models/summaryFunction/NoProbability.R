@@ -9,7 +9,6 @@ NoProbability <- R6Class(
   portable = TRUE,
   public = list(
     initialize = function(){
-      #stop("[ERROR][TwoClassSummaryProb] Class is static. Use 'execute method'\n")
       super$initialize(c("Kappa","Accuracy","TCR_9", "MCC", "PPV"))
     },
     execute = function(data, lev = NULL, model = NULL){

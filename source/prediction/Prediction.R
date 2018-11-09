@@ -3,18 +3,15 @@ Prediction <- R6Class(
   classname = "Prediction",
   portable = TRUE,                   
   public = list(
-    initialize = function(model){#, pred.type){
-      if( !"Model" %in% class(model) )
+    initialize = function(model){
+      if( !"ModelData" %in% class(model) )
         stop("[Prediction][ERROR] Parameter model must be defined as 'Model' Object\n")
-      
-      #if(is.null(pred.type) || !pred.type %in% c("response","raw", "prob") )
-      #  stop("[Prediction][ERROR] Parameter pred.type must be defined as 'raw' of 'prob' value\n")
       
       private$class.results <- NULL
       private$prob.results <- NULL
-      private$model.name <- model$getName()
-      private$model.performance <- model$getPerformance()
-      private$model.trained <- model$getTrainedModel()
+      private$model.name <- model$getModelMethod()
+      private$model.performance <- model$getBestModelPerformance()
+      private$model.trained <- model$getTrainModel()
     },
     execute = function( pred.values ){
       if( !missing(pred.values) && !is.null(pred.values) ){

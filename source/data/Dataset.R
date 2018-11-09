@@ -3,18 +3,21 @@ Dataset <- R6Class(
   classname = "Dataset",
   portable = TRUE,
   public = list(
-    initialize = function(filepath, header=TRUE, sep=",", skip=0, classIndex=NULL){
-      if( is.null(classIndex) ) stop("Class Index not defined\n")
+    initialize = function(filepath, header=TRUE, sep=",", skip=0, normalize.names = FALSE, classIndex=NULL){
+      if( is.null(classIndex) ) stop("[Dataset][ERROR] Class Index not defined\n")
       if( file.exists(filepath) ){
         if(header){
           private$corpus <- read.csv(filepath, header=header, skip=(skip+1), sep=sep)
           self$setClassIndex(classIndex)
-          self$setColumNames(unlist(strsplit(scan(file=filepath,nlines=1, what="character"),split=sep)))
+          columNames <- unlist(strsplit(scan(file=filepath,nlines=1, what="character"),split=sep))
+          if(isTRUE(normalize.names))
+            self$setColumNames(sprintf("`%s`",make.names(columNames, unique = TRUE) ) ) 
+          else self$setColumNames(columNames)
         }else{
           private$corpus <- read.csv(filepath, header=header, skip=skip, sep=sep)
           self$setClassIndex(classIndex)
         }
-      }else stop("Cannot initialize corpus\n")
+      }else stop("[Dataset][ERROR] Cannot initialize corpus\n")
     },
     setColumNames = function(names){
       names(private$corpus) <- names
@@ -74,7 +77,7 @@ Dataset <- R6Class(
     partitions = NULL
   )
 )
-library("caret")
+
 Partitioner <- R6Class(
   classname = "Partitioner",
   portable = TRUE,
@@ -134,7 +137,7 @@ Subset <- R6Class(
   public = list(
     initialize = function(dataset=NULL,classIndex=NULL){
       if( is.null(dataset) || is.null(classIndex) ) 
-        stop("[SUBSET][ERROR] Dataset not defined or empty\n")
+        stop("[Subset][ERROR] Dataset not defined or empty\n")
       private$data <- dataset
       private$classIndex <- classIndex
       private$instances <- c(1:nrow(private$data))
@@ -166,7 +169,14 @@ Subset <- R6Class(
     },
     getNrow = function(){
       nrow(private$data)
-    }
+    }#,
+    # save = function(path){
+    #   if(missing(path) || is.null(path)){
+    #     out <- as.environment(as.list.environment(self))
+    #     classs(out) <- c("Subset","R6")
+    #     saveRDS(out,path)
+    #   }cat("[Subset][ERROR] Save path not specified\n")
+    # }
   ),
   private = list(
     data = NULL,

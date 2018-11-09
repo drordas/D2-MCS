@@ -1,5 +1,4 @@
 library("R6")
-source("ModelFit.R")
 DefaultModelFit <- R6Class(
   classname = "DefaultModelFit",
   inherit = ModelFit,
@@ -17,8 +16,8 @@ DefaultModelFit <- R6Class(
     createRecipe = function(){
       recipe <- recipe( self$createFormula(simplify=TRUE), data=private$instances )
       recipe %>%
-        step_zv(all_predictors()) %>% step_nzv(all_predictors()) %>% step_corr(all_predictors()) %>% 
-        step_center(all_predictors()) %>% step_scale(all_predictors())
+        step_zv(all_predictors()) %>% step_nzv(all_predictors()) %>% 
+        step_corr(all_predictors()) %>% step_center(all_predictors()) %>% step_scale(all_predictors())
     }
   )
 )

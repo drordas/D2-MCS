@@ -15,10 +15,19 @@ ClassMajorityVoting <- R6Class(
     execute = function(predictions){
       if(!"PredictionList" %in% class(predictions))
         stop("[",super$getName(),"][ERROR] Unsupported format. Parameter should be a PredictionList object\n")
-      
+      cat("=========\n")
       class.predictions <- predictions$getClassPredictions()
+      print(class.predictions)
+      cat("=========\n")
       summary <- table(sapply(class.predictions,class))
-      class.values <- names(table(sapply(test1, unique)))
+      cat("=========\n")
+      print(summary)
+      cat("=========\n")
+      class.values <- names(table(sapply(class.predictions, unique)))
+      cat("=========\n")
+      print(class.values)
+      cat("=========\n")
+      
       
       if(!private$majority.class %in% class.values)
         stop("[",super$getName(),"][ERROR] Majority class not found in predicted values (",paste0(class.values,collapse = ","),")\n")
@@ -28,9 +37,6 @@ ClassMajorityVoting <- R6Class(
       
       if (!"factor" %in% names(summary))
         stop("[",super$getName(),"][ERROR] Prediction values must be factor. Aborting\n")
-      
-      #if( !super$getPrevalenceClass() %in% unique(unlist(lapply(class.predictions,levels))) )
-      #  stop("[",super$getName(),"][ERROR] Majority class not found\n")
       
       cat("[",super$getName(),"][INFO] Voting strategy selected: '", super$getName() ,"'\n", sep="")
       

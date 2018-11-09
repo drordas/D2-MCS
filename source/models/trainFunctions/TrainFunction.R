@@ -12,7 +12,7 @@ TrainFunction <- R6Class(
       private$allowParallel <- allowParallel
       private$verboseIter <- verboseIter
     },
-    create = function(summaryFunction, searchMethod = "grid"){
+    create = function(summaryFunction, search.method = "grid", class.probs){
       stop("[TrainFunction][ERROR] create is abstract. Must be implemented in inherited class\n")
     },
     getResamplingMethod = function(){
@@ -45,7 +45,7 @@ TrainFunction <- R6Class(
     setSummaryFunction = function (summaryFunction){
       stop("[TrainFuntion][ERROR] setSummaryFunction is abstract. Must be implemented in inherited class\n")
     },
-    setClassProbs = function(classProbs){
+    setClassProbs = function(class.probs){
       stop("[TrainFuntion][ERROR] setClassProbs is abstract. Must be implemented in inherited class\n")
     }
   ),

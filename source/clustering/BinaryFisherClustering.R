@@ -1,6 +1,4 @@
 library("R6")
-library("caret")
-library("tools")
 source("Cluster.R")
 BinaryFisherClustering <- R6Class(
   classname = "BinaryFisherClustering",

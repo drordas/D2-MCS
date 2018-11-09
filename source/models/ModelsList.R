@@ -12,7 +12,7 @@ ModelsList <- R6Class(
         if( length(private$listOfModels[[position]]) == 0 || 
             private$listOfModels[[position]]$getPerformance() < entry$getPerformance() )
           private$listOfModels[[position]] <- entry$clone()
-      }else stop("[ModelsList][WARNING] Position exceeds length of list or entry element is invalid. Aborting execution")
+      }
     },
     getAt = function(position){
       if ( position > 0 && position <= length(private$listOfModels) ){

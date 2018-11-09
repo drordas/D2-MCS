@@ -4,17 +4,17 @@ ClassWeightedVoting <- R6Class(
   portable = TRUE,
   inherit = VotingScheme,
   public = list(
-    initialize = function(majority.class, class.tie = "first", weights){ 
-      if( is.null(majority.class) || missing(majority.class) )
-        stop("[",super$getName(),"][ERRROR] Majority class parameter should be defined")
+    initialize = function(majority.class, class.tie = "first", weights = NULL){ 
+      #if( is.null(majority.class) || missing(majority.class) )
+      #  stop("[",super$getName(),"][ERRROR] Majority class parameter should be defined")
       
       private$majority.class <- majority.class
       super$initialize(private$voting.name) 
       private$class.tie <- class.tie
       
-      if ( !missing(weights) && !is.null(weights) )
-        private$weigths <- weigths
-      else private$weigths <- NULL
+      #if ( !missing(weights) && !is.null(weights) )
+      private$weigths <- weigths
+      #else private$weigths <- NULL
     },
     execute = function(predictions){
       if( !"PredictionList" %in% class(predictions) )
@@ -24,7 +24,7 @@ ClassWeightedVoting <- R6Class(
       summary <- table(sapply(class.predictions,class))
       
       if ( is.null(private$weigths) || length(private$weigths) != ncol(class.predictions) ){
-        cat("[",super$getName(),"][WARNING] Weight values are missing/incorrect. Assuming default model performance values\n", sep="")
+        cat("[",super$getName(),"][INFO] Weight values are missing/incorrect. Assuming default model performance values\n", sep="")
         private$weigths <- predictions$getModelPerformances()
       }
       
@@ -33,8 +33,6 @@ ClassWeightedVoting <- R6Class(
       
       if ( !"factor" %in% names(summary) )
         stop("[",super$getName(),"][ERROR] Prediction values must be factor. Aborting\n")
-      
-      cat("[",super$getName(),"][INFO] Voting strategy selected: '", super$getName() ,"'\n", sep="")
       
       voting.result <- data.frame(character(), stringsAsFactors = FALSE)
       

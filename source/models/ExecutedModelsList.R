@@ -5,6 +5,7 @@ ExecutedModelsList <- R6Class(
   public = list(
     initialize = function(size = 0){
       private$listOfModels <- vector( mode="list", length = size )
+      private$bestModel <- NULL
       for(i in 1:size) private$listOfModels[[i]] <- ModelInfo$new()
     },
     insertModeltAt = function(position, model){
@@ -22,13 +23,20 @@ ExecutedModelsList <- R6Class(
         models <- read.csv(file=path, header=TRUE, stringsAsFactors = FALSE, sep=",")
         if ( position > 0 && position <= length(private$listOfModels) ){
           if(ncol(models) == 3){
-            for(i in 1:nrow(models) )
+            for(i in 1:nrow(models) ){
               private$listOfModels[[position]]$insert(models[i,1], models[i,2], models[i,3] )
+            }
           }else cat("[ExecutedModelsList][WARNING] Error loading models from file '",path,"'\n", sep="")
         }else stop("[ExecutedModelsList][WARNING] Position exceeds length of list. Aborting execution")
-      }#else cat("[ExecutedModelsList][WARNING] Error path '",path,"' does not exists\n", sep="")
+      }
     },
-    exists = function(position, modelName){
+    getBestModel = function(position){
+      if ( position > 0 && position <= length(private$listOfModels) ){
+          private$listOfModels[[position]]$getAll()[which.max(private$listOfModels[[position]]$getPerformances()),]
+        
+      }else stop("[ExecutedModelsList][WARNING] Position exceeds length of list. Aborting execution")
+    },
+    isTrained = function(position, modelName){
       if( position > 0 && position <= length(private$listOfModels) ){
         ifelse( "ModelInfo" %in% class(private$listOfModels[[position]]) && 
                  modelName %in% private$listOfModels[[position]]$getNames(), TRUE, FALSE )
@@ -39,8 +47,14 @@ ExecutedModelsList <- R6Class(
         private$listOfModels[[position]]
       }else stop("[ExecutedModelsList][WARNING] Position exceeds length of list. Aborting...")
     },
-    size = function(){
-      length(private$listOfModels)
+    size = function(position){
+      if(missing(position))
+        length(private$listOfModels)
+      else{
+        if ( position > 0 && position <= length(private$listOfModels) ){
+          private$listOfModels[[position]]$nrow()
+        }else stop("[ExecutedModelsList][WARNING] Position exceeds length of list. Aborting...")
+      }
     },
     removeAt = function(position){
       if ( position > 0 && position <= length(private$listOfModels) ){
@@ -52,6 +66,7 @@ ExecutedModelsList <- R6Class(
     }
   ),
   private = list(
-    listOfModels = NULL
+    listOfModels = NULL,
+    bestModel = NULL
   )
 )

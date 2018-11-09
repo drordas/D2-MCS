@@ -26,26 +26,21 @@ D2MCS <- R6Class(
         xdr <- FALSE
       }else xdr <- serialize
       
-      if (missing(trainFunction) || is.null(trainFunction) || !"TrainFunction" %in% class(trainFunction) )
-        stop("[D2MCS][ERROR] TrainFunction not defined or incorrect type (should be inherit from TrainFunction abstract class)\n")
+      if (missing(trainFunction) || is.null(trainFunction) )
+        stop("[D2MCS][ERROR] TrainFunction not defined\n")
       else private$trainFunction <- trainFunction
       
-      #private$loadModules()
-      private$availableModels <- private$loadAvailableModels()
+      private$loadModules()
       private$path <- file.path(getwd(),path)
       dir.create( private$path, recursive = TRUE, showWarnings = FALSE )
       
-      #private$cluster <- makeCluster(cores, type=socket, outfile=outfile, useXDR=xdr) #TODO PRIVATE VARIABLE CORE/SOCKET,OUTFILE useXDR AND CREATE/STOP CLUSTER IN TRAIN.
-      private$cluster.conf <- list( cores=cores, socket=socket, outfile=outfile, xdr=xdr )
-      private$cluster.obj <- NULL
+      private$cluster <- makeCluster(cores, type=socket, outfile=outfile, useXDR=xdr)
       private$executedModels <- NULL
       private$prediction.voted <- NULL
       private$performance <- NULL
       private$models.weights <- c()
-      private$real.values <- NULL
     },
-    train = function( cluster.dist = NULL, num.clusters = NULL, ex.classifiers = c(), 
-                      ig.classifiers =c(), metric = NULL, saveAllModels = FALSE ){
+    train = function( cluster.dist = NULL, num.clusters = NULL, classifiers = c(), metric = NULL, saveAllModels = FALSE ){
       if(missing(cluster.dist) || is.null(cluster.dist) || !"ClusterDistribution" %in% class(cluster.dist) )
         stop("[D2MCS][ERROR] Subset must be of type 'Cluster'\n")
     
@@ -59,102 +54,68 @@ D2MCS <- R6Class(
         }else num.clusters <- c(1:num.clusters)
       }
 
-      if(missing(ex.classifiers) || is.null(ex.classifiers) || length(ex.classifiers) == 0){
-        usedModels <- private$availableModels$name
-      }else usedModels <- ex.classifiers
-      
-      if(!missing(ig.classifiers) && !is.null(ig.classifiers) && length(ig.classifiers) > 0){
-        cat("[D2MCS][INFO] Ignoring '",length(ig.classifiers),"' M.L models\n", sep="")
-        usedModels <- setdiff(usedModels,ig.classifiers)
-        cat("[D2MCS][INFO] Still '",length(usedModels),"' M.L models available\n", sep="")
-      }
-      
-      cat("[D2MCS][INFO] Making parallel Socket Cluster with ",private$cluster.conf$cores," cores\n",sep="")
-      private$cluster.obj <- makeCluster(private$cluster.conf$cores, type= private$cluster.conf$socket, outfile= private$cluster.conf$outfile, useXDR=private$cluster.conf$xdr)
-      
-      private$bestModels <- ModelsList$new( size = length(num.clusters) )
-      private$executedModels <- ExecutedModelsList$new( size = length(num.clusters) )
+      if(missing(classifiers) || is.null(classifiers) || length(classifiers) == 0){
+        cat("[D2MCS][INFO] Classification models not defined. Executing all available classifiers\n")
+        usedModels <- private$availableModels$METHOD
+      }else usedModels <- classifiers
+
+      private$bestModels <- ModelsList$new(size = length(num.clusters) )
+      private$executedModels <- ExecutedModelsList$new(size = length(num.clusters))
       private$metric <- metric
-      used.models <- private$availableModels[ (private$availableModels$name %in% usedModels), ]
-        
+      
       for (i in num.clusters ){
         cat("[D2MCS][INFO] ---------------------------------------\n",sep="")
         cat("[D2MCS][INFO] Training models for cluster '",i,"' of '", max(num.clusters),"'\n",sep="")
         cat("[D2MCS][INFO] ---------------------------------------\n",sep="")
         model.subset <- cluster.dist$getAt(i)
         model.fitClass <- DefaultModelFit$new(model.subset)
+        model.savePath <- file.path(private$path,metric,paste0("C[",i,"-",cluster.dist$getNumClusters(),"]") )
 
-        model.savePath <- file.path(paste0(private$path,private$metric),paste0("C[",i,"-",cluster.dist$getNumClusters(),"]") )
-        private$executedModels$loadFrom(file.path(model.savePath,".executed"),i)
         private$bestClusterModel <- NULL
-
-        if(private$executedModels$size(i) > 0 ){
-          bestModel <- private$executedModels$getBestModel(i)
-          
-          private$bestClusterModel <- ModelEntry$new( name= bestModel$method, object= NULL,
-                                                      performance= bestModel$performance,
-                                                      path= file.path(model.savePath,paste0(bestModel$method,".rds")) )
-        }else private$bestClusterModel <- ModelEntry$new( name= "NULL", performance= 0.0 )
+        private$executedModels$loadFrom(paste0(model.savePath,"/.executed"),i)
         
-        if(abs(mean(cor(model.subset$getInstances(ignore.class = TRUE),as.numeric(model.subset$getClass())), na.rm=TRUE) ) < 0.3 ){ ##CORRELATION
-          cat("[D2MCS][INFO] High-Correlated Data (< 0.3). Ignoring Linear-based and Discriminant-based models\n", sep="")
-          remaining.models <- subset(used.models,!grepl("Linea[l|r]|Discriminant",paste(used.models$description,used.models$family,sep=" ")) )
-          cat("[D2MCS][INFO] Removing ",nrow(used.models) - nrow(remaining.models)," incompatible M.L. models\n", sep="")
-        }else remaining.models <- used.models
-        
-        num.remaining <- nrow(remaining.models)
         cluster.models <- list()
-
-        remaining.models <- remaining.models[ !(remaining.models$name %in% private$executedModels$getAt(i)$getNames()), ]
         
-        if(nrow(remaining.models) == 0){
-          private$bestModels$insertAt(i,private$bestClusterModel)
-          private$models.weights <- c( private$models.weights,private$bestClusterModel$getPerformance() )
-          if(i < max(num.clusters))
-            cat("[D2MCS][INFO] Remaining ",num.remaining," M.L. models has been already executed for cluster ",i,"/",max(num.clusters),". Executing next cluster...\n", sep="")
-          else {
-            cat("[D2MCS][INFO] Remaining ",num.remaining," M.L. models has been already executed for cluster ",i,"/",max(num.clusters),".\n", sep="")
-            cat("[D2MCS][INFO] Finish !",sep="")
-            if(!is.null(private$cluster.obj)){ stopCluster(private$cluster.obj); private$cluster.obj <- NULL }
-          }
-          next
-          
-        }else{ 
-          cat("[D2MCS][INFO] ",(num.remaining-nrow(remaining.models)),"/",num.remaining," M.L. models has been already executed for cluster ",i,"/",max(num.clusters),"\n",sep="") 
-          cat("              Executing remaining " ,nrow(remaining.models)," M.L. model(s)\n", sep="")
-        }
-        
-        apply(remaining.models, 1, function(model){
-          if( isTRUE(model$prob) )
-            private$trainFunction$create( UseProbability$new(), search.method= "random", class.probs = TRUE )
-          else private$trainFunction$create( NoProbability$new(), search.method= "random", class.probs = FALSE )
+        apply(private$availableModels, 1, function(model){
 
-          model.fit <- model.fitClass$createRecipe()
-          model.type <- Model$new( dir = model.savePath, method = model$name,
-                                   family = model$family, description = model$description,
-                                   pkgName = as.vector( unlist(model$library) ), 
-                                   trFunction = private$trainFunction, metric = metric )
-          
-          if( !private$executedModels$isTrained(i,model$name) ){
-            model.type$train(dataset = model.subset$getInstances(), fitting = model.fit )
-            if( isTRUE(saveAllModels) ) model.type$saveModel() 
-            private$executedModels$insertModeltAt(i,model.type)
+          if( model$METHOD %in% usedModels ){
+            switch (toupper(model$CONFIGURATION$probabilistic),
+                    "TRUE" = {trFunction$create(UseProbability$new(),"grid")},
+                    "FALSE" = {trFunction$create(NoProbability$new(),"grid")}
+            )
+
+            switch ( toupper(model$CONFIGURATION$fitting) ,
+                     "FORMULA" = { model.fit <- model.fitClass$createFormula() },
+                     "RECIPE" = { model.fit <- model.fitClass$createRecipe() }
+            )
+            model.type <- Model$new(dir = model.savePath, method = model$METHOD,
+                                    family = model$FAMILY, description = model$DESCRIPTION,
+                                    pkgName = as.vector( unlist(model$DEPENDENCES) ), trFunction = private$trainFunction,
+                                    metric = metric )
             
-            if( private$bestClusterModel$getPerformance() < model.type$getPerformance() ){
-              private$bestClusterModel$removeModel()
-              private$bestClusterModel <- ModelEntry$new( name= model.type$getName, object= model.type,
+            if( !private$executedModels$exists(i,model$METHOD) ){
+              model.type$train(dataset = model.subset$getInstances(), fitting = model.fit )
+              if( isTRUE(saveAllModels) ) model.type$saveModel() 
+              private$executedModels$insertModeltAt(i,model.type)
+            }else cat("[D2MCS][INFO] Model '",model$METHOD,"' has been executed previously. Ignoring...\n", sep="")
+
+            if( model.type$exists() && (is.null(private$bestClusterModel) || 
+                !"ModelEntry" %in% class(private$bestClusterModel) || 
+                private$bestClusterModel$getPerformance() < model.type$getPerformance() ) )
+            {
+              if("ModelEntry" %in% class(private$bestClusterModel)) private$bestClusterModel$removeModel()
+              private$bestClusterModel <- ModelEntry$new( name= model$METHOD, object= model.type,
                                                           performance= model.type$getPerformance(),
                                                           path= model.type$getPath() )
-              private$bestClusterModel$save()
             }
             private$executedModels$saveAt(paste0(model.savePath,"/.executed"),i)
-          }else cat("[D2MCS][INFO] Model '",model$name,"' has been previously trained\n", sep="")
-        })
+          }
+        }) ##APPLY
+        private$bestClusterModel$save()
         private$bestModels$insertAt(i,private$bestClusterModel)
         private$models.weights <- c( private$models.weights,private$bestClusterModel$getPerformance() )
-        cat("[D2MCS][INFO] Finish ! \n", sep="")
       }
-      if(!is.null(private$cluster.obj)) { stopCluster(private$cluster.obj); private$cluster.obj <- NULL }
+      #private$bestModels$saveAll()
     },
     classify = function( test.set = NULL, voting.scheme){
       if( !"Subset" %in% class(test.set)  )
@@ -169,16 +130,12 @@ D2MCS <- R6Class(
         cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
         cat("[D2MCS][INFO] Starting prediction operation\n")
         cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-        
-        if( test.set$getClassIndex() > 0 && !is.null(test.set$getClass()) )
-          private$real.values <- test.set$getClass()
-        
+
         instances <- test.set$getInstances(ignore.class = TRUE)
         prediction.cluster <- PredictionList$new( private$metric )
 
         for ( cluster in 1:private$bestModels$size() ){
-          cat("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '",private$bestModels$size(),"'\n",sep="")
-          cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+          cat("[D2MCS][INFO] Computing predictions for Cluster ",cluster,"\n",sep="")
           pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject() )
           pred$execute(instances)
           prediction.cluster$addPrediction(pred)
@@ -194,20 +151,19 @@ D2MCS <- R6Class(
         stop("[D2MCS][ERROR] Train stage should be executed first\n")
       else private$models.weights
     },
-    computeFinalPerformance = function(new.data = NULL, positive.class){
+    computeFinalPerformance = function(new.data, positive.class){
       if( is.null(private$prediction.voted) || !is.data.frame(private$prediction.voted) )
         stop("[D2MCS][ERROR] Voting scheme should be executed first to obtain predicion results\n")
       
-      if ( (missing(new.data) || is.null(new.data) || (!"Subset" %in% class(new.data) || !is.data.frame(new.data))) && 
-           !is.null(private$real.values)  )
-          real.values <- private$real.values
-      else {
-        if ("Subset" %in% class(new.data)){
-          if(new.data$getNrow() != nrow(private$prediction.voted) )
-            stop("[D2MCS][ERROR] Distinct dimension of predicted and real values\n")
-          real.values <- new.data$getClass()
-        }else real.values <- new.data
-      }
+      if (missing(new.data) || is.null(new.data) && (!"Subset" %in% class(new.data) || !is.data.frame(new.data)) ) 
+        stop("[D2MCS][ERROR] Test data missing or incorrect object type (Subset class or data.set type)\n")
+      
+      if ("Subset" %in% class(new.data)){
+        if(new.data$getNrow() != nrow(private$prediction.voted) )
+          stop("[D2MCS][ERROR] Distinct dimension of predicted and real values\n")
+        real.values <- new.data$getClass()
+      }else real.values <- new.data
+      
       pred.values <- private$prediction.voted[,ncol(private$prediction.voted)]
       
       if( !"factor" %in% class(pred.values) ) pred.values <- as.factor(pred.values)
@@ -219,16 +175,15 @@ D2MCS <- R6Class(
       if (!positive.class %in% levels(pred.values) && !positive.class %in% levels(real.values) )
         stop("[D2MCS][ERROR] Positive class values not valid (",paste0(levels(real.values),collapse = ","),")\n")
       
-      cf <- caret::confusionMatrix(pred.values,real.values, positive=positive.class, mode="everything")
+      cf <- caret::confusionMatrix(real.values,pred.values, positive=positive.class, mode="everything")
       private$performance <- PerformanceMeasures$new( cf= cf, mcc= mltools::mcc(FP= cf$table[1,2], TP = cf$table[1,1], TN = cf$table[2,2], FN = cf$table[2,1]  ) )
     },
     getFinalPerformance = function(measure){
       if(is.null(private$performance) )
         stop("[D2MCS][ERROR] Performance not computed yet. ComputeFinalPerformance method should be executed first\n")
-      private$performance$getMeasure(measure)
+      private$performance
     },
-    plotTest = function(){
-      plotPath <- file.path(paste0(private$path,"plots"),paste0("TEST_",toupper(private$metric),"_Performance.pdf"))
+    plotTestPerformance = function(){
       df <- data.frame(cluster = as.character(), name = as.character(), performance = as.numeric(), stringsAsFactors = FALSE )
       for( i in 1:private$executedModels$size() ){
         bestModel.name <- private$executedModels$getAt(i)$getNames()[which.max(private$executedModels$getAt(1)$getPerformances())]
@@ -247,15 +202,13 @@ D2MCS <- R6Class(
                    labs( color= "Achieved performance\n" ) + 
                    scale_color_manual(values = c("black","blue")) + 
                    scale_y_continuous( limits=  c(min(df$performance-0.05), 1) )
-      ggsave(filename = plotPath, plot=last_plot(),device="pdf", limitsize = FALSE)
+      ggsave(filename = file.path(getwd(),"plots",paste0("TEST_",toupper(private$metric),"_Performance.pdf")), 
+             plot=last_plot(),device="pdf", limitsize = FALSE)
     },
-    plotTrain = function(){
+    plotTrainPerformances = function(){
       if ( is.null(private$executedModels ) || private$executedModels$size() < 1 )
         cat("[D2MCS][ERROR] Models were not trained. Please run 'executeTrain' method first\n")
       else{
-        plotPath <- paste0(private$path,"plots")
-        if (!dir.exists(plotPath)) dir.create(plotPath,recursive = TRUE)
-        
         for ( i in 1:private$executedModels$size() ){
           models.cluster <- private$executedModels$getAt(i)
           summary <- data.frame( model=models.cluster$getNames(), measure= as.numeric(models.cluster$getPerformances()), 
@@ -264,8 +217,8 @@ D2MCS <- R6Class(
           max <- data.frame( x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]) )
           avg <- round(mean(summary$measure ), digits = 2)
           measure <- private$metric
-          
-          ggplot(summary, aes(model,measure, group=1)) + geom_line() + geom_point() +
+          plotPath <- here::here("plots",paste0("TRAIN_",toupper(measure),"_C[",i,"-",private$executedModels$size(),"].pdf"))
+          plot <- ggplot(summary, aes(model,measure, group=1)) + geom_line() + geom_point() +
             geom_point(aes(x,y), min, fill="transparent", color="red", shape=21, size=3,stroke=1) +
             geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='red' ) +
             geom_point(aes(x,y), max, fill="transparent", color="blue", shape=21, size=3,stroke=1) +
@@ -275,9 +228,9 @@ D2MCS <- R6Class(
                  title = paste0("Performance benchmarking plot for cluster=",i)) +
             theme (axis.text.x = element_text(angle = 75, hjust = 1),
                    plot.title = element_text(hjust = 0.5))
-          save.path <- file.path(plotPath,paste0("TRAIN_",toupper(measure),"_C[",i,"-",private$executedModels$size(),"].pdf") )
-          cat("[D2MCS][INFO] Plot saved at: '",save.path,"'\n", sep="")
-          ggsave(filename = save.path,device="pdf")
+          plot
+          cat("[D2MCS][INFO] Plot saved at: '",plotPath,"'\n")
+          ggsave(filename = plotPath, plot=last_plot(),device=file_ext(plotPath), limitsize = FALSE)
         }
       }
     },
@@ -295,9 +248,6 @@ D2MCS <- R6Class(
           "all" = { private$prediction.voted }
         )
       }
-    },
-    getAvailableModels = function(){
-      private$availableModels[,c(1,2)]
     },
     savePredictions = function(option = "all", filename){
       if(missing(filename) || is.null(filename) )
@@ -326,26 +276,34 @@ D2MCS <- R6Class(
     }
   ),
   private = list(
-    loadAvailableModels = function(){
-      model.list <- getModelInfo()
-      model.names <- names(model.list)
+    loadModules = function(){
+      xml <- xmlInternalTreeParse("config/models.xml", isSchema = FALSE, isHTML = FALSE)
+      xsd <- xmlParse("config/models.xsd", isSchema = TRUE)
+      if( xmlSchemaValidate(xsd,xml)$status == 0 ){
+        cat("[D2MCS][INFO] XML format of 'config/models.xml' matches XSD schema. Loading classifiers\n", sep="")
+      }else stop("[D2MCS][INFO] XML format of 'config/models.xml' does not match XSD schema. Aborting execution\n")
       
-      models <- do.call(rbind, apply( t(model.names),2, function(name, modelList) { 
-        if( !name %in% c("null") && 
-            modelList[[name]]$type %in% "Classification" ){ 
-          data.frame( name=name,description=modelList[[name]]$label, 
-                      family=base::trimws(modelList[[name]]$tags[1]), library=I(list(modelList[[name]]$library)),
-                      prob=(!is.null(modelList[[name]]$prob) && length(grep("response",deparse(modelList[[name]]$prob))) == 0 ), stringsAsFactors=FALSE )
-        } 
-      }, modelList=model.list ) )
-      
-      cat("[D2MCS][INFO] ",nrow(models)," classifiers has been succesfully loaded\n", sep="")
-      models <- with(models,models[order(models$family,models$name),])
-      models
+      private$availableModels <- do.call(rbind,xpathApply(xml, "/methods/method", function(node) {
+        model <- xmlValue(node[["name"]])
+        description <- xmlValue(node[["description"]])
+        family <- xmlValue(node[["family"]])
+        if(is.null(description)) description <- NA
+        if(is.null(family)) family <- NA
+        
+        if( is.null(node[["dependences"]]) ) 
+          data.frame("METHOD" = model, "DESCRIPTION" = description, "FAMILY"=family,
+                     "DEPENDENCES" = NA, "CONFIGURATION"=I(list(xmlToList(node[["configuration"]]))), stringsAsFactors = FALSE)
+        else data.frame("METHOD" = model, "DESCRIPTION" = description, "FAMILY"=family,
+                        "DEPENDENCES" = I(list(xmlToList(node[["dependences"]]))), 
+                        "CONFIGURATION" = I(list(xmlToList(node[["configuration"]]))) ,stringsAsFactors = FALSE)
+      }) )
+      cat("[D2MCS][INFO] ",nrow(private$availableModels)," classifiers has been succesfully loaded\n", sep="")
+      private$availableModels[order(private$availableModels$FAMILY),]
     },
-    cluster.conf = NULL,
-    cluster.obj = NULL,
+    cluster = NULL,
     availableModels = NULL,
+    modelFormula = NULL,
+    modelRecipe = NULL,
     trainFunction = NULL,
     path = NULL,
     bestClusterModel = NULL,
@@ -354,7 +312,6 @@ D2MCS <- R6Class(
     metric = NULL,
     bestModels = NULL,
     performance = NULL,
-    models.weights = NULL,
-    real.values = NULL
+    models.weights = NULL
   )
 )
