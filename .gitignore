@@ -18,3 +18,7 @@ vignettes/*.pdf
 datasets/clustering\.rds
 
 *.rds
+
+\.DS_Store
+
+\.RData
