@@ -6,7 +6,7 @@ FSClustering <- R6Class(
   portable = TRUE,
   inherit = Cluster,
   public = list(
-    initialize = function(dataset, maxClusters = 25){
+    initialize = function(dataset, maxClusters = 50){
       if (class(dataset)[1] != "Subset" || class(dataset)[2]!= "R6" )
         stop("[CLUSTER][Error] Input corpus should be R6 Subset type\n")
       super$initialize( maxClusters )

@@ -5,9 +5,10 @@ MultiTypeClustering <- R6Class(
   portable = TRUE,
   inherit = Cluster,
   public = list(
-    initialize = function(dataset, maxClusters = 25){
-      if (class(dataset)[1] != "Subset" || class(dataset)[2]!= "R6" )
-        stop("[CLUSTER][Error] Input corpus should be R6 Subset type\n")
+    initialize = function(dataset, maxClusters = 50){
+      if (!"Subset" %in% class(dataset) )
+        stop("[CLUSTER][ERROR] Dataset must be a Subset type\n")
+      
       super$initialize( maxClusters )
       private$data.unbinary <- NULL
       
@@ -18,36 +19,47 @@ MultiTypeClustering <- R6Class(
       private$best.distribution <- NULL
       
       private$class <- dataset$getClass()
+      
+      private$class.values <- names(table(private$class)) #IMPROVED REMOVE WHILE LOOP.
+      
+      if(length(private$class.values) != 2)
+        stop("[MultiTypeClustering][ERROR] Method only valid for binary class (",length(private$class.values),">2)\n")
+      
       private$className <- dataset$getClassName()
       private$dataset <- dataset$getInstances(ignore.class = TRUE)
     },
-    
-    
     execute = function(positive.class, method){
-      if(missing(positive.class))
-        stop("[MultiTypeClustering][ERROR] positive.class parameter must be defined\n")
-      if(missing(method))
-        stop("[MultiTypeClustering][ERROR] method parameter must be defined\n")
+      if(missing(positive.class) || !positive.class %in% private$class.values)
+        stop("[MultiTypeClustering][ERROR] Positive class value does not exists\n")
+      
+      if(missing(method) || !tolower(method) %in% c("pearson","kendall"))
+        stop("[MultiTypeClustering][ERROR] Method parameter undefined or invalid (should be kendall or pearson)\n")
+      
       binaryIndex <- sapply( private$dataset, function(e){
         ( super$isBinary(e) || length( unique(e) ) == 2) 
       })
+      
       private$positive.class <- positive.class
-      private$method <- method
-      i <- 1
-      while(strcmpi(toString(private$class[i]), private$positive.class)){
-        i <- i+1
-      }
-      private$negative.class <- toString(private$class[i])
-      if( dim(private$dataset[,!binaryIndex])[2] > 0 ){
+      private$negative.class <- private$class.values[which(!private$class.values %in% positive.class)]
+      private$method <- tolower(method)
+      
+      cat("=================\n")
+      cat("Positive class: ",private$positive.class,"\n")
+      cat("Negative class: ",private$negative.class,"\n")
+      cat("Method type: ",private$method,"\n")
+      
+      if( dim(private$dataset[,!binaryIndex])[2] > 0 )
         private$data.unbinary <- private$removeUnnecesary(private$dataset[,!binaryIndex])
-      }
+      
       onlyBinary <- private$dataset[,binaryIndex]
       private$fisher.all.distribution <- private$computeFisherTest(onlyBinary)
       private$fisher.best.distribution <- data.frame(cluster=integer(),features=I(list()))
       aux <- unlist(private$fisher.all.distribution$getClusterDist()[private$fisher.all.distribution$getClusterDist()$k==private$fisher.all.distribution$getBestK(), ]$dist)
-      for(i in 1:private$fisher.all.distribution$getBestK() ){
+      
+      for(i in 1:private$fisher.all.distribution$getBestK() )
         private$fisher.best.distribution <- rbind(private$fisher.best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))))
-      }
+      
+      
       if(nrow(private$data.unbinary) > 0 ){
         private$cor.all.distribution <- private$computeCorrelationTest(private$data.unbinary)
         
@@ -65,7 +77,7 @@ MultiTypeClustering <- R6Class(
     },
     
     
-    plot = function(savePath = NULL){
+    plot = function(dir.path = NULL, file.name = NULL){
       #Fisher Plot
       summary <- data.frame(k=private$fisher.all.distribution$getClusterDist()[,1],
                             dispersion=private$fisher.all.distribution$getClusterDist()[,2],
@@ -79,7 +91,8 @@ MultiTypeClustering <- R6Class(
         geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) +
         scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) +
         scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) +
-        labs(title = "Binary Data", x = "Number of clusters", y = "Dispersion")
+        labs(title = "Binary Data", x = "Number of clusters", y = "Dispersion") + 
+        theme_light()
       
       #Cor Plot
       switch (private$method,
@@ -93,25 +106,35 @@ MultiTypeClustering <- R6Class(
                   geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) + 
                   geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='blue' ) +
                   geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) + 
-                  #geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) + 
                   geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=1.45, color='red' ) + 
                   scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) + 
                   scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
-                  labs(title = "Unbinary Data", x = "Number of clusters", y = "Dispersion")
+                  labs(title = "Unbinary Data", x = "Number of clusters", y = "Dispersion") + 
+                  theme_light()
               },
               "kendall" = { 
                 df <- data.frame(interval=c(private$positive.class, private$negative.class),
-                                 value=c(private$meanPositiveTau, private$meanNegativeTau))
+                                 value=round(c(private$meanPositiveTau, private$meanNegativeTau),3))
+                
                 CorPlot<-ggplot(data=df, aes(x=interval, y=value)) +
-                  geom_bar(stat="identity", width = 0.5, fill="steelblue")+
-                  geom_text(aes(label=sprintf("%.3f",value)), vjust=-0.3, size=5)+
-                  labs(title = "Unbinary Data", x = "Class", y = "Mean Tau Value")
+                  geom_bar(stat="identity", fill="steelblue") +
+                  geom_text(aes(label=df$value), size = 4, hjust= 1.6, color="white" ) +
+                  coord_flip() + 
+                  scale_y_continuous(expand = c(0, 0),
+                                     limits = c(0, max(df$value) * 1.2)) +  
+                  geom_hline(yintercept = max(df$value), linetype="dashed", color = "black") + 
+                  labs(title = "Unbinary Data", x = "Class", y = "Mean Tau Value") + 
+                  theme_light()
               }
       )
-      dualPlot <-  grid.arrange(fisherPlot, CorPlot, nrow = 1)
-      if( !is.null(savePath) )
-        ggsave(savePath,plot=dualPlot,device=file_ext(savePath), limitsize = FALSE)
-      cat("[MultiTypeClustering][INFO] Plot has been succesfully saved at: ",savePath,"\n",sep="")
+      cat("positive Tau:",private$meanPositiveTau,"\n")
+      cat("negative tau:",private$meanNegativeTau,"\n")
+      
+      dualPlot <-  grid.arrange(fisherPlot, CorPlot, nrow = 2, ncol = 1)
+      if( !is.null(dir.path) )
+        if(!dir.exists(dir.path)) dir.create(dir.path,recursive = TRUE)
+        ggsave(paste0(file.path(dir.path,file.name),".pdf"),device="pdf", plot=dualPlot, limitsize = FALSE)
+      cat("[MultiTypeClustering][INFO] Plot has been succesfully saved at: ",file.path(dir.path,file.name),".pdf\n",sep="")
     },
     
     
@@ -207,8 +230,6 @@ MultiTypeClustering <- R6Class(
       cluster.dist
     }
   ),
-  
-  
   private = list(
     computeFisherTable = function(corpus){ 
       fisherTest <- sapply(corpus, function(c){fisher.test(table(c,private$class))$p.value })
@@ -238,12 +259,8 @@ MultiTypeClustering <- R6Class(
 
     
     computeCorrelationTable = function(corpus){
-      binaryClass <- sapply(private$class,function(elem){
-        if(strcmpi(toString(elem), private$positive.class))
-          elem <- 1
-        else
-          elem <- 0
-      })
+      #RECODE FACTOR VALUES TO NUMERIC ONES (POSITIVE -> 1 & NEGATIVE -> 0)
+      binaryClass <- car::recode(private$class,paste0("'",private$positive.class,"'='1'; '",private$negative.class,"'='0'"), as.numeric = TRUE, as.factor = FALSE) #IMPROVED REMOVED LOOP
       switch (private$method,
               "pearson" = { correlationTest <- sapply(corpus, function(c){cor.test(c,binaryClass,method = "spearman", exact = FALSE)$p.value })},
               "kendall" = { 
@@ -261,7 +278,6 @@ MultiTypeClustering <- R6Class(
                 })}
       )
     },
-    
     
     computeCorrelationTest = function(corpus){
       unbinary.data <- ClusterData$new()
@@ -360,7 +376,7 @@ MultiTypeClustering <- R6Class(
     
     meanPositiveTau = NULL,
     meanNegativeTau = NULL,
-    
+    class.values = NULL,
     min = NULL,
     max = NULL
   )

@@ -1,13 +1,13 @@
-setwd("/Users/mpegea/GitKraken/D2-MCS")
-
-source("sources.R")
-
-data <- Dataset$new(filepath ="/Users/mpegea/GitKraken/Datasets/FCFP_6/TRAINNING/full_set_FCFP_6_physchem.csv", header=TRUE, sep="\t",skip = 1, classIndex = 1)
-
-set.seed("123")
-data$executePartition(4)
-
-subset.cluster <- data$getSubset(c(1,2))
+# setwd("/Users/mpegea/GitKraken/D2-MCS")
+# 
+# source("sources.R")
+# 
+# data <- Dataset$new(filepath ="/Users/mpegea/GitKraken/Datasets/FCFP_6/TRAINNING/full_set_FCFP_6_physchem.csv", header=TRUE, sep="\t",skip = 1, classIndex = 1)
+# 
+# set.seed("123")
+# data$executePartition(4)
+# 
+# subset.cluster <- data$getSubset(c(1,2))
 
 
 
@@ -38,11 +38,11 @@ subset.cluster <- data$getSubset(c(1,2))
 
 
 # ------------------------------------ FSClustering ---------------------------------------
-FSC <- FSClustering$new(subset.cluster)
-FSC$execute()
-FSC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/FSClustering_Dispersion.pdf")
-FSC$getDistribution(cluster = 10, includeClass = "END")
-FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))
-FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))$getAt(3)
-FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))$getAt(3)$getFeatures()
+# FSC <- FSClustering$new(subset.cluster)
+# FSC$execute()
+# FSC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/FSClustering_Dispersion.pdf")
+# FSC$getDistribution(cluster = 10, includeClass = "END")
+# FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))
+# FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))$getAt(3)
+# FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))$getAt(3)$getFeatures()
 # -----------------------------------------------------------------------------------------

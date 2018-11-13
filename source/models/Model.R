@@ -178,9 +178,9 @@ Model <- R6Class(
       })
     },
     unloadPackages = function(pkgName){
-      loaded.dlls <- getLoadedDLLs()
+      #loaded.dlls <- getLoadedDLLs()
       lapply(pkgName, function(pkg){
-        if( pkg %in% loaded_packages()$package ){
+        if( (pkg %in% loaded_packages()$package) && (!pkg %in% c("dplyr","plyr")) ){
           pck.name <- paste0("package:",pkg)
           try(detach(pck.name, character.only = TRUE), silent = TRUE)
         }
