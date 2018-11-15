@@ -7,8 +7,9 @@ FSClustering <- R6Class(
   inherit = Cluster,
   public = list(
     initialize = function(dataset, maxClusters = 50){
-      if (class(dataset)[1] != "Subset" || class(dataset)[2]!= "R6" )
+      if ( !"Subset" %in% class(dataset)  )
         stop("[CLUSTER][Error] Input corpus should be R6 Subset type\n")
+      
       super$initialize( maxClusters )
       private$all.distribution <- NULL
       private$best.distribution <- NULL
@@ -18,7 +19,11 @@ FSClustering <- R6Class(
     },
     
     
-    execute = function(){
+    execute = function( heuristic ){
+      if( missing( heuristic ))
+        private$heuristic <- super$getDefaultHeuristic()
+      else private$heuristic <- heuristic
+
       private$all.distribution <- private$computeTest(private$dataset)
       private$best.distribution <- data.frame(cluster=integer(),features=I(list()))
       aux <- unlist(private$all.distribution$getClusterDist()[private$all.distribution$getClusterDist()$k==private$all.distribution$getBestK(), ]$dist)
@@ -39,12 +44,13 @@ FSClustering <- R6Class(
       max <- data.frame(x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]))
       ggplot(summary, aes(k,dispersion)) + geom_line() + geom_point() +
         geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) + 
-        geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='blue' ) +
+        geom_text(aes(x,y,label=sprintf("%.10f",y)), min, hjust=-0.45, color='blue' ) +
         geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) + 
         geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) + 
         scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) + 
         scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
         labs(x = "Number of clusters", y = "Dispersion")
+      
       if( !is.null(savePath) ){
         ggsave(savePath,plot=last_plot(),device=file_ext(savePath), limitsize = FALSE)
         cat("[FSClustering][INFO] Plot has been succesfully saved at: ",savePath,"\n",sep="")
@@ -115,12 +121,6 @@ FSClustering <- R6Class(
     computeTable = function(corpus){
       igTest <- information.gain(as.formula(sprintf("`%s` ~.", subset.cluster$getClassName())), subset.cluster$getInstances(ignore.class = FALSE)) #OK
       length(igTest)
-      
-      # Incluyendo features con resultado 0
-      # igTestVector <- igTest$attr_importance
-      # names(igTestVector) <- row.names(igTest)
-      
-      # Sin features con resultado 0
       igTestVector <- igTest$attr_importance[igTest$attr_importance!=0]
       names(igTestVector) <- row.names(igTest)[which(igTest$attr_importance != 0, arr.ind = TRUE)]
       
@@ -133,8 +133,8 @@ FSClustering <- R6Class(
       fs.index <- order(fs.table, decreasing = TRUE)
       fs.size <- length(fs.table)
       totalGroups <- 2:super$getMaxClusters()
-      for(k in totalGroups) {
-        clustering <- rep(c(1:k,(k:1)),fs.size/(2*k)+1)[1:fs.size]
+      for(k in totalGroups) { 
+        clustering <- private$heuristic(fs.table, k)
         cluster <- integer(length = length(fs.table))
         names(cluster) <- names(fs.table)
         sumGroup <- vector(k,mode="list")
@@ -168,7 +168,8 @@ FSClustering <- R6Class(
     all.distribution = NULL,
     best.distribution = NULL,
     min = NULL,
-    max = NULL
+    max = NULL,
+    heuristic = NULL
     
   )
 )

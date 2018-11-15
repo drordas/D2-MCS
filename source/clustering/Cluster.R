@@ -30,9 +30,27 @@ Cluster <- R6Class(
     },
     plot = function(file.name){
       stop("[CLUSTER][Error] Function 'printPlot must be implemented in inherited class\n'")
+    },
+    getDefaultHeuristic = function(){
+      private$defaultHeuristic
     }
   ),
+  
   private = list(
+    defaultHeuristic = function(corpus, k){
+      sorted.corpus <- sort(corpus, decreasing = TRUE)
+      cluster.index <- vector(length = length(corpus) )
+      cluster.sum <- vector(length = k )
+      cluster.sum[1:k] <- 0
+      aux <- c()
+      for(i in 1:length(sorted.corpus)){
+        aux[1:k] <- sorted.corpus[i]
+        cluster <- (which.min((cluster.sum+aux)-(max(cluster.sum))))
+        cluster.index[i] <- cluster
+        cluster.sum[cluster] <- cluster.sum[cluster]+sorted.corpus[i]
+      }
+      cluster.index
+    },
     maxClusters = 50
   )
 )
