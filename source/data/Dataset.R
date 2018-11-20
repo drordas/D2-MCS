@@ -10,9 +10,10 @@ Dataset <- R6Class(
           private$corpus <- read.csv(filepath, header=header, skip=(skip+1), sep=sep)
           self$setClassIndex(classIndex)
           columNames <- unlist(strsplit(scan(file=filepath,nlines=1, what="character"),split=sep))
-          if(isTRUE(normalize.names))
-            self$setColumNames(sprintf("`%s`",make.names(columNames, unique = TRUE) ) ) 
-          else self$setColumNames(columNames)
+          if(isTRUE(normalize.names)){
+            #self$setColumNames(sprintf("`%s`",make.names(columNames, unique = TRUE) ) )
+            self$setColumNames( make.names(columNames, unique = TRUE) )
+          }else self$setColumNames(columNames)
         }else{
           private$corpus <- read.csv(filepath, header=header, skip=skip, sep=sep)
           self$setClassIndex(classIndex)

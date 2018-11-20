@@ -3,16 +3,32 @@ Cluster <- R6Class(
   classname = "Cluster",
   portable = TRUE,                   
   public = list(
-    initialize = function(maxClusters = 50){
+    initialize = function(name = NULL, dependences = NULL, maxClusters = 50){
+      if( is.character(name) )
+        private$name <- name
+      else stop("[CLUSTER][ERROR] Clustering not defined or incorrect\n")
+      
+      lapply(dependences, function(pkg){
+        if (! pkg %in% installed.packages() ){
+          cat("[",private$name,"][WARNING] ",pkg," package required and not installed. Performing installation...\n",sep="")
+          suppressMessages(install.packages(pkg,repos="https://ftp.cixug.es/CRAN/", dependencies = TRUE))
+        }
+        if(!pkg %in% loaded_packages() ){
+          cat("[",private$name,"][WARNING] Loading ",pkg," package....\n",sep="")
+          library(pkg,character.only = TRUE,warn.conflicts = FALSE, quietly = TRUE)
+        } 
+      })
+
       private$maxClusters <- maxClusters
     },
-    isBinary = function(column){
-      lvl <- levels(as.factor(column))
-      (length(lvl) == 2 && 
-          length(intersect(levels(as.factor(column)),c("0","1") )) == 2 )
+    isBinary = function(column) {
+      unique = unique(column)
+      if ( !is.numeric(column) | any(is.na(column)) )
+        return (FALSE)
+      else return(!(any(as.integer(unique) != unique) || length(unique) > 2 || min(column) != 0 || max(column) != 1))
     },
-    execute = function(){
-      stop("[CLUSTER][Error] Function 'execute' must be implemented\n")
+    execute = function(...){
+      stop("[CLUSTER][ERROR] Function 'execute' must be implemented\n")
     },
     getMaxClusters = function(){
       private$maxClusters
@@ -20,19 +36,19 @@ Cluster <- R6Class(
     setMaxClusters = function(max){
       if(max > 1) 
         private$maxClusters <- max
-      else cat("[CLUSTER][Error] number of clusters must be greater than 1\n. Assuming default value\n")
+      else cat("[CLUSTER][ERROR] number of clusters must be greater than 1\n. Assuming default value\n")
     },
     getNumClusters = function(){
-      stop("[CLUSTER][Error] Function 'getNumClusters must be implemented in inherited class\n'")
+      stop("[CLUSTER][ERROR] Function 'getNumClusters must be implemented in inherited class\n'")
     },
     getDistribution = function(group = NULL, includeClass = FALSE, classPosition = NULL){
-      stop("[CLUSTER][Error] Function 'gestBestDistribution must be implemented in inherited class\n'")
+      stop("[CLUSTER][ERROR] Function 'gestBestDistribution must be implemented in inherited class\n'")
     },
-    plot = function(file.name){
-      stop("[CLUSTER][Error] Function 'printPlot must be implemented in inherited class\n'")
+    plot = function(dir.path = NULL, file.name = NULL){
+      stop("[CLUSTER][ERROR] Function 'printPlot must be implemented in inherited class\n'")
     },
-    getDefaultHeuristic = function(){
-      private$defaultHeuristic
+    getName = function(){
+      private$name
     }
   ),
   
@@ -51,6 +67,7 @@ Cluster <- R6Class(
       }
       cluster.index
     },
-    maxClusters = 50
+    maxClusters = 50,
+    name = NULL
   )
 )

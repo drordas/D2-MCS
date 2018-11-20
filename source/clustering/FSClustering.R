@@ -8,35 +8,47 @@ FSClustering <- R6Class(
   public = list(
     initialize = function(dataset, maxClusters = 50){
       if ( !"Subset" %in% class(dataset)  )
-        stop("[CLUSTER][Error] Input corpus should be R6 Subset type\n")
+        stop("[CLUSTER][ERROR] Dataset must be a Subset type\n")
       
-      super$initialize( maxClusters )
+      super$initialize(name="FSCLUSTERING", dependences="FSelector" , maxClusters )
+      
       private$all.distribution <- NULL
       private$best.distribution <- NULL
       private$class <- dataset$getClass()
       private$className <- dataset$getClassName()
-      private$dataset <- dataset$getInstances(ignore.class = TRUE)
+      private$dataset <- dataset$getInstances(ignore.class = FALSE)
+      private$heuristic <- super$defaultHeuristic 
     },
-    
-    
-    execute = function( heuristic ){
-      if( missing( heuristic ))
-        private$heuristic <- super$getDefaultHeuristic()
-      else private$heuristic <- heuristic
+    execute = function( method=NULL, heuristic=NULL){
+      if( is.null(method) || !toupper(method) %in% c("IG","CHI","CC","OR","ORS","SIG","GR","MI") ){
+        cat("[",super$getName(),"][ERROR] Feature Selection Method not defined.\n") 
+        cat("\tFeature Selection methods available:\n")
+        cat("\t\t-IG: Information Gain\n")
+        cat("\t\t-CHI: Chi-square\n")
+        cat("\t\t-CC: Correlation Coefficient\n")
+        cat("\t\t-OR: Ods Ratio\n")
+        cat("\t\t-ORS: Ods Ratio Squared\n")
+        cat("\t\t-SIG: Signed Information Gain\n")
+        cat("\t\t-GR: Gain Ratio\n")
+        cat("\t\t-MI: Mutual Information\n")
+        stop()
+      }
+      private$method <- method
 
+      if( !is.null(heuristic) && is.function(heuristic) )
+        private$heuristic <- heuristic
+      
       private$all.distribution <- private$computeTest(private$dataset)
       private$best.distribution <- data.frame(cluster=integer(),features=I(list()))
       aux <- unlist(private$all.distribution$getClusterDist()[private$all.distribution$getClusterDist()$k==private$all.distribution$getBestK(), ]$dist)
-      for(i in 1:private$all.distribution$getBestK() ){
-        private$best.distribution <- rbind(private$best.distribution, 
-                                           data.frame(cluster=i,dist=I(list(names(aux[aux==i])))) )
-      }
+      
+      for(i in 1:private$all.distribution$getBestK() )
+        private$best.distribution <- rbind(private$best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))) )
+      
       private$min <- min(private$all.distribution$getClusterDist()$k)
       private$max <- max(private$all.distribution$getClusterDist()$k)
     },
-    
-    
-    plot = function(savePath = NULL){
+    plot = function(dir.path = NULL, file.name = NULL){
       summary <- data.frame(k=private$all.distribution$getClusterDist()[,1],
                             dispersion=private$all.distribution$getClusterDist()[,2], 
                             row.names = NULL)
@@ -51,20 +63,19 @@ FSClustering <- R6Class(
         scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
         labs(x = "Number of clusters", y = "Dispersion")
       
-      if( !is.null(savePath) ){
-        ggsave(savePath,plot=last_plot(),device=file_ext(savePath), limitsize = FALSE)
-        cat("[FSClustering][INFO] Plot has been succesfully saved at: ",savePath,"\n",sep="")
-      } 
+      if( !is.null(dir.path) ){
+        if(!dir.exists(dir.path)) dir.create(dir.path,recursive = TRUE)
+        ggsave(paste0(file.path(dir.path,file.name),".pdf"),device="pdf",plot=last_plot(), limitsize = FALSE)
+        cat("[",super$getName(),"][INFO] Plot has been succesfully saved at: ",paste0(file.path(dir.path,file.name),".pdf"),"\n",sep="")
+      }
     },
-    
-    
     getDistribution = function(cluster, group , includeClass = "NONE" ){
       if( is.null(private$best.distribution) || is.null(private$all.distribution) ){
-        warning("[FSClustering][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
+        warning("[",super$getName(),"][Warning] Function 'execute()' must be called first. Automatically run execute function\n",sep="")
         self$execute()
       }
       if( !toupper(includeClass) %in% c("NONE","BEGIN","END") ){
-        cat("[FSClustering][INFO] Class parameter not included. Assuming class not included\n")
+        cat("[",super$getName(),"][INFO] Class parameter not included. Assuming class not included\n",sep="")
         class <- "NONE"
       }else class <- toupper(includeClass)
       if( missing(cluster) || ( is.numeric(cluster) && (cluster == private$all.distribution$getBestK()) ) ){
@@ -91,11 +102,9 @@ FSClustering <- R6Class(
         else final.distr
       }
     },
-    
-    
     createSubset = function(cluster = NULL, subset = NULL){
       if( is.null(private$all.distribution) ){
-        cat("[FSClustering][Warning] Function 'execute()' must be called first. Automatically run execute function\n")
+        cat("[",super$getName(),"][Warning] Function 'execute()' must be called first. Automatically run execute function\n",sep="")
         self$execute()
       }
       if( missing(subset) || is.null(subset) || !"Subset" %in% class(subset)  )
@@ -103,7 +112,7 @@ FSClustering <- R6Class(
       
       if( is.null(cluster) || missing(cluster) || !is.numeric(cluster) || 
           (is.numeric(cluster) && !cluster %in% c(private$min:private$max ) ) ){
-        cat("[FSClustering][WARNING] Incorrect cluster parameter. Should be between: ",private$min," <= cluster <= ",private$max,"\n", sep="")
+        cat("[",super$getName(),"][WARNING] Incorrect cluster parameter. Should be between: ",private$min," <= cluster <= ",private$max,"\n", sep="")
         cat("                         Assuming best cluster configuration (",private$all.distribution$getBestK(),")\n", sep="")
         cluster <- private$all.distribution$getBestK()
       }
@@ -115,21 +124,21 @@ FSClustering <- R6Class(
       cluster.dist
     }
   ),
-  
-  
   private = list(
     computeTable = function(corpus){
-      igTest <- information.gain(as.formula(sprintf("`%s` ~.", subset.cluster$getClassName())), subset.cluster$getInstances(ignore.class = FALSE)) #OK
-      length(igTest)
-      igTestVector <- igTest$attr_importance[igTest$attr_importance!=0]
-      names(igTestVector) <- row.names(igTest)[which(igTest$attr_importance != 0, arr.ind = TRUE)]
-      
-      igTestVector
+      switch (private$method,
+        "IG" = {ig.values <- information.gain(as.formula(paste0(private$className," ~.")), private$dataset, unit = "log2")
+                ig.zero <- which(igTest==0, arr.ind = TRUE)[,1] #ig.values$attr_importance[-ig.nonzero]
+                ig.nonzero <- which(igTest!=0, arr.ind = TRUE)[,1] #ig.values$attr_importance[ig.values$attr_importance!=0]
+                output <- list("NonZero"=ig.nonzero,"Zero"=ig.zero)
+                return(output) }
+      )
     },
-    
     computeTest = function(corpus){
       clusteredData <- ClusterData$new()
       fs.table <- private$computeTable(corpus)
+      stop("AQUI VA A PETAR XQ AHORA DEVUELVO UNA LISTA Y TU TIENES UN DF - #MARTIN, ARREGLAR")
+      
       fs.index <- order(fs.table, decreasing = TRUE)
       fs.size <- length(fs.table)
       totalGroups <- 2:super$getMaxClusters()
@@ -169,7 +178,7 @@ FSClustering <- R6Class(
     best.distribution = NULL,
     min = NULL,
     max = NULL,
-    heuristic = NULL
-    
+    heuristic = NULL,
+    method = NULL
   )
 )

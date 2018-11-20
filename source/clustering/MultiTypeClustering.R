@@ -9,7 +9,7 @@ MultiTypeClustering <- R6Class(
       if (!"Subset" %in% class(dataset) )
         stop("[CLUSTER][ERROR] Dataset must be a Subset type\n")
       
-      super$initialize( maxClusters )
+      super$initialize(name="MultiTypeClustering", maxClusters = maxClusters )
       private$data.unbinary <- NULL
       
       private$fisher.all.distribution <- NULL
@@ -19,8 +19,7 @@ MultiTypeClustering <- R6Class(
       private$best.distribution <- NULL
       
       private$class <- dataset$getClass()
-      
-      private$class.values <- names(table(private$class)) #IMPROVED REMOVE WHILE LOOP.
+      private$class.values <- names(table(private$class)) #IMPROVED. REMOVED WHILE LOOP.
       
       if(length(private$class.values) != 2)
         stop("[MultiTypeClustering][ERROR] Method only valid for binary class (",length(private$class.values),">2)\n")
@@ -46,24 +45,26 @@ MultiTypeClustering <- R6Class(
       if( dim(private$dataset[,!binaryIndex])[2] > 0 )
         private$data.unbinary <- private$removeUnnecesary(private$dataset[,!binaryIndex])
       
-      onlyBinary <- private$dataset[,binaryIndex]
+      onlyBinary <- private$dataset[ ,binaryIndex]
       private$fisher.all.distribution <- private$computeFisherTest(onlyBinary)
       private$fisher.best.distribution <- data.frame(cluster=integer(),features=I(list()))
       aux <- unlist(private$fisher.all.distribution$getClusterDist()[private$fisher.all.distribution$getClusterDist()$k==private$fisher.all.distribution$getBestK(), ]$dist)
       
       for(i in 1:private$fisher.all.distribution$getBestK() )
-        private$fisher.best.distribution <- rbind(private$fisher.best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))))
+        private$fisher.best.distribution <- rbind( private$fisher.best.distribution, 
+                                                   data.frame(cluster=i,dist=I(list(names(aux[aux==i])))) )
 
       if(nrow(private$data.unbinary) > 0 ){
         private$cor.all.distribution <- private$computeCorrelationTest(private$data.unbinary)
         
-        if(strcmp(private$method, "pearson")){
+        if( private$method %in% "pearson" ){
           private$cor.best.distribution <- data.frame(cluster=integer(),features=I(list())) 
           aux <- unlist(private$cor.all.distribution$getClusterDist()[private$cor.all.distribution$getClusterDist()$k==private$cor.all.distribution$getBestK(), ]$dist) 
           for(i in 1:private$cor.all.distribution$getBestK() ){
             private$cor.best.distribution <- rbind(private$cor.best.distribution, data.frame(cluster=i,dist=I(list(names(aux[aux==i])))))
           }
         }
+        
         private$best.distribution <- rbind(private$fisher.best.distribution,private$cor.best.distribution)
       }
       private$min <- min(private$fisher.all.distribution$getClusterDist()$k)
@@ -76,38 +77,42 @@ MultiTypeClustering <- R6Class(
                             row.names = NULL)
       min <- data.frame(x=summary[which.min(summary[,2]), ][, 1],y= min(summary[,2]))
       max <- data.frame(x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]))
-      fisherPlot <- ggplot(summary, aes(k,dispersion)) + geom_line() + geom_point() +
-        geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) +
-        geom_text_repel(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='blue' ) +
-        geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) +
-        geom_text_repel(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) +
-        scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) +
-        scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) +
-        labs(title = "Binary Data", x = "Number of clusters", y = "Dispersion") + 
-        theme_light() + theme(axis.text.x = element_text(angle=90, hjust = 1, vjust = 1) )
+      fisherPlot <- ggplot(summary, aes(k,dispersion)) + geom_point(aes(color = dispersion),position = position_jitter()) + 
+        scale_color_continuous(name="",low = "blue", high = "red", guide = FALSE ) + 
+        geom_text_repel( aes(x,y,label=sprintf("%s",format(min$y,digits = 2, scientific = TRUE))), 
+                         min, hjust=0.5, vjust=0, point.padding = 0.25, color='blue', size=3 ) +
+        geom_text_repel( aes(x,y,label=sprintf("%s",format(max$y,digits = 2, scientific = TRUE))), 
+                         max, hjust=0.5, vjust=1, point.padding = 0.25, color='red', size=3  ) + 
+        scale_y_continuous( name="Dispersion (using logaritmic scale)", trans = "log", breaks = c( min$y,max$y ) ) + 
+        scale_x_continuous(name="Number of clusters", breaks=seq(from=2,to=nrow(summary) + 1)) + 
+        labs(title="Binary Data") + theme_light() + theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
       
       #Cor Plot
       switch (private$method,
               "pearson" = {
-                summary <- data.frame(k=private$cor.all.distribution$getClusterDist()[,1],
+                cor.summary <- data.frame(k=private$cor.all.distribution$getClusterDist()[,1],
                                       dispersion=private$cor.all.distribution$getClusterDist()[,2], 
-                                      row.names = NULL)
-                min <- data.frame(x=summary[which.min(summary[,2]), ][, 1],y= min(summary[,2]))
-                max <- data.frame(x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]))
-                CorPlot <- ggplot(summary, aes(k,dispersion)) + geom_line() + geom_point() +
-                  geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) + 
-                  geom_text_repel(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='blue' ) +
-                  geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) + 
-                  geom_text_repel(aes(x,y,label=sprintf("%.3f",y)), max, color='red') + 
-                  scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
-                  labs(title = "Unbinary Data", x = "Number of clusters", y = "Dispersion") + 
-                  theme_light()
+                                      row.names = NULL , check.rows = FALSE)
+                print(cor.summary)
+                cor.min <- data.frame(x=cor.summary[which.min(cor.summary[,2]), ][, 1],y= min(cor.summary[,2]))
+                cor.max <- data.frame(x=cor.summary[which.max(cor.summary[,2]), ][, 1],y= max(cor.summary[,2]))
+                cat("MIN: ",min$y,"\n")
+                cat("MAX",max$y,"\n")
+                CorPlot <- ggplot(cor.summary, aes(k,dispersion)) + geom_point(aes(color = dispersion),position = position_jitter()) + 
+                  scale_color_continuous(name="",low = "blue", high = "red", guide = FALSE ) + 
+                  geom_text_repel( aes(x,y,label=sprintf("%s",format(cor.min$y,digits = 2, scientific = TRUE))), 
+                                   cor.min, hjust=0.5, vjust=0, point.padding = 0.25, color='blue', size=3 ) +
+                  geom_text_repel( aes(x,y,label=sprintf("%s",format(cor.max$y,digits = 2, scientific = TRUE))), 
+                                   cor.max, hjust=0.5, vjust=0, point.padding = 0.25, color='red', size=3  ) + 
+                  scale_y_continuous( name="Dispersion (using logaritmic scale)", trans = "log", breaks = c( cor.min$y,cor.max$y ) ) + 
+                  scale_x_continuous(name="Number of clusters", breaks=seq(from=2,to=nrow(cor.summary) + 1)) + 
+                  labs(title="Binary Data") + theme_light() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0))
               },
               "kendall" = { 
                 df <- data.frame(interval=c(private$positive.class, private$negative.class),
                                  value=round(c(private$meanPositiveTau, private$meanNegativeTau),3))
                 
-                CorPlot<-ggplot(data=df, aes(x=interval, y=value)) +
+                CorPlot <- ggplot(data=df, aes(x=interval, y=value)) +
                   geom_bar(stat="identity", fill="steelblue") +
                   geom_text_repel(aes(label=df$value), size = 4, hjust= 1.6, color="white" ) +
                   coord_flip() + 
@@ -120,10 +125,11 @@ MultiTypeClustering <- R6Class(
       )
 
       dualPlot <- grid.arrange(fisherPlot, CorPlot, nrow = 2, ncol = 1)
-      if( !is.null(dir.path) )
+      if( !is.null(dir.path) ){
         if(!dir.exists(dir.path)) dir.create(dir.path,recursive = TRUE)
-        ggsave(paste0(file.path(dir.path,file.name),".pdf"),device="pdf", plot=dualPlot, limitsize = FALSE)
-      cat("[MultiTypeClustering][INFO] Plot has been succesfully saved at: ",file.path(dir.path,file.name),".pdf\n",sep="")
+          ggsave(paste0(file.path(dir.path,file.name),".pdf"),device="pdf", plot=dualPlot, limitsize = FALSE)
+        cat("[MultiTypeClustering][INFO] Plot has been succesfully saved at: ",file.path(dir.path,file.name),".pdf\n",sep="")
+      }
     },
     getDistribution = function(fisherK, corK, group, includeClass = "NONE" ){
       if( is.null(private$best.distribution) || is.null(private$cor.best.distribution) || is.null(private$fisher.all.distribution) || is.null(private$cor.all.distribution)){
@@ -131,12 +137,6 @@ MultiTypeClustering <- R6Class(
         self$execute()
       }
       
-      #VERIFICAR NO PASARSE.
-      
-      # if(private$method %in% "kendall"){ #¿PORQUE ESTE IF?
-      #  cat("[MultiTypeCluster][INFO] Setting Correlation distribution k to k=2. \n")
-      #   corK=2
-      # }
       if(!toupper(includeClass) %in% c("NONE","BEGIN","END") ){
         cat("[MultiTypeCluster][INFO] Class parameter not included. Assuming class not included\n")
         class <- "NONE"
@@ -152,12 +152,10 @@ MultiTypeClustering <- R6Class(
         final.distr <- rbind(private$fisher.best.distribution, private$cor.best.distribution)
       }
       else{
-        cat("1- ENTRA ELSE\n")
         if( ( is.numeric(fisherK) && (fisherK == private$fisher.all.distribution$getBestK()) ) || 
             ( is.numeric(corK) && (corK == private$cor.all.distribution$getBestK()) ))
         {
           if( ((is.numeric(fisherK) && (fisherK == private$fisher.all.distribution$getBestK()))) ){
-            cat("2- ENTRA IF\n")
             corKDistribution <- data.frame(cluster=integer(),features=I(list()))
             aux <- unlist(private$cor.all.distribution$getClusterDist()[private$cor.all.distribution$getClusterDist()$k==corK, ]$dist)
             for( i in 1:corK )
@@ -165,7 +163,6 @@ MultiTypeClustering <- R6Class(
             final.distr <- rbind( private$fisher.best.distribution, corKDistribution) 
           }
           else{
-            cat("2- ENTRA ELSE\n")
             fisherKDistribution <- data.frame(cluster=integer(),features=I(list()))
             aux <- unlist(private$fisher.all.distribution$getClusterDist()[private$fisher.all.distribution$getClusterDist()$k==fisherK, ]$dist)
             for( i in 1:fisherK )
@@ -173,7 +170,6 @@ MultiTypeClustering <- R6Class(
             final.distr <- rbind(fisherKDistribution,  private$cor.best.distribution) 
           }
         }else{
-          cat("3 ENTRA ELSE\n")
           fisherKDistribution <- data.frame(cluster=integer(),features=I(list()))
           aux <- unlist(private$fisher.all.distribution$getClusterDist()[private$fisher.all.distribution$getClusterDist()$k==fisherK, ]$dist)
           for( i in 1:fisherK )

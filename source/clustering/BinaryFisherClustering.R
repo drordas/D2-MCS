@@ -8,25 +8,24 @@ BinaryFisherClustering <- R6Class(
     initialize = function(dataset, maxClusters = 50){
       if (class(dataset)[1] != "Subset" || class(dataset)[2]!= "R6" )
          stop("[CLUSTER][Error] Input corpus should be R6 Subset type\n")
-      super$initialize( maxClusters )
+      
+      super$initialize(name="BinaryFisherClustering", maxClusters = maxClusters )
       private$data.unbinary <- NULL
-      #private$data.binary <- NULL
       private$all.distribution <- NULL
       private$best.distribution <- NULL
       private$class <- dataset$getClass()
       private$className <- dataset$getClassName()
       private$dataset <- dataset$getInstances(ignore.class = TRUE)
+      private$heuristic <- super$defaultHeuristic
     },
-    execute = function( heuristic ){
-      if( missing( heuristic )){
-        private$heuristic <- super$getDefaultHeuristic()
-      }
-      else{
+    execute = function( heuristic= NULL ){
+      if( !missing(heuristic) && is.function(heuristic) )
         private$heuristic <- heuristic
-      }
+      
       binaryIndex <- sapply( private$dataset, function(e){
         ( super$isBinary(e) || length( unique(e) ) == 2) 
       })
+      
       if( dim(private$dataset[,!binaryIndex])[2] > 0 ){
         private$data.unbinary <- private$removeUnnecesary(private$dataset[,!binaryIndex])
       }
@@ -51,32 +50,28 @@ BinaryFisherClustering <- R6Class(
       private$min <- min(private$all.distribution$getClusterDist()$k)
       private$max <- max(private$all.distribution$getClusterDist()$k)
     },
-    plot = function(savePath = NULL){
+    plot = function(dir.path = NULL, file.name = NULL){
       summary <- data.frame(k=private$all.distribution$getClusterDist()[,1],
-                            dispersion=private$all.distribution$getClusterDist()[,2], 
-                            row.names = NULL)
+                            dispersion= private$all.distribution$getClusterDist()[,2], 
+                            row.names = NULL, check.names = FALSE)
       min <- data.frame(x=summary[which.min(summary[,2]), ][, 1],y= min(summary[,2]))
       max <- data.frame(x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]))
-      ggplot(summary, aes(k,dispersion)) + geom_line() + geom_point() +
-          geom_point(aes(x,y), min, fill="transparent", color="blue", shape=21, size=3,stroke=1) + 
-          geom_text(aes(x,y,label=sprintf("%.30f",y)), min, hjust=-0.45, color='blue' ) +
-          geom_point(aes(x,y), max, fill="transparent", color="red", shape=21, size=3,stroke=1) + 
-          geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='red' ) + 
-          scale_y_continuous(limits=c(min(summary$dispersion), max( summary$dispersion) )) + 
-          scale_x_continuous(breaks=seq(from=2,to=nrow(summary) + 1)) + 
-          labs(x = "Number of clusters", y = "Dispersion")
+      diff <- abs(max$y - min$y)
+      ggplot(summary, aes(k,dispersion)) + geom_point(aes(color = dispersion),position = position_jitter()) + 
+          scale_color_continuous(name="",low = "blue", high = "red", guide = FALSE ) + 
+          geom_text_repel( aes(x,y,label=sprintf("%s",format(min$y,digits = 2, scientific = TRUE))), 
+                           min, hjust=0.5, vjust=0, point.padding = 0.25, color='blue', size=3 ) +
+          geom_text_repel( aes(x,y,label=sprintf("%s",format(max$y,digits = 2, scientific = TRUE))), 
+                           max, hjust=0.5, vjust=1, point.padding = 0.25, color='red', size=3  ) + 
+          scale_y_continuous( name="Dispersion (represented as logaritmic scale)", trans = "log", breaks = c( min$y,max$y ) ) + 
+          scale_x_continuous(name="Number of clusters", breaks=seq(from=2,to=nrow(summary) + 1)) + 
+          labs(title="Binary Data") + theme_light() + theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
       
-      #last_plot()
-      # if( !is.null(file.name) ){
-      #   save.path <- file.path(getwd(),"plots",paste0(file.name,".pdf") )
-      #   cat("[BinaryCluster][INFO] Plot has been succesfully saved at: ",save.path,"\n",sep="")
-      #   ggsave(save.path,plot=last_plot(),device="pdf", limitsize = FALSE)
-      # } 
-      # else{
-      #   cat("???")
-      # }
-      ggsave(savePath,plot=last_plot(),device="pdf", limitsize = FALSE)
-      #cat("[BinaryCluster][INFO] Plot has been succesfully saved at: ",file.path(dir.path,file.name),".pdf\n",sep="")
+      if( !is.null(dir.path) ){
+        if(!dir.exists(dir.path)) dir.create(dir.path,recursive = TRUE)
+        ggsave(paste0(file.path(dir.path,file.name),".pdf"),device="pdf",plot=last_plot(), limitsize = FALSE)
+        cat("[",super$getName(),"][INFO] Plot has been succesfully saved at: ",paste0(file.path(dir.path,file.name),".pdf"),"\n",sep="")
+      }
     },
     getDistribution = function(cluster, group , includeClass = "NONE" ){
       if( is.null(private$best.distribution) || is.null(private$all.distribution) ){
@@ -156,8 +151,7 @@ BinaryFisherClustering <- R6Class(
   private = list(
     computeFisherTable = function(corpus){
       fisherTest <- sapply(corpus, function(c){ fisher.test(table(c,private$class))$p.value } )
-      #str(fisherTest)
-      #stop()
+
     },
     computeFisherTest = function(corpus){
       binary.data <- ClusterData$new()
@@ -166,18 +160,17 @@ BinaryFisherClustering <- R6Class(
       fisher.size <- length(fisher.table)
       totalGroups <- 2:super$getMaxClusters()
       for(k in totalGroups) {
-        #clustering <- rep(c(1:k,(k:1)),fisher.size/(2*k)+1)[1:fisher.size]
         clustering <- private$heuristic(fisher.table, k)
-        if(k == 2) print(clustering)
         cluster <- integer(length = length(fisher.table))
         names(cluster) <- names(corpus)
         sumGroup <- vector(k,mode="list")
+        
         for (i in 1:k){ 
           sumGroup[[i]] <- fisher.table[fisher.index[clustering==i]]
           cluster[fisher.index[clustering==i]] <- i
         }
-        groupMeasure <- lapply(sumGroup,sum)
         
+        groupMeasure <- lapply(sumGroup,sum)
         deltha <- max(unlist(groupMeasure)) - min(unlist(groupMeasure))
         binary.data$addNewCluster(k,deltha,cluster)
       }
@@ -185,12 +178,10 @@ BinaryFisherClustering <- R6Class(
       binary.data
     },
     removeUnnecesary = function(corpus){
-      corpus[,sapply(corpus, function(c){
-              length(unique(c)) >= 2 } )]
+      corpus[,sapply(corpus, function(c){length(unique(c)) >= 2 } )]
     },
     getUnnecesary = function(corpus){
-      names(corpus[,!sapply(corpus, function(c){
-            length(unique(c)) >= 2 }) ])
+      names(corpus[,!sapply(corpus, function(c){length(unique(c)) >= 2 }) ])
     },
     data.unbinary = NULL,
     dataset = NULL,
