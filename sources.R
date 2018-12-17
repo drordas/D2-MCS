@@ -54,3 +54,9 @@ library(pracma)
 #Required for information.gain()
 library("rJava")
 library("FSelector")
+
+#Required for geom_text_repel()
+library("ggrepel")
+
+#Required for loaded_packages()
+library("devtools")

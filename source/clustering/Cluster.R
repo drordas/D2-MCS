@@ -38,9 +38,6 @@ Cluster <- R6Class(
         private$maxClusters <- max
       else cat("[CLUSTER][ERROR] number of clusters must be greater than 1\n. Assuming default value\n")
     },
-    getNumClusters = function(){
-      stop("[CLUSTER][ERROR] Function 'getNumClusters must be implemented in inherited class\n'")
-    },
     getDistribution = function(group = NULL, includeClass = FALSE, classPosition = NULL){
       stop("[CLUSTER][ERROR] Function 'gestBestDistribution must be implemented in inherited class\n'")
     },

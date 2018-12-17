@@ -300,7 +300,7 @@ MultiTypeClustering <- R6Class(
                 
                 deltha <- abs(sum(kendall.pos) - abs(sum(kendall.neg)))
                 kendallCluster <- list(names(kendall.neg),names(kendall.pos))
-                names(kendallCluster) <- c(negative.class,positive.class)
+                names(kendallCluster) <- c(private$negative.class,private$positive.class) #names(kendallCluster) <- c(negative.class,positive.class)
                 private$meanPositiveTau <- mean(kendall.pos)
                 private$meanNegativeTau <- abs(mean(kendall.neg))
                 

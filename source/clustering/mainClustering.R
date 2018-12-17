@@ -8,21 +8,19 @@ set.seed("123")
 data$executePartition(4)
 
 subset.cluster <- data$getSubset(c(1,2))
-
+train.cluster <- data$getSubset(c(2,3))
 
 
 # ------------------------------- BinaryFisherClustering ----------------------------------
-fisherC <- BinaryFisherClustering$new(subset.cluster)
-fisherC$execute()
-fisherC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/fisher_dispersion.pdf")
-fisherC$getDistribution(cluster = 4, includeClass = "END")
-# fisherC$createSubset(cluster=25, subset = data$getSubset(c(2,3)))
-# fisherC$createSubset(cluster=25, subset = data$getSubset(c(2,3)))$getNumClusters()
-# fisherC$createSubset(cluster=25, subset = data$getSubset(c(2,3)))$getAt(26)$getFeatures()
-# fisherC$createSubset(cluster=25, subset = data$getSubset(c(2,3)))$getAt(1)$getClass()
+# fisherC <- BinaryFisherClustering$new(subset.cluster)
+# fisherC$execute()
+#fisherC$plot(dir.path = "/Users/mpegea/Desktop", file.name = "fisher_dispersion.pdf")
+#fisherC$getDistribution(cluster = 4, includeClass = "END")
+# test.subset <- fisherC$createSubset(cluster=4, subset = train.cluster, na.rm = TRUE )
+# fisherC$createSubset(cluster=25, subset = data$getSubset(c(2,3)) )$getNumClusters()
+# fisherC$createSubset(cluster=25, subset = data$getSubset(c(2,3)) )$getAt(26)$getFeatures()
+# fisherC$createSubset(cluster=25, subset = data$getSubset(c(2,3)) )$getAt(1)$getClass()
 # -----------------------------------------------------------------------------------------
-
-
 
 # -------------------------------- MultiTypeClustering ------------------------------------
 # multiC <- MultiTypeClustering$new(subset.cluster)
@@ -40,10 +38,10 @@ fisherC$getDistribution(cluster = 4, includeClass = "END")
 
 # ------------------------------------ FSClustering ---------------------------------------
 FSC <- FSClustering$new(subset.cluster)
-FSC$execute()
-FSC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/FSClustering_Dispersion.pdf")
-# FSC$getDistribution(cluster = 10, includeClass = "END")
-# FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))
-# FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))$getAt(3)
-# FSC$createSubset(cluster = 5, subset = data$getSubset(c(2,3)))$getAt(3)$getFeatures()
+FSC$execute( method = "IG")
+FSC$plot(dir.path = "/Users/mpegea/Desktop", file.name = "FSC")
+FSC$getDistribution(cluster = 5, includeClass = "END")
+FSC$createSubset(cluster = 5, train.cluster)
+FSC$createSubset(cluster = 5, train.cluster)$getAt(3)
+FSC$createSubset(cluster = 5, train.cluster)$getAt(3)$getFeatures()
 # -----------------------------------------------------------------------------------------
