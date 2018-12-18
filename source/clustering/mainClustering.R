@@ -38,10 +38,11 @@ train.cluster <- data$getSubset(c(2,3))
 
 # ------------------------------------ FSClustering ---------------------------------------
 FSC <- FSClustering$new(subset.cluster)
-FSC$execute( method = "IG")
-FSC$plot(dir.path = "/Users/mpegea/Desktop", file.name = "FSC")
-FSC$getDistribution(cluster = 5, includeClass = "END")
-FSC$createSubset(cluster = 5, train.cluster)
-FSC$createSubset(cluster = 5, train.cluster)$getAt(3)
-FSC$createSubset(cluster = 5, train.cluster)$getAt(3)$getFeatures()
-# -----------------------------------------------------------------------------------------
+FSC$execute( method = "CHI")
+# FSC$plot(dir.path = "/Users/mpegea/Desktop", file.name = "FSC")
+# FSC$getDistribution(cluster = 5, includeClass = "END")
+# FSC$createSubset(cluster = 5, train.cluster)
+# FSC$createSubset(cluster = 5, train.cluster)$getAt(3)
+# FSC$createSubset(cluster = 5, train.cluster)$getAt(3)$getFeatures()
+# FSC$createSubset(cluster = 5, train.cluster)$getAt(3)$getInstances()
+# # -----------------------------------------------------------------------------------------

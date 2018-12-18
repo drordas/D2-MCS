@@ -9,16 +9,16 @@ FSClustering <- R6Class(
     initialize = function(dataset, maxClusters = 50) {
       if (!"Subset" %in% class(dataset))
         stop("[CLUSTER][ERROR] Dataset must be a Subset type\n")
-      
       super$initialize(name = "FSCLUSTERING", dependences = "FSelector" , maxClusters)
-      
       private$all.distribution <- NULL
       private$best.distribution <- NULL
       private$class <- dataset$getClass()
       private$className <- dataset$getClassName()
       private$dataset <- dataset$getInstances(ignore.class = FALSE)
+      private$dataset.noclass <- dataset$getInstances(ignore.class = TRUE)
       private$heuristic <- super$defaultHeuristic
     },
+    
     execute = function(method = NULL, heuristic = NULL) {
       if (is.null(method) ||
           !toupper(method) %in% c("IG", "CHI", "CC", "OR", "ORS", "SIG", "GR", "MI")) {
@@ -28,7 +28,7 @@ FSClustering <- R6Class(
         cat("\tFeature Selection methods available:\n")
         cat("\t\t-IG: Information Gain\n")
         cat("\t\t-CHI: Chi-square\n")
-        cat("\t\t-CC: Correlation Coefficient\n") #Preguntar a Tomás
+        cat("\t\t-CC: Correlation Coefficient\n")
         cat("\t\t-OR: Ods Ratio\n")
         cat("\t\t-ORS: Ods Ratio Squared\n")
         cat("\t\t-SIG: Signed Information Gain\n") #oneR
@@ -37,32 +37,19 @@ FSClustering <- R6Class(
         stop()
       }
       private$method <- method
-      
       if (!is.null(heuristic) && is.function(heuristic))
         private$heuristic <- heuristic
-     
-      # ---- ELIMINAR LAS FEATURES CONSTANTES !!
-      # binaryIndex <- sapply( private$dataset, function(e){
-      #   ( super$isBinary(e) || length( unique(e) ) == 1)
-      # })
-      # if( dim(private$dataset[,!binaryIndex])[2] > 0 ){
-      #   private$dataset <- private$removeUnnecesary(private$dataset[,!binaryIndex])
-      # }
-      #---
-      
+      if(private$method == "CHI")
+        private$dataset <- private$removeUnnecesary(private$dataset.noclass)
+      else
+        private$dataset <- private$removeUnnecesary(private$dataset)
       private$all.distribution <- private$computeTest(private$dataset)
       private$best.distribution <- data.frame(cluster = integer(), features = I(list()))
       aux <- unlist(private$all.distribution$getClusterDist()[private$all.distribution$getClusterDist()$k == private$all.distribution$getBestK(),]$dist)
       for (i in 1:private$all.distribution$getBestK())
-        private$best.distribution <-
-        rbind(private$best.distribution, data.frame(cluster = i, dist = I(list(names(
-          aux[aux == i]
-        )))))
-      
-      private$min <-
-        min(private$all.distribution$getClusterDist()$k)
-      private$max <-
-        max(private$all.distribution$getClusterDist()$k)
+        private$best.distribution <-rbind(private$best.distribution, data.frame(cluster = i, dist = I(list(names(aux[aux == i])))))
+      private$min <- min(private$all.distribution$getClusterDist()$k)
+      private$max <- max(private$all.distribution$getClusterDist()$k)
     },
     
     
@@ -112,18 +99,6 @@ FSClustering <- R6Class(
         ggsave(paste0(file.path(dir.path,file.name),".pdf"),device="pdf",plot=last_plot(), limitsize = FALSE)
         cat("[",super$getName(),"][INFO] Plot has been succesfully saved at: ",paste0(file.path(dir.path,file.name),".pdf"),"\n",sep="")
       }
-      # if (!is.null(savePath)) {
-      #   ggsave(
-      #     savePath,
-      #     plot = last_plot(),
-      #     device = "pdf",
-      #     limitsize = FALSE
-      #   )
-      #   cat("[FSClustering][INFO] Plot has been succesfully saved at: ",
-      #       savePath,
-      #       "\n",
-      #       sep = "")
-      # }
     },
     getDistribution = function(cluster, group , includeClass = "NONE") {
       if (is.null(private$best.distribution) ||
@@ -250,11 +225,13 @@ FSClustering <- R6Class(
       cluster.dist
     }
   ),
+  
+  
   private = list(
     computeTable = function(corpus) {
       switch (private$method,
               "IG" = {
-                ig.test <- information.gain(as.formula(sprintf("`%s` ~.", subset.cluster$getClassName())),subset.cluster$getInstances(ignore.class = FALSE))
+                ig.test <- information.gain(as.formula(sprintf("`%s` ~.", private$className)),corpus)
                 ig.values <- ig.test$attr_importance
                 names(ig.values) <- row.names(ig.test)
                 ig.zero <- ig.values[which(ig.values == 0, arr.ind = TRUE)]
@@ -262,19 +239,26 @@ FSClustering <- R6Class(
                 ig.values <- list("NonZero"=ig.nonzero,"Zero"=ig.zero)
                 ig.values
               },
-              "CHI" = {# WARNING! Chi-squared approximation may be incorrect
-                chisq.result <- apply(subset.cluster$getInstances(ignore.class = TRUE), 2, function(e) {
-                    chisq.test(subset.cluster$getInstances(ignore.class = FALSE)[, 1], e)$p.value
+              "CHI" = { # WARNING! Chi-squared approximation may be incorrect
+                chisq.result <- sapply(corpus,function(e){
+                  chisq.test(private$class, e)$p.value
                   })
-                names(chisq.result) <- names(subset.cluster$getFeatures())
+                names(chisq.result) <- names(corpus)
                 str(chisq.result)
                 print(chisq.result)
                 chisq.result
               },
-              "CC" = {
+              "CC" = { # Preguntar a Tomás
+                
+              },
+              "OR" = {
+                
+              },
+              "ORS" = {
                 
               })
     },
+    
     computeTest = function(corpus) {
       clusteredData <- ClusterData$new()
       fs.table <- private$computeTable(corpus)
@@ -301,12 +285,9 @@ FSClustering <- R6Class(
       clusteredData
     },
     
-    
     removeUnnecesary = function(corpus) {
       corpus[,sapply(corpus,function(c){length(unique(c)) >= 2})]
     },
-    
-    
     
     getUnnecesary = function(corpus) {
       names(corpus[, !sapply(corpus, function(c) {
@@ -316,6 +297,7 @@ FSClustering <- R6Class(
     
     data.unbinary = NULL,
     dataset = NULL,
+    dataset.noclass = NULL,
     class = NULL,
     className = NULL,
     all.distribution = NULL,
@@ -326,19 +308,3 @@ FSClustering <- R6Class(
     method = NULL
   )
 )
-
-
-### NOTES
-# chisq.result <- length(subset.cluster$getInstances(ignore.class = TRUE))
-#   for(i in 1:(length(subset.cluster$getInstances(ignore.class = TRUE))-1)){
-#     chisq.result[i] <- chisq.test(subset.cluster$getInstances(ignore.class = FALSE)[,1],subset.cluster$getInstances(ignore.class = TRUE)[,i])$p.value
-#   }
-
-# # # DANGER ZONE # # #
-# ig.values <- information.gain(as.formula(paste0(private$className," ~.")), private$dataset, unit = "log2")
-# str(ig.values)
-# ig.zero <- which(ig.values==0, arr.ind = TRUE)[,1] #ig.values$attr_importance[-ig.nonzero] # ELIMINAR
-# ig.nonzero <- which(ig.values!=0, arr.ind = TRUE)[,1] #ig.values$attr_importance[ig.values$attr_importance!=0]
-# output <- list("NonZero"=ig.nonzero,"Zero"=ig.zero)
-# return(output)
-# # # # # # # # # # # #
