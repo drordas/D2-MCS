@@ -25,7 +25,7 @@ train.cluster <- data$getSubset(c(2,3))
 # -------------------------------- MultiTypeClustering ------------------------------------
 # multiC <- MultiTypeClustering$new(subset.cluster)
 # multiC$execute(positive.class = "Active", method = "kendall")
-# # multiC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/MutiTypeClustering_Kendall_Dispersion.pdf") #PETADA
+# # multiC$plot(savePath = "/Users/mpegea/GitKraken/D2-MCS/plots/MutiTypeClustering_Kendall_Dispersion.pdf")
 # multiC$plot()
 # multiC$getDistribution(fisherK = 8, corK = 2, includeClass = "NONE")
 # multiC$createSubset(subset = data$getSubset(c(2,3)))
@@ -38,8 +38,8 @@ train.cluster <- data$getSubset(c(2,3))
 
 # ------------------------------------ FSClustering ---------------------------------------
 FSC <- FSClustering$new(subset.cluster)
-FSC$execute( method = "CHI")
-# FSC$plot(dir.path = "/Users/mpegea/Desktop", file.name = "FSC")
+FSC$execute( method = "MI")
+FSC$plot(dir.path = "/Users/mpegea/Desktop", file.name = "MI")
 # FSC$getDistribution(cluster = 5, includeClass = "END")
 # FSC$createSubset(cluster = 5, train.cluster)
 # FSC$createSubset(cluster = 5, train.cluster)$getAt(3)

@@ -37,7 +37,6 @@ MultiTypeClustering <- R6Class(
       binaryIndex <- sapply( private$dataset, function(e){
         ( super$isBinary(e) || length( unique(e) ) == 2) 
       })
-      
       private$positive.class <- positive.class
       private$negative.class <- private$class.values[which(!private$class.values %in% positive.class)]
       private$method <- tolower(method)

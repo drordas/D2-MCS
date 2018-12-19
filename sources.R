@@ -60,3 +60,9 @@ library("ggrepel")
 
 #Required for loaded_packages()
 library("devtools")
+
+#Required for odds.ratio()
+library("fmsb")
+
+#Required for mutinformation()
+library("infotheo")

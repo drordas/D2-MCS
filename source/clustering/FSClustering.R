@@ -39,10 +39,22 @@ FSClustering <- R6Class(
       private$method <- method
       if (!is.null(heuristic) && is.function(heuristic))
         private$heuristic <- heuristic
+      
+
+      ### TODO: SWITCH ###
       if(private$method == "CHI")
         private$dataset <- private$removeUnnecesary(private$dataset.noclass)
+      if(private$method == "OR" || private$method == "ORS" || private$method == "MI"){
+        binaryIndex <- sapply( private$dataset, function(e){
+          ( super$isBinary(e) || length( unique(e) ) == 2) 
+        })
+        if( dim(private$dataset[,!binaryIndex])[2] > 0 )
+          private$dataset <- private$removeUnnecesary(private$dataset[,binaryIndex])
+      }
       else
         private$dataset <- private$removeUnnecesary(private$dataset)
+      
+      
       private$all.distribution <- private$computeTest(private$dataset)
       private$best.distribution <- data.frame(cluster = integer(), features = I(list()))
       aux <- unlist(private$all.distribution$getClusterDist()[private$all.distribution$getClusterDist()$k == private$all.distribution$getBestK(),]$dist)
@@ -244,18 +256,37 @@ FSClustering <- R6Class(
                   chisq.test(private$class, e)$p.value
                   })
                 names(chisq.result) <- names(corpus)
-                str(chisq.result)
-                print(chisq.result)
                 chisq.result
               },
               "CC" = { # Preguntar a Tomás
                 
               },
               "OR" = {
-                
+                oddsr.result <- sapply(corpus,function(e){
+                  odds.ratio(private$class,e)$p
+                })
+                names(oddsr.result) <- names(corpus)
+                oddsr.result
               },
               "ORS" = {
-                
+                oddsrs.result <- sapply(corpus,function(e){
+                  odds.ratio(private$class,e)$p
+                })
+                names(oddsrs.result) <- names(corpus)
+                sqrt(oddsrs.result)
+              },
+              "GR" = {
+                gainr <- gain.ratio(as.formula(sprintf("`%s` ~.", private$className)),corpus)
+                gainr.values <- gainr$attr_importance
+                names(gainr.values) <- row.names(gainr)
+                gainr.values
+              },
+              "MI" = {
+                mutinf <- sapply(corpus,function(e){
+                  mutinformation(private$class,e)
+                })
+                names(mutinf) <- names(corpus)
+                mutinf
               })
     },
     
