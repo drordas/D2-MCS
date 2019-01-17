@@ -92,11 +92,8 @@ MultiTypeClustering <- R6Class(
                 cor.summary <- data.frame(k=private$cor.all.distribution$getClusterDist()[,1],
                                       dispersion=private$cor.all.distribution$getClusterDist()[,2], 
                                       row.names = NULL , check.rows = FALSE)
-                print(cor.summary)
                 cor.min <- data.frame(x=cor.summary[which.min(cor.summary[,2]), ][, 1],y= min(cor.summary[,2]))
                 cor.max <- data.frame(x=cor.summary[which.max(cor.summary[,2]), ][, 1],y= max(cor.summary[,2]))
-                cat("MIN: ",min$y,"\n")
-                cat("MAX",max$y,"\n")
                 CorPlot <- ggplot(cor.summary, aes(k,dispersion)) + geom_point(aes(color = dispersion),position = position_jitter()) + 
                   scale_color_continuous(name="",low = "blue", high = "red", guide = FALSE ) + 
                   geom_text_repel( aes(x,y,label=sprintf("%s",format(cor.min$y,digits = 2, scientific = TRUE))), 

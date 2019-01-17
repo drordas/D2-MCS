@@ -7,6 +7,9 @@ subset.test <- data$getSubset(4)
 saveRDS(subset.cluster,file = file.path("datasets/","cluster.rds")) ## CLUSTERING SUBSET
 saveRDS(subset.test,file = file.path("datasets/","test.rds")) ## TEST SUBSET
 
+subset.cluster <- readRDS(file = "/mnt/Research/Leiden/D2-MCS/datasets/cluster.rds")
+test.cluster <- readRDS(file = "datasets/test.rds")
+
 # Only Fisher
 
 BFClustering <- BinaryFisherClustering$new(dataset = subset.cluster)
@@ -32,8 +35,8 @@ saveRDS(pearson.train,file = file.path("datasets/MultiTypePearson","train.rds"))
 
 #FSelectionClustering (IG)
 
-FSelectionClustering <- FSClustering$new(dataset = subset.cluster)
-FSelectionClustering$execute(method="IG")
-FSelectionClustering$plot(dir.path ="models/FSelectionClustering", file.name = "FSelectionClustering")
-ig.train <- MultiTypeKendall$createSubset(subset = data$getSubset(c(2,3)) )
-saveRDS(ig.train,file = file.path("datasets/FSelectionClustering","train.rds")) ## TRAINING SUBSET
+#FSelectionClustering <- FSClustering$new(dataset = subset.cluster)
+#FSelectionClustering$execute(method="IG")
+#FSelectionClustering$plot(dir.path ="models/FSelectionClustering", file.name = "FSelectionClustering")
+#ig.train <- MultiTypeKendall$createSubset(subset = data$getSubset(c(2,3)) )
+#saveRDS(ig.train,file = file.path("datasets/FSelectionClustering","train.rds")) ## TRAINING SUBSET

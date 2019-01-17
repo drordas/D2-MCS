@@ -1,4 +1,8 @@
-#source("pkgChecker.R", chdir = TRUE) #PETADA EN BUCLE
+cat("[SOURCES][INFO] Loading required libraries\n")
+source("pkgChecker.R", chdir = TRUE)
+
+cat("[SOURCES][INFO] Loading required sources\n")
+source("utils.R", chdir = TRUE)
 source("source/data/Dataset.R", chdir=TRUE)
 source("source/clustering/Cluster.R", chdir=TRUE)
 source("source/clustering/ClusterDistribution.R", chdir=TRUE)
@@ -28,10 +32,18 @@ source("source/prediction/Prediction.R", chdir=TRUE)
 source("source/prediction/PredictionList.R", chdir=TRUE)
 source("source/prediction/PredictionHandler.R", chdir=TRUE)
 source("source/prediction/VotingScheme.R", chdir=TRUE)
+source("source/prediction/ClassWeightedVoting.R", chdir = TRUE)
 source("source/prediction/ClassMajorityVoting.R", chdir=TRUE)
 source("source/prediction/ProbMajorityVoting.R", chdir=TRUE)
 source("source/prediction/PerformanceMeasures.R", chdir=TRUE)
-source("source/prediction/ClassWeightedVoting.R", chdir = TRUE)
+
+source("source/optimization/MinFunction.R", chdir = TRUE)
+source("source/optimization/FPFN.R", chdir = TRUE)
+source("source/optimization/WeightsOptimizer.R", chdir = TRUE)
+source("source/optimization/NSGA2.R", chdir = TRUE)
+source("source/optimization/OptimizationOutput.R", chdir=TRUE)
+source("source/optimization/OptimizationConfig.R", chdir=TRUE)
+
 source("D2MCS.R",chdir=TRUE)
 
 # sources <- list.files(pattern = "*.R$", all.files = TRUE, recursive = TRUE)
@@ -39,30 +51,9 @@ source("D2MCS.R",chdir=TRUE)
 # cat("Loading required packages and libraries\n")
 # invisible(sapply(sources, source, chdir=TRUE))
 
-#Required for dual plot
-library(gridExtra)
-library(grid)
-library(ggplot2)
-library(lattice)
-
-#Required for recode()
-library(car)
-
 #Required for strcmpi()
-library(pracma)
+#library(pracma)
 
 #Required for information.gain()
-library("rJava")
-library("FSelector")
-
-#Required for geom_text_repel()
-library("ggrepel")
-
-#Required for loaded_packages()
-library("devtools")
-
-#Required for odds.ratio()
-library("fmsb")
-
-#Required for mutinformation()
-library("infotheo")
+#library("rJava")
+#library("FSelector")
