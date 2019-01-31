@@ -13,7 +13,7 @@ D2MCS <- R6Class(
         else
           cat(" (1>= nCores < ",detectCores(),")\n", sep="")
         cores <- min(max(1,detectCores()-2),10)
-        cat(" Using default configuration (",cores,"/",detectCores(),") \n", sep="")
+        cat("\t\tUsing default configuration (",cores,"/",detectCores(),") \n", sep="")
       }else cores <- nCores
       
       if( !socket.type %in% c("PSOCK","FORK") ){
@@ -193,10 +193,13 @@ D2MCS <- R6Class(
       cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
       cat("[D2MCS][INFO] Computing final prediction values using '",voting.scheme$getName(),"'\n", sep="")
 
-      private$prediction.voted <- factor(voting.scheme$execute(prediction.cluster), levels=c(0,1),labels=c(negative.class,positive.class))
+      private$prediction.voted <- list("preds"=factor(voting.scheme$execute(prediction.cluster), levels=c(0,1),labels=c(negative.class,positive.class)),
+                                      "weights"=as.numeric(private$models.weights),
+                                      "positive" = positive.class )
       cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
     },
     optimize = function(opt.set, voting.scheme, opt.algorithm, positive.class, metric=private$metric){
+
       if( !"Subset" %in% class(opt.set)  )
         stop("[D2MCS][ERROR] Test dataset missing or incorrect. Aborting...\n")
 
@@ -208,7 +211,7 @@ D2MCS <- R6Class(
 
       if ( is.null(positive.class) || !positive.class %in% levels(opt.set$getClass()) )
         stop("[D2MCS][ERROR] Positive class missing or invalid (must be: ",paste0(levels(opt.set$getClass()),collapse=", "),"). Aborting...\n")
-      
+
       if( is.null(private$bestModels) || private$bestModels$size() < 1 )
         stop("[D2MCS][ERROR] Models were not trained. Please run 'Train' method first\n")
       
@@ -217,7 +220,10 @@ D2MCS <- R6Class(
         private$models.weights <- rep.int(1,times = private$bestModels$size() )
       }else private$models.weights <- as.numeric(private$models.weights)
       
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
       cat("[D2MCS][INFO] D2MCS Optimization stage\n")
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      
       if( opt.set$getClassIndex() > 0 && !is.null(opt.set$getClass()) )
         private$real.values <- opt.set$getClass()
       
@@ -226,7 +232,7 @@ D2MCS <- R6Class(
       
       real.values <- factor( opt.set$getClass(), levels= c(negative.class,positive.class),  labels = c(0, 1) )
       prediction.cluster <- PredictionList$new( private$metric )
-
+      
       for ( cluster in 1:private$bestModels$size() ){
         cat("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '",private$bestModels$size(),"'\n",sep="")
         cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
@@ -251,10 +257,9 @@ D2MCS <- R6Class(
       }
       
       opt.algorithm$execute(private$models.weights, compute.fitness)
-      opt.algorithm$finalize()
-      
-      return( OptimizationOutput$new(opt.algorithm) )
+      freq <- table(real.values)
       cat("[D2MCS][INFO] Finish optimmization process!'\n")
+      return(OptimizationOutput$new(optimizer=opt.algorithm,n.positive= as.numeric(freq["1"]), n.negative = as.numeric(freq["0"]) ))
     },
     getBestPerformanceByCluster = function(){
       if ( is.null(private$models.weights) || length(private$models.weights) < 1 )
@@ -322,7 +327,40 @@ D2MCS <- R6Class(
     getPredictions = function(){
       if( is.null(private$prediction.voted) )
         stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
-      private$prediction.voted
+      private$prediction.voted$preds
+    },
+    getPerformance = function(real.values = NULL, measure = NULL){
+      if( is.null(private$prediction.voted$preds) )
+        stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
+      
+      if(is.null(real.values) && is.null(private$real.values) )
+        stop("[D2MCS][ERROR] Real values are missing. Should be defined to compute performance measures\n")
+      
+      if( !is.null(real.values) ) rv <- real.values else rv <- private$real.values
+      
+      PerformanceOutput$new( preds = private$prediction.voted, obs = rv )
+    },
+    computePerformance = function(real.values = NULL, measures = NULL){
+      if( is.null(private$prediction.voted$preds) )
+        stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
+      
+      if(is.null(real.values) && is.null(private$real.values) )
+        stop("[D2MCS][ERROR] Real values are missing. Should be defined to compute performance measures\n")
+      
+      if( !is.list(measures) || length(measures) ==0  )
+        stop("[D2MCS][ERROR] Measure function not included\n")
+      
+      if( !is.null(real.values) ) rv <- real.values else rv <- private$real.values
+      #measures$compute( PerformanceOutput$new( preds = private$prediction.voted, obs = rv ) )
+       
+      do.call(rbind,lapply( measures, function(entry,y) { 
+                                          df <- data.frame(entry$getName(), entry$compute(y))
+                                          rownames(df) <- NULL
+                                          names(df) <- c("Measure","Value") 
+                                          df 
+                                      }, 
+                            y= PerformanceOutput$new( preds = private$prediction.voted, obs = rv ) )) 
+       
     },
     getAvailableModels = function(){
       private$availableModels[,c(1,2)]

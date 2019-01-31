@@ -3,10 +3,9 @@ source("sources.R")
 set.seed(1234)
 data <- Dataset$new(filepath ="/mnt/Research/Corpus/D4N/FCFP_6/TRAINNING/full_set_FCFP_6_physchem.csv",
                     header=TRUE, sep="\t",skip = 1, normalize.names=TRUE, classIndex = 1)
+data$getNcol()
+data$getNrow()
 
-# data <- Dataset$new(filepath ="/mnt/Research/Corpus/D4N/FCFP_6/TRAINNING/full_set_FCFP_6_physchem.csv",
-#                    header=TRUE, sep="\t",skip = 1, normalize.names=TRUE, classIndex = 1)
-# 
 data$executePartition(4)
 # bfc <- BinaryFisherClustering$new(dataset = data$getSubset(c(1,2)) )
 # bfc$execute()
@@ -27,24 +26,24 @@ cluster.subset <- readRDS(file = file.path(getwd(),"datasets","cluster.rds") )
 train.subset <- readRDS(file = file.path(getwd(),"datasets/BinaryFisherClustering","train.rds") )
 test.subset <- readRDS(file = file.path(getwd(),"datasets","test.rds") )
 
-test.subset
+test.subset$getClass()
 
 
 #BEGIN
 Benchmarking <- D2MCS$new( path = "models/BinaryFisherCluster_prev/", trainFunction = trFunction )
 Benchmarking$train( train.set = train.subset, ig.classifiers = ignore.classifiers, metric = "PPV" )
 Benchmarking$classify( test.set = test.subset, voting.scheme = ClassWeightedVoting$new(), positive.class = "Active" )
-
+#output <- Benchmarking$getPerformance(real.values = test.subset$getClass() )
+Benchmarking$computePerformance(real.values = test.subset$getClass(), list(MCC$new(),PPV$new(),Accuracy$new()) )
 
 a <- Benchmarking$optimize( opt.set = test.subset, 
                             voting.scheme = ClassWeightedVoting$new(), 
-                            opt.algorithm = NSGAII$new(min.function = FPFN$new(),generations = 1 ), #100
+                            opt.algorithm = NSGAII$new( min.function = FPFN$new(), 
+                                                        n.generations = 1, 
+                                                        n.iteractions = 2 ), #generations=100
                             positive.class = "Active" )
 
 
-Benchmarking$computeFinalPerformance(positive.class = "Active" )
-Benchmarking$getFinalPerformance("PPV")
-#END
 
 write.csv(test.subset$getInstances(),file = "/mnt/Research/Leiden/D2-MCS/subset.csv", row.names = FALSE)
 

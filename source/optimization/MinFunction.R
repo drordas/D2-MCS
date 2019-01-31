@@ -14,7 +14,7 @@ MinFunction <- R6Class(
       private$n.objectives <- n.objectives
     },
     computeMeasure = function(conf.matrix){
-      stop("[Fitness][ERROR] Fitness class is abstract. Method computeMeasure should be immplemented inherited class. Aborting\n")
+      stop("[Fitness][ERROR] Fitness class is abstract. Method 'computeMeasure' should be immplemented inherited class. Aborting\n")
     },
     getName = function(){ private$name },
     getNumOjectives = function(){ private$n.objectives }

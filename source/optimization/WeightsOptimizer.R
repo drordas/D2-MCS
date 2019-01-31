@@ -11,19 +11,8 @@ WeightsOptimizer <- R6Class(
       
       private$name <- name
       private$min.function <- min.function
-
-      loadPackages(dependences,quiet=TRUE)
-
-      # lapply(dependences, function(pkg){
-      #   if (! pkg %in% installed.packages() ){
-      #     cat("[",private$name,"][INFO] ",pkg," package required and not installed. Performing installation...\n",sep="")
-      #     suppressMessages(install.packages(pkg,repos="https://ftp.cixug.es/CRAN/", dependencies = TRUE))
-      #   }
-      #   if(!pkg %in% loaded_packages()$package ){
-      #     cat("[",private$name,"][INFO] Loading ",pkg," package....\n",sep="")
-      #     library(pkg,character.only = TRUE,warn.conflicts = FALSE, quietly = TRUE)
-      #   } 
-      # })
+      private$dependences <- dependences
+      loadPackages(private$dependences,quiet=TRUE)
     },
     execute = function(fitness = NULL){
       stop("[WeightsOptimizer][ERROR] Method 'execute' is abstract. Should be implemented in inherited class\n")
@@ -44,6 +33,7 @@ WeightsOptimizer <- R6Class(
     getMinFunction = function() { private$min.function },
     voting.scheme = NULL,
     name = NULL,
-    min.function = NULL
+    min.function = NULL,
+    dependences = NULL
   )
 )

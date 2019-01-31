@@ -1,6 +1,6 @@
 packages.list <- c("R6","car","plyr","dplyr","caret","tictoc","mltools","here","parallel","RWeka",
                    "devtools","ggrepel","ModelMetrics","tools","tictoc","graphics","gridExtra",
-                   "grid", "ggplot2","lattice","rJava","FSelector","BBmisc")
+                   "grid", "ggplot2","lattice","rJava","FSelector","BBmisc","ggalt")
 
 cat("[PkgChecker][INFO] Package Manager\n")
 

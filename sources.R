@@ -4,12 +4,16 @@ source("pkgChecker.R", chdir = TRUE)
 cat("[SOURCES][INFO] Loading required sources\n")
 source("utils.R", chdir = TRUE)
 source("source/data/Dataset.R", chdir=TRUE)
+
+#LOAD CLUSTERING ALGORITHMS CLASSES
 source("source/clustering/Cluster.R", chdir=TRUE)
 source("source/clustering/ClusterDistribution.R", chdir=TRUE)
 source("source/clustering/ClusterData.R", chdir=TRUE)
 source("source/clustering/BinaryFisherClustering.R", chdir=TRUE)
 source("source/clustering/MultiTypeClustering.R", chdir=TRUE)
 source("source/clustering/FSClustering.R", chdir=TRUE)
+
+#LOAD MODEL CLASSES
 source("source/models/utility/ModelFit.R", chdir = TRUE)
 source("source/models/utility/DefaultModelFit.R", chdir = TRUE)
 source("source/models/trainFunctions/TrainFunction.R", chdir= TRUE)
@@ -28,6 +32,9 @@ source("source/models/Predictions.R", chdir=TRUE)
 source("source/models/ExecutedModels.R", chdir=TRUE)
 source("source/models/ExecutedModelsList.R", chdir=TRUE)
 source("source/models/ModelInfo.R", chdir=TRUE)
+source("source/models/PerformanceOutput.R", chdir=TRUE)
+
+#LOAD PREDICTION CLASSES
 source("source/prediction/Prediction.R", chdir=TRUE)
 source("source/prediction/PredictionList.R", chdir=TRUE)
 source("source/prediction/PredictionHandler.R", chdir=TRUE)
@@ -37,12 +44,26 @@ source("source/prediction/ClassMajorityVoting.R", chdir=TRUE)
 source("source/prediction/ProbMajorityVoting.R", chdir=TRUE)
 source("source/prediction/PerformanceMeasures.R", chdir=TRUE)
 
+#LOAD PREDICTION ALGORITHMS
 source("source/optimization/MinFunction.R", chdir = TRUE)
 source("source/optimization/FPFN.R", chdir = TRUE)
 source("source/optimization/WeightsOptimizer.R", chdir = TRUE)
 source("source/optimization/NSGA2.R", chdir = TRUE)
 source("source/optimization/OptimizationOutput.R", chdir=TRUE)
 source("source/optimization/OptimizationConfig.R", chdir=TRUE)
+
+#LOAD MEASURES ALGORITHMS
+source("source/measures/MeasureFunction.R", chdir = TRUE)
+source("source/measures/Accuracy.R", chdir = TRUE)
+source("source/measures/Kappa.R", chdir = TRUE)
+source("source/measures/MCC.R", chdir = TRUE)
+source("source/measures/NPV.R", chdir = TRUE)
+source("source/measures/PPV.R", chdir = TRUE)
+source("source/measures/Precision.R", chdir = TRUE)
+source("source/measures/Recall.R", chdir = TRUE)
+source("source/measures/Sensitivity.R", chdir = TRUE)
+source("source/measures/Specificity.R", chdir = TRUE)
+
 
 source("D2MCS.R",chdir=TRUE)
 
