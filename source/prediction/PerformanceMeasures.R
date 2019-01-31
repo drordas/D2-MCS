@@ -4,7 +4,7 @@ PerformanceMeasures <- R6Class(
   portable = TRUE,                   
   public = list(
     initialize = function(cf){
-      if(class(cf) %in% "table"){
+      if("confusionMatrix" %in% class(cf)){
         private$cf <- cf
         private$mcc <- mltools::mcc(TP=cf$table[1,1],FP=cf$table[1,2],TN=cf$table[2,2],FN=cf$table[2,1])
       }else stop("[PerformanceMeasures][ERROR] Incorrect type of Confusion Matrix\n")

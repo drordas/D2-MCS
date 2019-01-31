@@ -25,16 +25,9 @@ datasets/clustering\.rds
 
 source/clustering/mainClustering\.R
 
-models/testModel_/MCC/C\[1-3\]/\.executed
+models/
 
-models/testModel_/MCC/C\[2-3\]/\.executed
+plots/
 
-plots/MutiTypeClustering_Kendall_Dispersion\.pdf
 
-plots/MutiTypeClustering_Pearson_Dispersion\.pdf
-
-models/testModel_/MCC/C\[1-3\]/\.executed
-
-models/testModel_/MCC/C\[2-3\]/\.executed
-
-models/MultiTypeKendall/MultiTypeKendall\.pdf
+badhess\.txt

@@ -12,9 +12,9 @@ PredictionList <- R6Class(
       private$metric <- metric
     },
     addPrediction = function(prediction){
-      if( "Prediction" %in% class(prediction) )
+      if( "Prediction" %in% class(prediction) ){
         private$results.pred <- append(private$results.pred,prediction)
-      else stop("[PredictionList][ERROR] Prediction parameter must be defined as 'Prediction' Object\n")
+      }else stop("[PredictionList][ERROR] Prediction parameter must be defined as 'Prediction' Object\n")
     },
     getPredictionAt = function(position){
       if( position > 0 && position <= length(private$results.pred) ){
@@ -34,9 +34,18 @@ PredictionList <- R6Class(
     },
     getProbPredictions = function(){
       allPreds <- data.frame(matrix(NA, nrow=1, ncol=0),stringsAsFactors = FALSE)
-      for( i in 1:length(private$results.pred) ){
+      for( i in 1:length(private$results.pred) )
         allPreds <- cbind(allPreds,data.frame(private$results.pred[[i]]$getProbPrediction()), stringsAsFactors = FALSE)
+      allPreds
+    },
+    getBinaryPredictions = function(){
+      allPreds <- data.frame(matrix(NA, nrow=1, ncol=0),stringsAsFactors = FALSE)
+      colNames <- c()
+      for( i in 1:length(private$results.pred) ){
+        allPreds <- cbind(allPreds,data.frame(private$results.pred[[i]]$getBinaryPrediction()), stringsAsFactors = FALSE)
+        colNames <- c(colNames,paste0("CLUSTER ",i) )
       }
+      names(allPreds) <- colNames
       allPreds
     },
     getMetric = function(){ private$metric },

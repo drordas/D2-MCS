@@ -26,8 +26,6 @@ Model <- R6Class(
         dir.create(dir,showWarnings = FALSE,recursive = TRUE)
       }
       
-      #if(!is.null(pkgName) && !is.na(pkgName) && !pkgName %in% "NA" ) 
-      
       private$packages <- pkgName
       private$dir <- dir
       private$metric <- metric
@@ -51,7 +49,7 @@ Model <- R6Class(
         private$isTrained <- TRUE
       }else{
         private$modelInfo <- ModelData$new( dir= dir, method = method, family = family, 
-                                            description = description, metric = metric )
+                                            description = description, metric = metric, pkgs = private$packages )
         private$isTrained <- FALSE
         cat("[",private$method,"][INFO] '",family,"' '",description,"' loaded!\n", sep="")
       }
@@ -100,7 +98,7 @@ Model <- R6Class(
         }
         
         cat("[",private$method,"][INFO] Performing model training and hyperparameter optimization stage...\n", sep="")
-        tic(quiet = TRUE)
+        tictoc::tic(quiet = TRUE)
         
         repeat{
           trainedModel <- tryCatch({caret::train(fitting,data=data, method=private$method,
@@ -112,7 +110,7 @@ Model <- R6Class(
           if( !is.null(trainedModel) ) {break}
           cat("[",private$method,"][INFO] Trying to retrain model\n", sep="")
         }
-        time <- toc(quiet=TRUE)
+        time <- tictoc::toc(quiet=TRUE)
         private$modelInfo$setTrainInfo(trainedModel, (time$toc - time$tic) )
         private$isTrained <- TRUE
         cat("[",private$method,"][INFO] Finished [",(time$toc - time$tic),"s]\n", sep="")
@@ -170,7 +168,8 @@ Model <- R6Class(
       new.packages <- pkgName[!(pkgName %in% installed.packages()[,"Package"])]
       if(length(new.packages)){ 
         cat("[Model][INFO]",length(new.packages),"packages needed to execute aplication\n Installing packages ...")
-        suppressMessages(install.packages(new.packages,repos="https://ftp.cixug.es/CRAN/", dependencies = TRUE))
+        suppressMessages(install.packages( new.packages,repos="https://ftp.cixug.es/CRAN/", dependencies = TRUE, 
+                                           quiet = TRUE, verbose = FALSE))
       }
       lapply(pkgName, function(pkg){
         if (! pkg %in% loaded_packages() )
@@ -178,7 +177,6 @@ Model <- R6Class(
       })
     },
     unloadPackages = function(pkgName){
-      #loaded.dlls <- getLoadedDLLs()
       lapply(pkgName, function(pkg){
         if( (pkg %in% loaded_packages()$package) && (!pkg %in% c("dplyr","plyr")) ){
           pck.name <- paste0("package:",pkg)
@@ -206,13 +204,17 @@ ModelData <- R6Class(
   classname = "ModelData",
   portable = TRUE,                   
   public = list(
-    initialize = function(dir,method,family,description,metric){
+    initialize = function(dir,method,family,description,metric, pkgs){
       private$dir <- dir
       private$method <- method
       private$family <- family
       private$description <- description
       private$metric <- metric
       private$execTime <- 0
+      private$pkgs <- pkgs
+    },
+    getModelPkgs = function(){
+      private$pkgs
     },
     getModelDir = function(){
       private$dir
@@ -270,6 +272,7 @@ ModelData <- R6Class(
     fit = NULL,
     metric = NULL,
     execTime = 0,
-    trainModel = NULL
+    trainModel = NULL,
+    pkgs= NULL
   )
 )

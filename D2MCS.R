@@ -9,11 +9,11 @@ D2MCS <- R6Class(
       if(is.null(nCores) || nCores >=  detectCores() || nCores > 10  ){
         cat("[D2MCS][WARNING] Invalid number of cores ")
         if(detectCores() > 10)
-          cat(" (1>= nCores <= 10)", sep="")
+          cat(" (1>= nCores <= 10)\n", sep="")
         else
-          cat(" (1>= nCores < ",detectCores(),")", sep="")
+          cat(" (1>= nCores < ",detectCores(),")\n", sep="")
         cores <- min(max(1,detectCores()-2),10)
-        cat(" Using default configuration (",cores,"/",detectCores(),") \n", sep="")
+        cat("\t\tUsing default configuration (",cores,"/",detectCores(),") \n", sep="")
       }else cores <- nCores
       
       if( !socket.type %in% c("PSOCK","FORK") ){
@@ -30,12 +30,10 @@ D2MCS <- R6Class(
         stop("[D2MCS][ERROR] TrainFunction not defined or incorrect type (should be inherit from TrainFunction abstract class)\n")
       else private$trainFunction <- trainFunction
       
-      #private$loadModules()
       private$availableModels <- private$loadAvailableModels()
       private$path <- file.path(getwd(),path)
       dir.create( private$path, recursive = TRUE, showWarnings = FALSE )
       
-      #private$cluster <- makeCluster(cores, type=socket, outfile=outfile, useXDR=xdr) #TODO PRIVATE VARIABLE CORE/SOCKET,OUTFILE useXDR AND CREATE/STOP CLUSTER IN TRAIN.
       private$cluster.conf <- list( cores=cores, socket=socket, outfile=outfile, xdr=xdr )
       private$cluster.obj <- NULL
       private$executedModels <- NULL
@@ -44,18 +42,18 @@ D2MCS <- R6Class(
       private$models.weights <- c()
       private$real.values <- NULL
     },
-    train = function( cluster.dist = NULL, num.clusters = NULL, ex.classifiers = c(), 
+    train = function( train.set = NULL, num.clusters = NULL, ex.classifiers = c(), 
                       ig.classifiers =c(), metric = NULL, saveAllModels = FALSE ){
-      if(missing(cluster.dist) || is.null(cluster.dist) || !"ClusterDistribution" %in% class(cluster.dist) )
+      if(missing(train.set) || is.null(train.set) || !"ClusterDistribution" %in% class(train.set) )
         stop("[D2MCS][ERROR] Subset must be of type 'Cluster'\n")
     
       if(missing(num.clusters) || is.null(num.clusters) || !is.numeric(num.clusters) || !is.vector(num.clusters) ){
         cat("[D2MCS][WARNING] Number of clusters missing or incorrect (must be numeric or vector). Using all clusters\n")
-        num.clusters <- c(1:cluster.dist$getNumClusters())
+        num.clusters <- c(1:train.set$getNumClusters())
       }else{
-        if (is.numeric(num.clusters) && num.clusters > cluster.dist$getNumClusters() ){
+        if (is.numeric(num.clusters) && num.clusters > train.set$getNumClusters() ){
           cat("[D2MCS][WARNING] num.clusters is higher than number of existing clusters. Using all clusters\n")
-          num.clusters <- c(1:cluster.dist$getNumClusters())
+          num.clusters <- c(1:train.set$getNumClusters())
         }else num.clusters <- c(1:num.clusters)
       }
 
@@ -81,10 +79,10 @@ D2MCS <- R6Class(
         cat("[D2MCS][INFO] ---------------------------------------\n",sep="")
         cat("[D2MCS][INFO] Training models for cluster '",i,"' of '", max(num.clusters),"'\n",sep="")
         cat("[D2MCS][INFO] ---------------------------------------\n",sep="")
-        model.subset <- cluster.dist$getAt(i)
+        model.subset <- train.set$getAt(i)
         model.fitClass <- DefaultModelFit$new(model.subset)
 
-        model.savePath <- file.path(paste0(private$path,private$metric),paste0("C[",i,"-",cluster.dist$getNumClusters(),"]") )
+        model.savePath <- file.path(paste0(private$path,private$metric),paste0("C[",i,"-",train.set$getNumClusters(),"]") )
         private$executedModels$loadFrom(file.path(model.savePath,".executed"),i)
         private$bestClusterModel <- NULL
 
@@ -96,7 +94,7 @@ D2MCS <- R6Class(
                                                       path= file.path(model.savePath,paste0(bestModel$method,".rds")) )
         }else private$bestClusterModel <- ModelEntry$new( name= "NULL", performance= 0.0 )
         
-        if(abs(mean(cor(model.subset$getInstances(ignore.class = TRUE),as.numeric(model.subset$getClass())), na.rm=TRUE) ) < 0.3 ){ ##CORRELATION
+        if(abs(mean(cor(model.subset$getInstances(ignore.class = TRUE), as.numeric(model.subset$getClass())), na.rm=TRUE) ) < 0.3 ){ ##CORRELATION
           cat("[D2MCS][INFO] High-Correlated Data (< 0.3). Ignoring Linear-based and Discriminant-based models\n", sep="")
           remaining.models <- subset(used.models,!grepl("Linea[l|r]|Discriminant",paste(used.models$description,used.models$family,sep=" ")) )
           cat("[D2MCS][INFO] Removing ",nrow(used.models) - nrow(remaining.models)," incompatible M.L. models\n", sep="")
@@ -150,82 +148,128 @@ D2MCS <- R6Class(
             private$executedModels$saveAt(paste0(model.savePath,"/.executed"),i)
           }else cat("[D2MCS][INFO] Model '",model$name,"' has been previously trained\n", sep="")
         })
+        
         private$bestModels$insertAt(i,private$bestClusterModel)
-        private$models.weights <- c( private$models.weights,private$bestClusterModel$getPerformance() )
+        private$models.weights <- as.numeric(c( private$models.weights,private$bestClusterModel$getPerformance() ))
         cat("[D2MCS][INFO] Finish ! \n", sep="")
       }
       if(!is.null(private$cluster.obj)) { stopCluster(private$cluster.obj); private$cluster.obj <- NULL }
     },
-    classify = function( test.set = NULL, voting.scheme){
+    classify = function( test.set = NULL, voting.scheme, positive.class){
       if( !"Subset" %in% class(test.set)  )
         stop("[D2MCS][ERROR] Test dataset missing or incorrect. Must be a Subset object\n")
       
       if (missing(voting.scheme) || !"VotingScheme" %in% class(voting.scheme) )
         stop("[D2MCS][ERROR] Voting Scheme missing or invalid\n")
       
+      if ( is.null(positive.class) || !positive.class %in% levels(test.set$getClass()) )
+        stop("[D2MCS][ERROR] Positive class missing or invalid (must be: ",paste0(levels(test.set$getClass()),collapse=", "),"). Aborting...\n")
+      
       if( is.null(private$bestModels) || private$bestModels$size() < 1 )
-        cat("[D2MCS][ERROR] Models were not trained. Please run 'executeTrain' method first\n")
-      else{
-        cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-        cat("[D2MCS][INFO] Starting prediction operation\n")
-        cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-        
-        if( test.set$getClassIndex() > 0 && !is.null(test.set$getClass()) )
-          private$real.values <- test.set$getClass()
-        
-        instances <- test.set$getInstances(ignore.class = TRUE)
-        prediction.cluster <- PredictionList$new( private$metric )
+        stop("[D2MCS][ERROR] Models were not trained. Please run 'Train' method first\n")
 
-        for ( cluster in 1:private$bestModels$size() ){
-          cat("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '",private$bestModels$size(),"'\n",sep="")
-          cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-          pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject() )
-          pred$execute(instances)
-          prediction.cluster$addPrediction(pred)
-        }
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      cat("[D2MCS][INFO] Starting prediction operation\n")
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      
+      if( test.set$getClassIndex() > 0 && !is.null(test.set$getClass()) )
+        private$real.values <- test.set$getClass()
+      
+      instances <- test.set$getInstances(ignore.class = TRUE)
+      negative.class <- levels(test.set$getClass())[which(levels(test.set$getClass())!=positive.class)]
+      
+      real.values <- factor( test.set$getClass(), levels= c(negative.class,positive.class),  labels = c(0, 1) )
+      prediction.cluster <- PredictionList$new( private$metric )
+
+      for ( cluster in 1:private$bestModels$size() ){
+        cat("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '",private$bestModels$size(),"'\n",sep="")
         cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-        cat("[D2MCS][INFO] Computing final prediction values using '",voting.scheme$getName(),"'\n", sep="")
-        private$prediction.voted <- voting.scheme$execute(prediction.cluster)
-        cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+        pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject(), 
+                                class.values = levels( test.set$getClass() ), positive.class = positive.class )
+        pred$execute(instances)
+        prediction.cluster$addPrediction(pred)
       }
+      
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      cat("[D2MCS][INFO] Computing final prediction values using '",voting.scheme$getName(),"'\n", sep="")
+
+      private$prediction.voted <- list("preds"=factor(voting.scheme$execute(prediction.cluster), levels=c(0,1),labels=c(negative.class,positive.class)),
+                                      "weights"=as.numeric(private$models.weights),
+                                      "positive" = positive.class )
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+    },
+    optimize = function(opt.set, voting.scheme, opt.algorithm, positive.class, metric=private$metric){
+
+      if( !"Subset" %in% class(opt.set)  )
+        stop("[D2MCS][ERROR] Test dataset missing or incorrect. Aborting...\n")
+
+      if ( !"VotingScheme" %in% class(voting.scheme) )
+        stop("[D2MCS][ERROR] Voting Scheme missing or invalid. Aborting...\n")
+
+      if ( !"WeightsOptimizer" %in% class(opt.algorithm) )
+        stop("[D2MCS][ERROR] Optimization algorithm missing or invalid. Aborting...\n")
+
+      if ( is.null(positive.class) || !positive.class %in% levels(opt.set$getClass()) )
+        stop("[D2MCS][ERROR] Positive class missing or invalid (must be: ",paste0(levels(opt.set$getClass()),collapse=", "),"). Aborting...\n")
+
+      if( is.null(private$bestModels) || private$bestModels$size() < 1 )
+        stop("[D2MCS][ERROR] Models were not trained. Please run 'Train' method first\n")
+      
+      if ( is.null(private$models.weights) || length(private$models.weights) < 1 ){
+        cat("[D2MCS][ERROR] Weigths not defined. Initializing weights values\n")
+        private$models.weights <- rep.int(1,times = private$bestModels$size() )
+      }else private$models.weights <- as.numeric(private$models.weights)
+      
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      cat("[D2MCS][INFO] D2MCS Optimization stage\n")
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      
+      if( opt.set$getClassIndex() > 0 && !is.null(opt.set$getClass()) )
+        private$real.values <- opt.set$getClass()
+      
+      instances <- opt.set$getInstances(ignore.class = TRUE)
+      negative.class <- levels(opt.set$getClass())[which(levels(opt.set$getClass())!=positive.class)]
+      
+      real.values <- factor( opt.set$getClass(), levels= c(negative.class,positive.class),  labels = c(0, 1) )
+      prediction.cluster <- PredictionList$new( private$metric )
+      
+      for ( cluster in 1:private$bestModels$size() ){
+        cat("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '",private$bestModels$size(),"'\n",sep="")
+        cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+        pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject(), 
+                                class.values = levels(opt.set$getClass()), positive.class = positive.class )
+        pred$execute(instances)
+        prediction.cluster$addPrediction(pred)
+      }
+      
+      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      cat("[D2MCS][INFO] Starting optimmization process: \n")
+
+      compute.fitness <- function(weights,min.function){
+        pred.values <- voting.scheme$execute(prediction.cluster,weights)
+        
+        if ( all(levels(pred.values) != levels(real.values)) )
+          stop("[D2MCS][ERROR] Different type of predicted and real class values\n")
+        
+        mf <- min.function(caret::confusionMatrix(pred.values,real.values, positive="1", mode="everything" ))
+        cat("[-] ",paste0(weights,collapse = ","),"-> FP:",mf[1]," FN:",mf[2],"\n")
+        return(mf)
+      }
+      
+      opt.algorithm$execute(private$models.weights, compute.fitness)
+      freq <- table(real.values)
+      cat("[D2MCS][INFO] Finish optimmization process!'\n")
+      return(OptimizationOutput$new(optimizer=opt.algorithm,n.positive= as.numeric(freq["1"]), n.negative = as.numeric(freq["0"]) ))
     },
     getBestPerformanceByCluster = function(){
       if ( is.null(private$models.weights) || length(private$models.weights) < 1 )
         stop("[D2MCS][ERROR] Train stage should be executed first\n")
-      else private$models.weights
+      else as.numeric(private$models.weights)
     },
-    computeFinalPerformance = function(new.data = NULL, positive.class){
-      if( is.null(private$prediction.voted) || !is.data.frame(private$prediction.voted) )
-        stop("[D2MCS][ERROR] Voting scheme should be executed first to obtain predicion results\n")
-      
-      if ( (missing(new.data) || is.null(new.data) || (!"Subset" %in% class(new.data) || !is.data.frame(new.data))) && 
-           !is.null(private$real.values)  )
-          real.values <- private$real.values
-      else {
-        if ("Subset" %in% class(new.data)){
-          if(new.data$getNrow() != nrow(private$prediction.voted) )
-            stop("[D2MCS][ERROR] Distinct dimension of predicted and real values\n")
-          real.values <- new.data$getClass()
-        }else real.values <- new.data
-      }
-      pred.values <- private$prediction.voted[,ncol(private$prediction.voted)]
-      
-      if( !"factor" %in% class(pred.values) ) pred.values <- as.factor(pred.values)
-      
-      if ( length(levels(real.values)) != length(levels(pred.values)) || 
-           ( length(setdiff(levels(pred.values), levels(real.values))) != length(setdiff(levels(real.values), levels(pred.values))) )  )
-        stop("[D2MCS][ERROR] Different type of predicted and real class values\n")
-      
-      if (!positive.class %in% levels(pred.values) && !positive.class %in% levels(real.values) )
-        stop("[D2MCS][ERROR] Positive class values not valid (",paste0(levels(real.values),collapse = ","),")\n")
-      
-      cf <- caret::confusionMatrix(pred.values,real.values, positive=positive.class, mode="everything")
-      private$performance <- PerformanceMeasures$new( cf= cf, mcc= mltools::mcc(FP= cf$table[1,2], TP = cf$table[1,1], TN = cf$table[2,2], FN = cf$table[2,1]  ) )
-    },
-    getFinalPerformance = function(measure){
-      if(is.null(private$performance) )
-        stop("[D2MCS][ERROR] Performance not computed yet. ComputeFinalPerformance method should be executed first\n")
-      private$performance$getMeasure(measure)
+    getTrainedResults = function(){
+      if( is.null(private$models.weights) || is.null(private$bestModels) || (private$bestModels$size() < 1) )
+        stop("[D2MCS][ERROR] Parameters not assigned. Please execute Train method first\n")
+      OptimizationConfig$new(weights = private$models.weights, models = private$bestModels)
     },
     plotTest = function(){
       plotPath <- file.path(paste0(private$path,"plots"),paste0("TEST_",toupper(private$metric),"_Performance.pdf"))
@@ -239,14 +283,13 @@ D2MCS <- R6Class(
       measure <- private$performance$getMeasure(private$metric)
       ggplot(df, aes(x=cluster, y=performance ) ) + geom_point( aes(color="By Cluster"),shape=18, size=3, show.legend = TRUE) + 
                    geom_label_repel(aes(label=paste0(name,"\n",df$performance) ), size=3 ) +
-                   geom_point( aes(cluster,measure, color="Combined"), shape=15, size=3, show.legend = TRUE ) + 
-                   theme( legend.position = "bottom", legend.box = "horizontal", legend.title = element_blank() ) +
-                   geom_segment(aes(x=df$cluster,y=measure, xend=df$cluster[length(df$cluster)], yend=measure ), color="blue", alpha=0.25  ) + 
-                   annotate("text", x=(1 + nrow(df))/2, y=round(measure,digits = 2), label=round(measure,digits=2), color="blue" ) + 
-                   xlab("Performance") + ylab( paste0("Performance (",private$metric,")") ) + 
+                   geom_segment(aes(x=df$cluster,y=measure, xend=df$cluster[length(df$cluster)], yend=measure ), color="blue", linetype=1, size=2  ) +
+                   geom_label(aes(label=paste0(round(measure,digits = 2),"\ncombined performance"),x=(1 + nrow(df))/2,y=measure), color="blue", size=2  ) + 
+                   xlab("Clusters") + ylab( paste0("Performance (",private$metric,")") ) + 
                    labs( color= "Achieved performance\n" ) + 
                    scale_color_manual(values = c("black","blue")) + 
-                   scale_y_continuous( limits=  c(min(df$performance-0.05), 1) )
+                   scale_y_continuous( limits=  c(min(df$performance-0.05), 1) ) +
+                   theme( legend.position = "none" )
       ggsave(filename = plotPath, plot=last_plot(),device="pdf", limitsize = FALSE)
     },
     plotTrain = function(){
@@ -276,45 +319,57 @@ D2MCS <- R6Class(
             theme (axis.text.x = element_text(angle = 75, hjust = 1),
                    plot.title = element_text(hjust = 0.5))
           save.path <- file.path(plotPath,paste0("TRAIN_",toupper(measure),"_C[",i,"-",private$executedModels$size(),"].pdf") )
-          cat("[D2MCS][INFO] Plot saved at: '",save.path,"'\n", sep="")
+          cat("[D2MCS][INFO] Plot saved from cluster ",i," of ",private$executedModels$size()," at: '",save.path,"'\n", sep="")
           ggsave(filename = save.path,device="pdf")
         }
       }
     },
-    getPredictions = function(option = "all"){
-      if( is.null(private$prediction.voted) || length(private$prediction.voted)  <= 0 )
-        cat("[D2MCS][ERROR] Method 'executePrediction' should be executed first. Aborting execution\n")
-      else{
-        
-        if(!option %in% c("cluster", "final", "all") )
-          stop("[D2MCS][ERROR] Incorrect option should be 'cluster', 'final' or 'all'\n")
-        
-        switch (tolower(option) ,
-          "cluster" = { private$prediction.voted[,-ncol(private$prediction.voted)] },
-          "final" = { private$prediction.voted[,ncol(private$prediction.voted)] },
-          "all" = { private$prediction.voted }
-        )
-      }
+    getPredictions = function(){
+      if( is.null(private$prediction.voted) )
+        stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
+      private$prediction.voted$preds
+    },
+    getPerformance = function(real.values = NULL, measure = NULL){
+      if( is.null(private$prediction.voted$preds) )
+        stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
+      
+      if(is.null(real.values) && is.null(private$real.values) )
+        stop("[D2MCS][ERROR] Real values are missing. Should be defined to compute performance measures\n")
+      
+      if( !is.null(real.values) ) rv <- real.values else rv <- private$real.values
+      
+      PerformanceOutput$new( preds = private$prediction.voted, obs = rv )
+    },
+    computePerformance = function(real.values = NULL, measures = NULL){
+      if( is.null(private$prediction.voted$preds) )
+        stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
+      
+      if(is.null(real.values) && is.null(private$real.values) )
+        stop("[D2MCS][ERROR] Real values are missing. Should be defined to compute performance measures\n")
+      
+      if( !is.list(measures) || length(measures) ==0  )
+        stop("[D2MCS][ERROR] Measure function not included\n")
+      
+      if( !is.null(real.values) ) rv <- real.values else rv <- private$real.values
+      #measures$compute( PerformanceOutput$new( preds = private$prediction.voted, obs = rv ) )
+       
+      do.call(rbind,lapply( measures, function(entry,y) { 
+                                          df <- data.frame(entry$getName(), entry$compute(y))
+                                          rownames(df) <- NULL
+                                          names(df) <- c("Measure","Value") 
+                                          df 
+                                      }, 
+                            y= PerformanceOutput$new( preds = private$prediction.voted, obs = rv ) )) 
+       
     },
     getAvailableModels = function(){
       private$availableModels[,c(1,2)]
     },
-    savePredictions = function(option = "all", filename){
+    savePredictions = function(filename){
       if(missing(filename) || is.null(filename) )
         stop("[D2MCS][ERROR] Store path must be selected\n")
       path <- file.path(getwd(),"results",filename)
-      if( is.null(private$prediction.voted) || length(private$prediction.voted)  <= 0 )
-        cat("[D2MCS][ERROR] Method 'executePrediction' should be executed first. Aborting execution\n")
-      else{
-        if(!option %in% c("cluster", "final", "all") )
-          stop("[D2MCS][ERROR] Incorrect option should be 'cluster', 'final' or 'all'\n")
-        
-        switch (tolower(option) ,
-                "cluster" = { write.csv(private$prediction.voted[,-ncol(private$prediction.voted)], file=path, row.names = FALSE) },
-                "final" = { write.csv(private$prediction.voted[,ncol(private$prediction.voted)], file=path, row.names = FALSE) },
-                "all" = { write.csv(private$prediction.voted, file=path, row.names = FALSE) }
-        )
-      }
+      write.csv(private$prediction.voted, file=path, row.names = FALSE)
       cat("[D2MCS][INFO] Classification results succesfully saved at: ",path,"\n")
     },
     removeAll = function(){
