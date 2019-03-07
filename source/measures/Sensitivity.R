@@ -7,10 +7,10 @@ Sensitivity <- R6Class(
       super$initialize("Sensitivity",performance.output)
     },
     compute = function(performance.output = NULL){
-      if(is.null(super$performance) && (is.null(performance.output) || !inherits(performance.output,"PerformanceOutput") ) )
-        stop("[Sensitivity][ERROR] PerformanceOutput object not included or invalid\n")
+      if ( is.null(super$performance) && !inherits(performance.output,c("MinResult","Classifier","ModelPerformance","ConFMatrix") ) )
+        stop("[",private$name,"][ERROR] Classifier object not included or invalid\n")
       
-      if( !is.null(performance.output) && inherits(performance.output,"PerformanceOutput") )
+      if( !is.null(performance.output) && inherits(performance.output,c("MinResult","Classifier","ModelPerformance","ConFMatrix")) )
         performance.output$getConfusionMatrix()$byClass["Sensitivity"]
       else super$performance$getConfusionMatrix()$byClass["Sensitivity"]
     }

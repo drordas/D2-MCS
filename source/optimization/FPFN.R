@@ -4,7 +4,7 @@ FPFN <- R6Class(
   inherit = MinFunction,
   public = list(
     initialize = function (){
-      super$initialize(name= "FP & FN", n.objectives= 2)
+      super$initialize(name= "FP & FN", objective.names= c("FP","FN") )
     },
     computeMeasure = function(conf.matrix){
       if( !"confusionMatrix" %in% class(conf.matrix) )
@@ -15,8 +15,9 @@ FPFN <- R6Class(
 
       c(fp,fn)
     },
-    xlabel= "False Positives (FP)",
-    ylabel= "False Negatives (FN)",
-    objectives = c("FP","FN")
+    pack = function(alg.name,pareto.front, population, n.positive, n.negative){
+      FPFNdata$new( alg.name = alg.name, pareto.front = pareto.front, population= population, 
+                    n.positive = n.positive, n.negative = n.negative )
+    }
   )
 )

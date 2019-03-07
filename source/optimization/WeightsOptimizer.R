@@ -12,22 +12,22 @@ WeightsOptimizer <- R6Class(
       private$name <- name
       private$min.function <- min.function
       private$dependences <- dependences
-      loadPackages(private$dependences,quiet=TRUE)
+      loadPackages(private$dependences)
     },
     execute = function(fitness = NULL){
       stop("[WeightsOptimizer][ERROR] Method 'execute' is abstract. Should be implemented in inherited class\n")
     },
-    plot = function(){
-      stop("[WeightsOptimizer][ERROR] Method 'plot' is abstract. Should be implemented in inherited class\n")
-    },
+    #plot = function(){
+    #  stop("[WeightsOptimizer][ERROR] Method 'plot' is abstract. Should be implemented in inherited class\n")
+    #},
     getName = function(){ private$name },
-    getNumObjectives = function(){ private$min.function$getNumOjectives() },
-    getParetoValues = function(){
-      stop("[WeightsOptimizer][ERROR] Method 'getParetoValues' is abstract. Should be implemented in inherited class\n")
-    },
-    getOptimizedValues = function(){
-      stop("[WeightsOptimizer][ERROR] Method 'getOptimizedValues' is abstract. Should be implemented in inherited class\n")
-    }
+    getNumObjectives = function(){ private$min.function$getNumOjectives() }#,
+    #getParetoValues = function(){
+    #  stop("[WeightsOptimizer][ERROR] Method 'getParetoValues' is abstract. Should be implemented in inherited class\n")
+    #},
+    #getOptimizedValues = function(){
+    #  stop("[WeightsOptimizer][ERROR] Method 'getOptimizedValues' is abstract. Should be implemented in inherited class\n")
+    #}
   ),
   private = list(
     getMinFunction = function() { private$min.function },

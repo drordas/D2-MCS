@@ -26,13 +26,13 @@ Prediction <- R6Class(
     },
     execute = function( pred.values ){
       if( !missing(pred.values) && !is.null(pred.values) ){
-        loadPackages(private$model.pkgs, quiet = TRUE)
+        loadPackages(private$model.pkgs)
         private$class.results <- predict(object = private$model.trained, newdata=pred.values, type="raw" )
         private$prob.results <- predict(object = private$model.trained, newdata=pred.values, type="prob" )
         private$binary.results <- as.numeric( as.character( factor( private$class.results,
                                                                     levels=c(private$negative.class,private$positive.class), 
                                                                     labels = c(0, 1) ) ) )
-        unloadPackages(private$model.pkgs)
+        #unloadPackages(private$model.pkgs)
       }
       else stop("[Prediction][ERROR] Parameter pred.values is missing or empty\n")
     },

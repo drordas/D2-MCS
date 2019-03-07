@@ -23,12 +23,14 @@ ClassWeightedVoting <- R6Class(
         private$weights <- predictions$getModelPerformances()
       }
       
-      cat("[",super$getName(),"][INFO] Executing voting scheme with: ~",paste0(round(private$weights,3),collapse = ", ~")," weights\n",sep="")
       sum.weights <- sum(private$weights)
+
       
       if( length(names(summary)) > 1 ) stop("[",super$getName(),"][ERROR] Different prediction values\n")
       
       weighted.predictions <- as.data.frame( binary.predictions %*% diag(as.vector(private$weights)) )
+      
+      cat("[",super$getName(),"][INFO] Executing '",super$getName(),"' with '~",paste0(round(as.vector(private$weights), digits=4),collapse=", ~"),"' weights\n", sep="")
       
       final.prediction <- as.factor(as.vector(rowSapply(weighted.predictions, function(row){ ifelse(sum(row) / sum(sum.weights)<=.5, 0, 1) }, unlist=TRUE ) ))
       if (length(levels(final.prediction)) < 2 ) levels(final.prediction) <- c(0, 1)

@@ -11,13 +11,8 @@ OptimizationOutput <- R6Class(
       private$n.objectives <- optimizer$getNumObjectives()
       private$pareto.front <- optimizer$getParetoValues()
       private$opt.values <- optimizer$getOptimizedValues()
-      # distances <- private$euclidean.distance( private$pareto.front[,1:private$n.objectives] )
-      # private$best.solution <- cbind( private$pareto.front[which(distances==min(distances)), ],
-      #                                 private$opt.values[ which(distances==min(distances)), -nrow(private$opt.values) ] )
-      # names(private$best.solution) <- c(names(private$pareto.front),paste0("X",seq(1,(nrow(private$opt.values)-1),1)))
       private$n.positive <- n.positive
       private$n.negative <- n.negative
-      private$best.solution <- NULL
     },
     getParetoFronts = function(){
       private$pareto.front
@@ -28,28 +23,17 @@ OptimizationOutput <- R6Class(
     getMethodName = function(){
       private$method
     },
-    computeBestSolution = function(distance = NULL, tie.solver = NULL){
-      if( is.null(distance) || !is.function(distance) ){
-        distances <- private$euclidean.distance( private$pareto.front[,1:private$n.objectives] )
-        private$best.solution <- cbind( private$pareto.front[which(distances==min(distances)), ],
-                                        private$opt.values[ which(distances==min(distances)), -nrow(private$opt.values) ] )
-        names(private$best.solution) <- c(names(private$pareto.front),paste0("X",seq(1,(nrow(private$opt.values)-1),1)))
-      }else{
-        distances <- private$distance( private$pareto.front[,1:private$n.objectives] )
-        private$best.solution <- cbind( private$pareto.front[which(distances==min(distances)), ],
-                                        private$opt.values[ which(distances==min(distances)), -nrow(private$opt.values) ] )
-        names(private$best.solution) <- c(names(private$pareto.front),paste0("X",seq(1,(nrow(private$opt.values)-1),1)))
-      }
+    getBestSolution = function(pareto.distance = NULL){
+      if( !is.null(pareto.distance) ){
+        if( !inherits(pareto.distance,"ParetoDistance") ){
+           cat("[OptimizationOutput][WARNING] Input parameter must inherit from ParetoDistance class. Using default method\n")
+           method <- EuclideanDistance$new()   
+        }else method <- pareto.distance
+      }else method <- EuclideanDistance$new()
       
-      if( is.null(tie.solver) || !is.function(tie.solver) )
-        private$best.solution <- private$best.solution[1, ]
-      else private$best.solution <- tie.solver(private$best.solution)
-    },
-    getBestSolution = function(){
-      if( is.null(private$best.solution) )
-        self$computeBestSolution()
-      
-      private$best.solution
+      cat("[OptimizationOutput][INFO] Executing method '",method$getName(),"'\n", sep="")
+      method$compute(private$pareto.front[,-which(colnames(private$pareto.front)=="p.front")])
+      method$solve.ties()
     },
     getNumPositives = function(){
       private$n.positive
@@ -67,15 +51,10 @@ OptimizationOutput <- R6Class(
     }
   ),
   private = list(
-    euclidean.distance = function(pareto.front){
-      distances <- apply(pareto.front,1,function(row){ sqrt(sum(row^2)) })
-      pareto.front[ which(distances==min(distances)), ]
-    },
     method = NULL,
     n.objectives = NULL,
     pareto.front = NULL,
     opt.values = NULL,
-    best.solution = NULL,
     n.positive = NULL,
     n.negative = NULL 
   )

@@ -3,11 +3,10 @@ PredictionList <- R6Class(
   classname = "PredictionList",
   portable = TRUE,                   
   public = list(
-    initialize = function(metric){
+    initialize = function(metric=NULL){
       private$results.pred <- vector(mode="list")
-      
-      if(missing(metric) || is.null(metric))
-        stop("[PredictionList][ERROR] Model metric parameter should be defined. Aborting\n")
+      #if( missing(metric) )
+      #  stop("[PredictionList][ERROR] Model metric parameter should be defined. Aborting\n")
       
       private$metric <- metric
     },

@@ -7,12 +7,13 @@ MCC <- R6Class(
       super$initialize("MCC",performance.output)
     },
     compute = function(performance.output = NULL){
-      if(is.null(super$performance) && (is.null(performance.output) || !inherits(performance.output,"PerformanceOutput") ) )
-        stop("[MCC][ERROR] PerformanceOutput object not included or invalid\n")
       
-      if( !is.null(performance.output) && inherits(performance.output,"PerformanceOutput") )
-         output <- mltools::mcc(preds= performance.output$getPredictions(), actuals = performance.output$getObserved() )
-      else output <- mltools::mcc(preds= super$performance$getPredictions(), actuals = super$performance$getObserved() )
+      if ( is.null(super$performance) && !inherits(performance.output,c("MinResult","Classifier","ModelPerformance", "ConFMatrix") ) )
+        stop("[",private$name,"][ERROR] Classifier object not included or invalid\n")
+      
+      if( inherits(performance.output,c("MinResult","Classifier","ModelPerformance","ConFMatrix")) )
+         output <- mltools::mcc( TP = performance.output$getTP(), FP = performance.output$getFP(), FN = performance.output$getFN(), TN = performance.output$getTN() )
+      else output <- mltools::mcc( TP = super$performance$getTP(), FP = super$performance$getFP(), FN = super$performance$getFN(), TN = super$performance$getTN() )
       names(output) <- super$getName()
       output
     }

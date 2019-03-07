@@ -6,10 +6,10 @@ MeasureFunction <- R6Class(
       if( is.null(name) )
         stop("[MeasureFunction][ERROR] Measure name is not defined or is incorrect\n")
       
-      if (is.null(performance) || !inherits(performance,"PerformanceOutput"))
-        private$performance <- NULL
-      else private$performance <- performance
-      
+      if ( !is.null(performance) && !inherits(performance.output,c("MinResult","Classifier","ModelPerformance") ) )
+        stop("[MeasureFunction][ERROR] Performance argument should be of type 'MeasureFunction' or 'ClassifierPerformance'\n")
+
+      private$performance <- performance
       private$name <- name
     },
     compute = function(performance = NULL){
