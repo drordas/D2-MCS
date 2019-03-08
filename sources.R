@@ -1,4 +1,5 @@
 cat("[SOURCES][INFO] Loading required libraries\n")
+library("devtools")
 source("pkgChecker.R", chdir = TRUE)
 
 cat("[SOURCES][INFO] Loading required sources\n")

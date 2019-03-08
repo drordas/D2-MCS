@@ -21,10 +21,10 @@ ModelEntry <- R6Class(
       else cat("[ModelEntry][WARNING] Cannot save '",private$name,"' model. Object is not correct.\n",sep="")
     },
     removeModel = function(){ 
-      if( "ModelData" %in% class(private$object) && file.exists(private$path) ){
+      if( inherits(private$object,"Model") && file.exists(private$path) ){
         file.remove(private$path)
         private$object <- NULL
-      }else cat("[ModelEntry][WARNING] Cannot remove '",private$name,"' model. Object is not correct.\n", sep="")
+      }else cat("[ModelEntry][WARNING] Cannot remove '",private$name,"' model. Object is not correct.\n", sep="") 
     }
   ),
   private = list(

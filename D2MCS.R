@@ -13,7 +13,7 @@ D2MCS <- R6Class(
         else
           cat(" (1>= nCores < ",detectCores(),")\n", sep="")
         cores <- min(max(1,detectCores()-2),10)
-        cat("\t\tUsing default configuration (",cores,"/",detectCores(),") \n", sep="")
+        cat("\t\t Using default configuration (",cores,"/",detectCores(),") \n", sep="")
       }else cores <- nCores
       
       if( !socket.type %in% c("PSOCK","FORK") ){
@@ -122,32 +122,28 @@ D2MCS <- R6Class(
           cat("              Executing remaining " ,nrow(remaining.models)," M.L. model(s)\n", sep="")
         }
         
-        apply(remaining.models, 1, function(model){
-          if( isTRUE(model$prob) )
-            private$trainFunction$create( UseProbability$new(), search.method= "random", class.probs = TRUE )
-          else private$trainFunction$create( NoProbability$new(), search.method= "random", class.probs = FALSE )
+        apply(remaining.models, 1, function(model, executedModel){
+          ifelse( isTRUE(model$prob), private$trainFunction$create( UseProbability$new(), search.method= "random", class.probs = TRUE ),
+                                      private$trainFunction$create( NoProbability$new(), search.method= "random", class.probs = FALSE ) )
 
           model.fit <- model.fitClass$createRecipe()
           model.type <- Model$new( dir = model.savePath, method = model$name,
                                    family = model$family, description = model$description,
                                    pkgName = as.vector( unlist(model$library) ), 
                                    trFunction = private$trainFunction, metric = metric )
-          
-          if( !private$executedModels$isTrained(i,model$name) ){
+          if( !executedModel$isTrained(i,model$name) ){
             model.type$train(dataset = model.subset$getInstances(), fitting = model.fit )
             if( isTRUE(saveAllModels) ) model.type$saveModel() 
-            private$executedModels$insertModeltAt(i,model.type)
-            
+            executedModel$insertModeltAt(i,model.type)
             if( private$bestClusterModel$getPerformance() < model.type$getPerformance() ){
               private$bestClusterModel$removeModel()
-              private$bestClusterModel <- ModelEntry$new( name= model.type$getName, object= model.type,
-                                                          performance= model.type$getPerformance(),
-                                                          path= model.type$getPath() )
+              private$bestClusterModel <- ModelEntry$new( name= model.type$getName(), object= model.type, 
+                                           performance= model.type$getPerformance(), path= model.type$getPath() )
               private$bestClusterModel$save()
             }
-            private$executedModels$saveAt(paste0(model.savePath,"/.executed"),i)
+            executedModel$saveAt(paste0(model.savePath,"/.executed"),i)
           }else cat("[D2MCS][INFO] Model '",model$name,"' has been previously trained\n", sep="")
-        })
+        }, executedModel = private$executedModels )
         
         private$bestModels$insertAt(i,private$bestClusterModel)
         private$models.weights <- as.numeric(c( private$models.weights,private$bestClusterModel$getPerformance() ))
@@ -278,27 +274,6 @@ D2MCS <- R6Class(
         stop("[D2MCS][ERROR] Parameters not assigned. Please execute Train method first\n")
       TrainOutput$new(models = private$bestModels, weights = private$models.weights, metric = private$metric)
     },
-    # plotTest = function(){
-    #   plotPath <- file.path(paste0(private$path,"plots"),paste0("TEST_",toupper(private$metric),"_Performance.pdf"))
-    #   df <- data.frame(cluster = as.character(), name = as.character(), performance = as.numeric(), stringsAsFactors = FALSE )
-    #   for( i in 1:private$executedModels$size() ){
-    #     bestModel.name <- private$executedModels$getAt(i)$getNames()[which.max(private$executedModels$getAt(1)$getPerformances())]
-    #     bestModel.value <- round( max(as.numeric(private$executedModels$getAt(i)$getPerformances())), digits = 4 )
-    #     df <- rbind(df, data.frame( cluster=paste0("CLUSTER ",i), name=bestModel.name, performance = bestModel.value), stringsAsFactors = FALSE )
-    #   }
-    #   
-    #   measure <- private$performance$getMeasure(private$metric)
-    #   ggplot(df, aes(x=cluster, y=performance ) ) + geom_point( aes(color="By Cluster"),shape=18, size=3, show.legend = TRUE) + 
-    #                geom_label_repel(aes(label=paste0(name,"\n",df$performance) ), size=3 ) +
-    #                geom_segment(aes(x=df$cluster,y=measure, xend=df$cluster[length(df$cluster)], yend=measure ), color="blue", linetype=1, size=2  ) +
-    #                geom_label(aes(label=paste0(round(measure,digits = 2),"\ncombined performance"),x=(1 + nrow(df))/2,y=measure), color="blue", size=2  ) + 
-    #                xlab("Clusters") + ylab( paste0("Performance (",private$metric,")") ) + 
-    #                labs( color= "Achieved performance\n" ) + 
-    #                scale_color_manual(values = c("black","blue")) + 
-    #                scale_y_continuous( limits=  c(min(df$performance-0.05), 1) ) +
-    #                theme( legend.position = "none" )
-    #   ggsave(filename = plotPath, plot=last_plot(),device="pdf", limitsize = FALSE)
-    # },
     plotTrain = function(){
       if ( is.null(private$executedModels ) || private$executedModels$size() < 1 )
         cat("[D2MCS][ERROR] Models were not trained. Please run 'executeTrain' method first\n")

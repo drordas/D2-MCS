@@ -11276,3 +11276,1383 @@ starting worker pid=15213 on localhost:11353 at 12:25:12.053
 starting worker pid=15223 on localhost:11353 at 12:25:12.204
 starting worker pid=15232 on localhost:11353 at 12:25:12.347
 starting worker pid=15241 on localhost:11353 at 12:25:12.493
+starting worker pid=8097 on localhost:11052 at 14:29:25.028
+starting worker pid=8107 on localhost:11052 at 14:29:25.179
+starting worker pid=8116 on localhost:11052 at 14:29:25.321
+starting worker pid=8125 on localhost:11052 at 14:29:25.465
+starting worker pid=8134 on localhost:11052 at 14:29:25.610
+starting worker pid=8143 on localhost:11052 at 14:29:25.754
+starting worker pid=8152 on localhost:11052 at 14:29:25.905
+starting worker pid=8161 on localhost:11052 at 14:29:26.049
+starting worker pid=8170 on localhost:11052 at 14:29:26.194
+starting worker pid=8182 on localhost:11052 at 14:29:26.348
+starting worker pid=8293 on localhost:11052 at 14:30:54.556
+starting worker pid=8305 on localhost:11052 at 14:30:54.706
+starting worker pid=8314 on localhost:11052 at 14:30:54.857
+starting worker pid=8335 on localhost:11052 at 14:30:55.014
+starting worker pid=8344 on localhost:11052 at 14:30:55.166
+starting worker pid=8353 on localhost:11052 at 14:30:55.316
+starting worker pid=8362 on localhost:11052 at 14:30:55.466
+starting worker pid=8383 on localhost:11052 at 14:30:55.620
+starting worker pid=8392 on localhost:11052 at 14:30:55.767
+starting worker pid=8401 on localhost:11052 at 14:30:55.924
+starting worker pid=8738 on localhost:11052 at 14:35:46.140
+starting worker pid=8763 on localhost:11052 at 14:35:46.293
+starting worker pid=8772 on localhost:11052 at 14:35:46.444
+starting worker pid=8781 on localhost:11052 at 14:35:46.595
+starting worker pid=8790 on localhost:11052 at 14:35:46.748
+starting worker pid=8799 on localhost:11052 at 14:35:46.904
+starting worker pid=8808 on localhost:11052 at 14:35:47.059
+starting worker pid=8817 on localhost:11052 at 14:35:47.211
+starting worker pid=8826 on localhost:11052 at 14:35:47.363
+starting worker pid=8835 on localhost:11052 at 14:35:47.514
+starting worker pid=17775 on localhost:11052 at 14:42:45.191
+starting worker pid=17785 on localhost:11052 at 14:42:45.352
+starting worker pid=17794 on localhost:11052 at 14:42:45.508
+starting worker pid=17803 on localhost:11052 at 14:42:45.664
+starting worker pid=17812 on localhost:11052 at 14:42:45.820
+starting worker pid=17821 on localhost:11052 at 14:42:45.980
+starting worker pid=17830 on localhost:11052 at 14:42:46.138
+starting worker pid=17839 on localhost:11052 at 14:42:46.293
+starting worker pid=17848 on localhost:11052 at 14:42:46.449
+starting worker pid=17857 on localhost:11052 at 14:42:46.604
+starting worker pid=18030 on localhost:11052 at 14:45:20.581
+starting worker pid=18040 on localhost:11052 at 14:45:20.738
+starting worker pid=18049 on localhost:11052 at 14:45:20.893
+starting worker pid=18058 on localhost:11052 at 14:45:21.049
+starting worker pid=18071 on localhost:11052 at 14:45:21.210
+starting worker pid=18080 on localhost:11052 at 14:45:21.367
+starting worker pid=18089 on localhost:11052 at 14:45:21.521
+starting worker pid=18099 on localhost:11052 at 14:45:21.674
+starting worker pid=18108 on localhost:11052 at 14:45:21.830
+starting worker pid=18117 on localhost:11052 at 14:45:21.983
+starting worker pid=18409 on localhost:11052 at 14:49:08.923
+starting worker pid=18419 on localhost:11052 at 14:49:09.082
+starting worker pid=18428 on localhost:11052 at 14:49:09.236
+starting worker pid=18437 on localhost:11052 at 14:49:09.392
+starting worker pid=18446 on localhost:11052 at 14:49:09.547
+starting worker pid=18456 on localhost:11052 at 14:49:09.709
+starting worker pid=18465 on localhost:11052 at 14:49:09.867
+starting worker pid=18474 on localhost:11052 at 14:49:10.022
+starting worker pid=18483 on localhost:11052 at 14:49:10.175
+starting worker pid=18492 on localhost:11052 at 14:49:10.330
+starting worker pid=18523 on localhost:11052 at 14:49:27.036
+starting worker pid=18533 on localhost:11052 at 14:49:27.195
+starting worker pid=18554 on localhost:11052 at 14:49:27.350
+starting worker pid=18565 on localhost:11052 at 14:49:27.509
+starting worker pid=18584 on localhost:11052 at 14:49:27.666
+starting worker pid=18593 on localhost:11052 at 14:49:27.823
+starting worker pid=18603 on localhost:11052 at 14:49:27.980
+starting worker pid=18612 on localhost:11052 at 14:49:28.137
+starting worker pid=18622 on localhost:11052 at 14:49:28.292
+starting worker pid=18634 on localhost:11052 at 14:49:28.448
+starting worker pid=18889 on localhost:11052 at 14:54:27.091
+starting worker pid=18899 on localhost:11052 at 14:54:27.246
+starting worker pid=18909 on localhost:11052 at 14:54:27.399
+starting worker pid=18918 on localhost:11052 at 14:54:27.553
+starting worker pid=18927 on localhost:11052 at 14:54:27.708
+starting worker pid=18936 on localhost:11052 at 14:54:27.868
+starting worker pid=18945 on localhost:11052 at 14:54:28.026
+starting worker pid=18954 on localhost:11052 at 14:54:28.180
+starting worker pid=18963 on localhost:11052 at 14:54:28.333
+starting worker pid=18972 on localhost:11052 at 14:54:28.493
+starting worker pid=19047 on localhost:11052 at 14:55:21.229
+starting worker pid=19058 on localhost:11052 at 14:55:21.385
+starting worker pid=19067 on localhost:11052 at 14:55:21.537
+starting worker pid=19076 on localhost:11052 at 14:55:21.690
+starting worker pid=19085 on localhost:11052 at 14:55:21.841
+starting worker pid=19094 on localhost:11052 at 14:55:22.004
+starting worker pid=19103 on localhost:11052 at 14:55:22.162
+starting worker pid=19113 on localhost:11052 at 14:55:22.318
+starting worker pid=19122 on localhost:11052 at 14:55:22.473
+starting worker pid=19131 on localhost:11052 at 14:55:22.626
+starting worker pid=19599 on localhost:11052 at 15:05:03.172
+starting worker pid=19609 on localhost:11052 at 15:05:03.325
+starting worker pid=19618 on localhost:11052 at 15:05:03.479
+starting worker pid=19627 on localhost:11052 at 15:05:03.631
+starting worker pid=19636 on localhost:11052 at 15:05:03.785
+starting worker pid=19645 on localhost:11052 at 15:05:03.945
+starting worker pid=19654 on localhost:11052 at 15:05:04.104
+starting worker pid=19663 on localhost:11052 at 15:05:04.257
+starting worker pid=19672 on localhost:11052 at 15:05:04.411
+starting worker pid=19681 on localhost:11052 at 15:05:04.565
+starting worker pid=20018 on localhost:11052 at 15:11:20.612
+starting worker pid=20029 on localhost:11052 at 15:11:20.774
+starting worker pid=20038 on localhost:11052 at 15:11:20.934
+starting worker pid=20047 on localhost:11052 at 15:11:21.090
+starting worker pid=20056 on localhost:11052 at 15:11:21.247
+starting worker pid=20065 on localhost:11052 at 15:11:21.405
+starting worker pid=20074 on localhost:11052 at 15:11:21.561
+starting worker pid=20083 on localhost:11052 at 15:11:21.717
+starting worker pid=20092 on localhost:11052 at 15:11:21.871
+starting worker pid=20101 on localhost:11052 at 15:11:22.024
+starting worker pid=20192 on localhost:11052 at 15:11:41.417
+starting worker pid=20202 on localhost:11052 at 15:11:41.577
+starting worker pid=20211 on localhost:11052 at 15:11:41.732
+starting worker pid=20220 on localhost:11052 at 15:11:42.322
+starting worker pid=20229 on localhost:11052 at 15:11:42.478
+starting worker pid=20238 on localhost:11052 at 15:11:42.631
+starting worker pid=20247 on localhost:11052 at 15:11:42.788
+starting worker pid=20256 on localhost:11052 at 15:11:42.941
+starting worker pid=20265 on localhost:11052 at 15:11:43.098
+starting worker pid=20274 on localhost:11052 at 15:11:43.252
+starting worker pid=20344 on localhost:11052 at 15:13:01.637
+starting worker pid=20354 on localhost:11052 at 15:13:01.792
+starting worker pid=20363 on localhost:11052 at 15:13:01.948
+starting worker pid=20372 on localhost:11052 at 15:13:02.105
+starting worker pid=20381 on localhost:11052 at 15:13:02.262
+starting worker pid=20391 on localhost:11052 at 15:13:02.421
+starting worker pid=20400 on localhost:11052 at 15:13:02.579
+starting worker pid=20409 on localhost:11052 at 15:13:02.734
+starting worker pid=20418 on localhost:11052 at 15:13:02.888
+starting worker pid=20427 on localhost:11052 at 15:13:03.044
+starting worker pid=20457 on localhost:11052 at 15:13:24.215
+starting worker pid=20467 on localhost:11052 at 15:13:24.374
+starting worker pid=20476 on localhost:11052 at 15:13:24.530
+starting worker pid=20485 on localhost:11052 at 15:13:24.685
+starting worker pid=20494 on localhost:11052 at 15:13:24.840
+starting worker pid=20503 on localhost:11052 at 15:13:25.000
+starting worker pid=20513 on localhost:11052 at 15:13:25.157
+starting worker pid=20522 on localhost:11052 at 15:13:25.309
+starting worker pid=20531 on localhost:11052 at 15:13:25.463
+starting worker pid=20540 on localhost:11052 at 15:13:25.616
+starting worker pid=20567 on localhost:11052 at 15:13:44.412
+starting worker pid=20577 on localhost:11052 at 15:13:44.573
+starting worker pid=20591 on localhost:11052 at 15:13:44.730
+starting worker pid=20600 on localhost:11052 at 15:13:44.889
+starting worker pid=20609 on localhost:11052 at 15:13:45.044
+starting worker pid=20619 on localhost:11052 at 15:13:45.203
+starting worker pid=20628 on localhost:11052 at 15:13:45.360
+starting worker pid=20637 on localhost:11052 at 15:13:45.514
+starting worker pid=20646 on localhost:11052 at 15:13:45.665
+starting worker pid=20655 on localhost:11052 at 15:13:45.820
+starting worker pid=20729 on localhost:11052 at 15:15:11.654
+starting worker pid=20739 on localhost:11052 at 15:15:11.810
+starting worker pid=20748 on localhost:11052 at 15:15:12.003
+starting worker pid=20757 on localhost:11052 at 15:15:12.158
+starting worker pid=20766 on localhost:11052 at 15:15:12.318
+starting worker pid=20775 on localhost:11052 at 15:15:12.479
+starting worker pid=20784 on localhost:11052 at 15:15:12.636
+starting worker pid=20793 on localhost:11052 at 15:15:12.792
+starting worker pid=20802 on localhost:11052 at 15:15:12.947
+starting worker pid=20811 on localhost:11052 at 15:15:13.104
+starting worker pid=20857 on localhost:11052 at 15:16:17.740
+starting worker pid=20867 on localhost:11052 at 15:16:17.901
+starting worker pid=20882 on localhost:11052 at 15:16:18.056
+starting worker pid=20891 on localhost:11052 at 15:16:18.212
+starting worker pid=20900 on localhost:11052 at 15:16:18.367
+starting worker pid=20914 on localhost:11052 at 15:16:18.525
+starting worker pid=20928 on localhost:11052 at 15:16:18.681
+starting worker pid=20937 on localhost:11052 at 15:16:18.835
+starting worker pid=20946 on localhost:11052 at 15:16:18.989
+starting worker pid=20955 on localhost:11052 at 15:16:19.144
+starting worker pid=21054 on localhost:11052 at 15:16:51.070
+starting worker pid=21064 on localhost:11052 at 15:16:51.236
+starting worker pid=21073 on localhost:11052 at 15:16:51.398
+starting worker pid=21082 on localhost:11052 at 15:16:51.553
+starting worker pid=21091 on localhost:11052 at 15:16:51.706
+starting worker pid=21100 on localhost:11052 at 15:16:51.868
+starting worker pid=21109 on localhost:11052 at 15:16:52.026
+starting worker pid=21118 on localhost:11052 at 15:16:52.180
+starting worker pid=21127 on localhost:11052 at 15:16:52.335
+starting worker pid=21137 on localhost:11052 at 15:16:52.492
+starting worker pid=21176 on localhost:11052 at 15:17:24.765
+starting worker pid=21186 on localhost:11052 at 15:17:24.921
+starting worker pid=21195 on localhost:11052 at 15:17:25.076
+starting worker pid=21205 on localhost:11052 at 15:17:25.233
+starting worker pid=21214 on localhost:11052 at 15:17:25.390
+starting worker pid=21223 on localhost:11052 at 15:17:25.548
+starting worker pid=21232 on localhost:11052 at 15:17:25.710
+starting worker pid=21241 on localhost:11052 at 15:17:25.864
+starting worker pid=21250 on localhost:11052 at 15:17:26.016
+starting worker pid=21259 on localhost:11052 at 15:17:26.170
+starting worker pid=21289 on localhost:11052 at 15:17:41.372
+starting worker pid=21299 on localhost:11052 at 15:17:41.529
+starting worker pid=21308 on localhost:11052 at 15:17:41.684
+starting worker pid=21317 on localhost:11052 at 15:17:41.838
+starting worker pid=21326 on localhost:11052 at 15:17:41.991
+starting worker pid=21335 on localhost:11052 at 15:17:42.151
+starting worker pid=21344 on localhost:11052 at 15:17:42.310
+starting worker pid=21354 on localhost:11052 at 15:17:42.465
+starting worker pid=21363 on localhost:11052 at 15:17:42.619
+starting worker pid=21372 on localhost:11052 at 15:17:42.776
+starting worker pid=21404 on localhost:11052 at 15:18:01.001
+starting worker pid=21414 on localhost:11052 at 15:18:01.161
+starting worker pid=21428 on localhost:11052 at 15:18:01.315
+starting worker pid=21437 on localhost:11052 at 15:18:01.469
+starting worker pid=21446 on localhost:11052 at 15:18:01.624
+starting worker pid=21455 on localhost:11052 at 15:18:01.784
+starting worker pid=21464 on localhost:11052 at 15:18:01.941
+starting worker pid=21473 on localhost:11052 at 15:18:02.094
+starting worker pid=21482 on localhost:11052 at 15:18:02.249
+starting worker pid=21493 on localhost:11052 at 15:18:02.403
+starting worker pid=21651 on localhost:11052 at 15:19:17.713
+starting worker pid=21661 on localhost:11052 at 15:19:17.869
+starting worker pid=21670 on localhost:11052 at 15:19:18.023
+starting worker pid=21679 on localhost:11052 at 15:19:18.180
+starting worker pid=21688 on localhost:11052 at 15:19:18.334
+starting worker pid=21698 on localhost:11052 at 15:19:18.497
+starting worker pid=21707 on localhost:11052 at 15:19:18.655
+starting worker pid=21716 on localhost:11052 at 15:19:18.807
+starting worker pid=21725 on localhost:11052 at 15:19:18.960
+starting worker pid=21734 on localhost:11052 at 15:19:19.111
+starting worker pid=21803 on localhost:11052 at 15:21:01.983
+starting worker pid=21813 on localhost:11052 at 15:21:02.136
+starting worker pid=21822 on localhost:11052 at 15:21:02.289
+starting worker pid=21831 on localhost:11052 at 15:21:02.444
+starting worker pid=21841 on localhost:11052 at 15:21:02.599
+starting worker pid=21850 on localhost:11052 at 15:21:02.761
+starting worker pid=21859 on localhost:11052 at 15:21:02.918
+starting worker pid=21868 on localhost:11052 at 15:21:03.070
+starting worker pid=21877 on localhost:11052 at 15:21:03.220
+starting worker pid=21886 on localhost:11052 at 15:21:03.373
+starting worker pid=22017 on localhost:11052 at 15:22:06.625
+starting worker pid=22026 on localhost:11052 at 15:22:06.779
+starting worker pid=22035 on localhost:11052 at 15:22:06.931
+starting worker pid=22044 on localhost:11052 at 15:22:07.084
+starting worker pid=22053 on localhost:11052 at 15:22:07.238
+starting worker pid=22062 on localhost:11052 at 15:22:07.410
+starting worker pid=22071 on localhost:11052 at 15:22:07.566
+starting worker pid=22080 on localhost:11052 at 15:22:07.722
+starting worker pid=22090 on localhost:11052 at 15:22:07.873
+starting worker pid=22099 on localhost:11052 at 15:22:08.025
+starting worker pid=22328 on localhost:11052 at 15:25:08.181
+starting worker pid=22338 on localhost:11052 at 15:25:08.338
+starting worker pid=22347 on localhost:11052 at 15:25:08.491
+starting worker pid=22356 on localhost:11052 at 15:25:08.646
+starting worker pid=22365 on localhost:11052 at 15:25:08.797
+starting worker pid=22375 on localhost:11052 at 15:25:08.961
+starting worker pid=22384 on localhost:11052 at 15:25:09.118
+starting worker pid=22393 on localhost:11052 at 15:25:09.273
+starting worker pid=22402 on localhost:11052 at 15:25:09.427
+starting worker pid=22411 on localhost:11052 at 15:25:09.583
+starting worker pid=22570 on localhost:11052 at 15:27:13.183
+starting worker pid=22580 on localhost:11052 at 15:27:13.338
+starting worker pid=22590 on localhost:11052 at 15:27:13.491
+starting worker pid=22599 on localhost:11052 at 15:27:13.647
+starting worker pid=22608 on localhost:11052 at 15:27:13.801
+starting worker pid=22617 on localhost:11052 at 15:27:13.959
+starting worker pid=22626 on localhost:11052 at 15:27:14.114
+starting worker pid=22635 on localhost:11052 at 15:27:14.266
+starting worker pid=22644 on localhost:11052 at 15:27:14.419
+starting worker pid=22653 on localhost:11052 at 15:27:14.575
+starting worker pid=22721 on localhost:11052 at 15:28:46.466
+starting worker pid=22731 on localhost:11052 at 15:28:46.620
+starting worker pid=22740 on localhost:11052 at 15:28:46.771
+starting worker pid=22749 on localhost:11052 at 15:28:46.923
+starting worker pid=22758 on localhost:11052 at 15:28:47.076
+starting worker pid=22767 on localhost:11052 at 15:28:47.232
+starting worker pid=22776 on localhost:11052 at 15:28:47.391
+starting worker pid=22785 on localhost:11052 at 15:28:47.544
+starting worker pid=22794 on localhost:11052 at 15:28:47.695
+starting worker pid=22803 on localhost:11052 at 15:28:47.846
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+starting worker pid=29303 on localhost:11697 at 18:04:38.707
+starting worker pid=29313 on localhost:11697 at 18:04:38.846
+starting worker pid=29322 on localhost:11697 at 18:04:38.986
+starting worker pid=29331 on localhost:11697 at 18:04:39.122
+starting worker pid=29340 on localhost:11697 at 18:04:39.262
+starting worker pid=29350 on localhost:11697 at 18:04:39.415
+starting worker pid=29359 on localhost:11697 at 18:04:39.556
+starting worker pid=29368 on localhost:11697 at 18:04:39.696
+starting worker pid=29377 on localhost:11697 at 18:04:39.833
+starting worker pid=29386 on localhost:11697 at 18:04:39.970
+starting worker pid=29630 on localhost:11697 at 18:07:05.965
+starting worker pid=29652 on localhost:11697 at 18:07:06.118
+starting worker pid=29661 on localhost:11697 at 18:07:06.268
+starting worker pid=29670 on localhost:11697 at 18:07:06.430
+starting worker pid=29679 on localhost:11697 at 18:07:06.582
+starting worker pid=29688 on localhost:11697 at 18:07:06.736
+starting worker pid=29697 on localhost:11697 at 18:07:06.890
+starting worker pid=29706 on localhost:11697 at 18:07:07.040
+starting worker pid=29715 on localhost:11697 at 18:07:07.192
+starting worker pid=29724 on localhost:11697 at 18:07:07.342
+starting worker pid=29853 on localhost:11697 at 18:09:48.370
+starting worker pid=29863 on localhost:11697 at 18:09:48.529
+starting worker pid=29872 on localhost:11697 at 18:09:48.688
+starting worker pid=29881 on localhost:11697 at 18:09:48.844
+starting worker pid=29890 on localhost:11697 at 18:09:49.004
+starting worker pid=29899 on localhost:11697 at 18:09:49.163
+starting worker pid=29908 on localhost:11697 at 18:09:49.327
+starting worker pid=29918 on localhost:11697 at 18:09:49.486
+starting worker pid=29927 on localhost:11697 at 18:09:49.644
+starting worker pid=29936 on localhost:11697 at 18:09:49.805
+starting worker pid=30286 on localhost:11697 at 18:12:55.234
+starting worker pid=30296 on localhost:11697 at 18:12:55.386
+starting worker pid=30305 on localhost:11697 at 18:12:55.539
+starting worker pid=30314 on localhost:11697 at 18:12:55.690
+starting worker pid=30323 on localhost:11697 at 18:12:55.842
+starting worker pid=30332 on localhost:11697 at 18:12:56.000
+starting worker pid=30341 on localhost:11697 at 18:12:56.156
+starting worker pid=30350 on localhost:11697 at 18:12:56.307
+starting worker pid=30359 on localhost:11697 at 18:12:56.461
+starting worker pid=30368 on localhost:11697 at 18:12:56.614
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+starting worker pid=32597 on localhost:11333 at 18:36:47.303
+starting worker pid=32606 on localhost:11333 at 18:36:47.418
+starting worker pid=32617 on localhost:11333 at 18:36:47.529
+starting worker pid=32626 on localhost:11333 at 18:36:47.639
+starting worker pid=32635 on localhost:11333 at 18:36:47.748
+starting worker pid=32644 on localhost:11333 at 18:36:47.856
+starting worker pid=32653 on localhost:11333 at 18:36:47.966
+starting worker pid=32662 on localhost:11333 at 18:36:48.081
+starting worker pid=32671 on localhost:11333 at 18:36:48.195
+starting worker pid=32680 on localhost:11333 at 18:36:48.305
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+starting worker pid=15882 on localhost:11848 at 11:32:46.720
+starting worker pid=15891 on localhost:11848 at 11:32:46.855
+starting worker pid=15901 on localhost:11848 at 11:32:46.986
+starting worker pid=15910 on localhost:11848 at 11:32:47.118
+starting worker pid=15919 on localhost:11848 at 11:32:47.250
+starting worker pid=15929 on localhost:11848 at 11:32:47.382
+starting worker pid=15938 on localhost:11848 at 11:32:47.518
+starting worker pid=15948 on localhost:11848 at 11:32:47.655
+starting worker pid=15962 on localhost:11848 at 11:32:47.787
+starting worker pid=15971 on localhost:11848 at 11:32:47.920
+starting worker pid=22387 on localhost:11848 at 12:01:50.456
+starting worker pid=22397 on localhost:11848 at 12:01:50.605
+starting worker pid=22408 on localhost:11848 at 12:01:50.749
+starting worker pid=22417 on localhost:11848 at 12:01:50.895
+starting worker pid=22426 on localhost:11848 at 12:01:51.037
+starting worker pid=22435 on localhost:11848 at 12:01:51.192
+starting worker pid=22444 on localhost:11848 at 12:01:51.336
+starting worker pid=22453 on localhost:11848 at 12:01:51.478
+starting worker pid=22462 on localhost:11848 at 12:01:51.620
+starting worker pid=22471 on localhost:11848 at 12:01:51.765
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+Error in unserialize(node$con) : error al leer desde conexión
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCK0node -> unserialize
+Ejecución interrumpida
+starting worker pid=27622 on localhost:11328 at 12:40:44.418
+starting worker pid=27633 on localhost:11328 at 12:40:44.579
+starting worker pid=27647 on localhost:11328 at 12:40:44.717
+starting worker pid=27656 on localhost:11328 at 12:40:44.851
+starting worker pid=27665 on localhost:11328 at 12:40:44.986
+starting worker pid=27674 on localhost:11328 at 12:40:45.131
+starting worker pid=27683 on localhost:11328 at 12:40:45.271
+starting worker pid=27692 on localhost:11328 at 12:40:45.408
+starting worker pid=27701 on localhost:11328 at 12:40:45.543
+starting worker pid=27710 on localhost:11328 at 12:40:45.678
+starting worker pid=27742 on localhost:11328 at 12:41:10.339
+starting worker pid=27751 on localhost:11328 at 12:41:10.477
+starting worker pid=27760 on localhost:11328 at 12:41:10.615
+starting worker pid=27769 on localhost:11328 at 12:41:10.749
+starting worker pid=27778 on localhost:11328 at 12:41:10.887
+starting worker pid=27787 on localhost:11328 at 12:41:11.029
+starting worker pid=27796 on localhost:11328 at 12:41:11.173
+starting worker pid=27807 on localhost:11328 at 12:41:11.318
+starting worker pid=27816 on localhost:11328 at 12:41:11.457
+starting worker pid=27825 on localhost:11328 at 12:41:11.593

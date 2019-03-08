@@ -44,7 +44,6 @@ Model <- R6Class(
       }
 
       if( file.exists( private$RDSpath ) ){
-        #cat("[",private$method,"][INFO] '",private$family,"' '",private$description,"' already exists. Loading!\n", sep="")
         private$modelInfo <- readRDS( private$RDSpath )
         private$isTrained <- TRUE
       }else{
@@ -172,15 +171,21 @@ Model <- R6Class(
                                            quiet = TRUE, verbose = FALSE))
       }
       lapply(pkgName, function(pkg){
-        if (! pkg %in% loaded_packages() )
+        if (! pkg %in% loaded_packages() ){
           library(pkg,character.only = TRUE,warn.conflicts = FALSE,quietly = TRUE)
+          #packrat::snapshot()
+        }
       })
     },
     unloadPackages = function(pkgName){
       lapply(pkgName, function(pkg){
         if( (pkg %in% loaded_packages()$package) && (!pkg %in% c("dplyr","plyr")) ){
           pck.name <- paste0("package:",pkg)
-          try(detach(pck.name, character.only = TRUE), silent = TRUE)
+          try({
+            detach(pck.name, character.only = TRUE)
+            pd.file <- attr(packageDescription(pkg), "file")
+            library.dynam.unload(pkg, libpath = sub("/Meta.*", '', pd.file))
+          }, silent = TRUE)
         }
       })
     },

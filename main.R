@@ -27,9 +27,8 @@ test.subset$getClass()
 
 #BEGIN
 Benchmarking <- D2MCS$new( path = "models/BinaryFisherCluster_prev/", trainFunction = trFunction )
-Benchmarking$train( train.set = train.subset, ig.classifiers = ignore.classifiers, metric = "PPV" )
+Benchmarking$train( train.set = train.subset, ig.classifiers = ignore.classifiers, metric = "MCC" )
 classify <- Benchmarking$classify( test.set = test.subset, voting.scheme = ClassWeightedVoting$new(), positive.class = "Active" )
-#class.output <- Benchmarking$getPerformance( real.values = test.subset$getClass() )
 classify$computePerformance( ob = test.subset$getClass(), list(MCC$new(), PPV$new(), Accuracy$new()) )
 
 nsga <- Benchmarking$optimize( opt.set = test.subset, 
@@ -52,9 +51,10 @@ nsga <- Benchmarking$optimize( opt.set = test.subset,
  
 
 a <- PerformanceComparator$new( test.set = test.subset, d2mcs.models = Benchmarking$getTrainedModels(), 
-                                op.results = nsga, pareto.optimal = EuclideanDistance$new(), measures = list(PPV$new()) )
-
-
+                                op.results = nsga, pareto.optimal = EuclideanDistance$new(), 
+                                measures = list(MCC$new(), PPV$new(), Accuracy$new()) )
+x <- a$showResults()
+a$plotResults()
 
 
 
