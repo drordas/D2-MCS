@@ -4,7 +4,7 @@ R framework to automatically predict the biological activity of chemical compoun
 
 ## Operation mode
 
-![D2-MCS Operation mode](d2_mcs_operation_mode.jpg)
+![D2-MCS Operation mode](d2mcs_operation_mode.jpg)
 
 
 ## Required libraries
