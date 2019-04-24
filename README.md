@@ -61,4 +61,5 @@ Output visualization example
 | 3 | Accuracy | 0.8928571 |
 
 
-
+## How to cite 
+[Ruano-Ordás, D; Yevseyeva, I, Basto-Fernandes,V; Méndez, José R; Emmerichc, Michael T.M. "Improving the drug discovery process by using multiple classifier systems". *Expert Systems with Applications.* Elsevier. 2019. doi: doi.org/10.1016/j.eswa.2018.12.032](https://doi.org/10.1016/j.eswa.2018.12.032)
