@@ -32,23 +32,23 @@ Download from CRAN Project: https://cran.r-project.org/bin/windows/
 
 ```R
 source("sources.R")
-  data <- Dataset$new( filepath ="<path_to_dataset_file>", header=TRUE, 
-                       sep="\t",skip = 1, normalize.names=TRUE, classIndex = 1 )
-  data$executePartition(4)
+data <- Dataset$new( filepath ="<path_to_dataset_file>", header=TRUE, 
+                     sep="\t",skip = 1, normalize.names=TRUE, classIndex = 1 )
+data$executePartition(4)
   
-  trFunction <- TwoClass$new( method = "cv", number = 10, savePredictions = "final", 
-                              classProbs = TRUE, allowParallel = TRUE, verboseIter = FALSE)
+trFunction <- TwoClass$new( method = "cv", number = 10, savePredictions = "final", 
+                            classProbs = TRUE, allowParallel = TRUE, verboseIter = FALSE)
   
-  fisherC <- BinaryFisherClustering$new(dataset = data$getSubset(1,2), maxClusters = 50)
-  fisherC$execute(positive.class = "<value_positive_class>")
-  train.subset <- fisherC$createSubset( subset = data$getSubset(c(2,3)) )
-  test.subset <- data$getSubset(4)
+fisherC <- BinaryFisherClustering$new(dataset = data$getSubset(1,2), maxClusters = 50)
+fisherC$execute(positive.class = "<value_positive_class>")
+train.subset <- fisherC$createSubset( subset = data$getSubset(c(2,3)) )
+test.subset <- data$getSubset(4)
   
-  Benchmarking <- D2MCS$new( path = "models/BinaryFisherCluster", trainFunction = trFunction )
-  Benchmarking$train( train.set = train.subset, metric = "MCC" )
-  classify <- Benchmarking$classify( test.set = test.subset), voting.scheme = ClassWeightedVoting$new(), 
-                                     positive.class = "<value_positive_class>" )
-  classify$computePerformance( ob = test.subset$getClass(), list(MCC$new(), PPV$new(), Accuracy$new()) )
+Benchmarking <- D2MCS$new( path = "models/BinaryFisherCluster", trainFunction = trFunction )
+Benchmarking$train( train.set = train.subset, metric = "MCC" )
+classify <- Benchmarking$classify( test.set = test.subset), voting.scheme = ClassWeightedVoting$new(), 
+                                   positive.class = "<value_positive_class>" )
+classify$computePerformance( ob = test.subset$getClass(), list(MCC$new(), PPV$new(), Accuracy$new()) )
   
 ```
 Output visualization example
