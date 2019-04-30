@@ -44,7 +44,7 @@ source("sources.R")
   train.subset <- fisherC$createSubset( subset = data$getSubset(c(2,3)) )
   test.subset <- data$getSubset(4)
   
-  Benchmarking <- D2MCS$new( path = "models/KendallCluster", trainFunction = trFunction )
+  Benchmarking <- D2MCS$new( path = "models/BinaryFisherCluster", trainFunction = trFunction )
   Benchmarking$train( train.set = train.subset, metric = "MCC" )
   classify <- Benchmarking$classify( test.set = test.subset), voting.scheme = ClassWeightedVoting$new(), 
                                      positive.class = "<value_positive_class>" )
