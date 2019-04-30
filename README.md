@@ -60,6 +60,10 @@ Output visualization example
 | 2 |     PPV  | 0.8864542 |
 | 3 | Accuracy | 0.8928571 |
 
+## Citation
 
-## How to cite 
-[Ruano-Ordás, D; Yevseyeva, I, Basto-Fernandes,V; Méndez, José R; Emmerichc, Michael T.M. "Improving the drug discovery process by using multiple classifier systems". *Expert Systems with Applications.* Elsevier. 2019. doi: doi.org/10.1016/j.eswa.2018.12.032](https://doi.org/10.1016/j.eswa.2018.12.032)
+To cite **D2-MCS** please use:
+> Ruano-Ordás, D; Yevseyeva, I, Basto-Fernandes,V; Méndez, José R; Emmerichc, Michael T.M. (2018). 
+> Improving the drug discovery process by using multiple classifier systems
+> Expert Systems with Applications. Volume 121, pp. 292-303.
+> Elsevier. https://doi.org/10.1016/j.eswa.2018.12.032
