@@ -60,6 +60,9 @@ Output visualization example
 | 2 |     PPV  | 0.8864542 |
 | 3 | Accuracy | 0.8928571 |
 
+## Developers
+[David Ruano Ordás](http://drordas.info)
+
 ## Citation
 
 To cite **D2-MCS** please use:
