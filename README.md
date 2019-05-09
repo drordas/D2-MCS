@@ -60,6 +60,20 @@ Output visualization example
 | 2 |     PPV  | 0.8864542 |
 | 3 | Accuracy | 0.8928571 |
 
+## Execution example (execute NSGAII and SPEA2 optimization algorithms)
+
+```R
+optimization <- Benchmarking$optimize( opt.set = test.subset, 
+                                       voting.scheme = ClassWeightedVoting$new(), 
+                                       opt.algorithm = list(NSGAII$new( min.function  = FPFN$new(), 
+                                                                        n.generations = 100,
+                                                                        n.iteractions = 1 ),
+                                                            SMSEMOA$new( min.function = FPFN$new(), 
+                                                                         n.generations = 25000,
+                                                                         n.iteractions = 1 ) ), 
+                                       positive.class = "<value_positive_class>" )
+```
+
 ## Developers
 [David Ruano Ordás](http://drordas.info)
 
