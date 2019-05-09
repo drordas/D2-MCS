@@ -60,7 +60,7 @@ Output visualization example
 | 2 |     PPV  | 0.8864542 |
 | 3 | Accuracy | 0.8928571 |
 
-## Execution example (execute NSGAII and SPEA2 optimization algorithms)
+## Execution example (execute NSGAII and SMSEMOA optimization algorithms)
 
 ```R
 optimization <- Benchmarking$optimize( opt.set = test.subset, 
