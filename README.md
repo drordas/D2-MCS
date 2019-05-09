@@ -66,7 +66,7 @@ Output visualization example
 optimization <- Benchmarking$optimize( opt.set = test.subset, 
                                        voting.scheme = ClassWeightedVoting$new(), 
                                        opt.algorithm = list(NSGAII$new( min.function  = FPFN$new(), 
-                                                                        n.generations = 100,
+                                                                        n.generations = 25000,
                                                                         n.iteractions = 1 ),
                                                             SMSEMOA$new( min.function = FPFN$new(), 
                                                                          n.generations = 25000,
