@@ -10,10 +10,27 @@ cat("[SOURCES][INFO] Loading clustering algorithms\n")
 #LOAD CLUSTERING ALGORITHMS CLASSES
 source("source/clustering/Cluster.R", chdir = TRUE)
 
+source("source/clustering/heuristics/Heuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/ChiSquareHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/FisherTestHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/GainRatioHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/InformationGainHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/KendallHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/MultinformationHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/OddsRatioHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/OddsRatioSHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/PearsonHeuristic.R", chdir = TRUE)
 
+source("source/clustering/plot/Plot.R", chdir = TRUE)
+source("source/clustering/plot/BinaryPlot.R", chdir = TRUE)
+source("source/clustering/plot/KendallPlot.R", chdir = TRUE)
+source("source/clustering/plot/PearsonPlot.R", chdir = TRUE)
+source("source/clustering/plot/SimplePlot.R", chdir = TRUE)
 
-
-
+source("source/clustering/strategies/StrategyGeneric.R", chdir = TRUE)
+source("source/clustering/strategies/BinaryStrategy.R", chdir = TRUE)
+source("source/clustering/strategies/SimpleStrategy.R", chdir = TRUE)
+source("source/clustering/strategies/MultiTypeStrategy.R", chdir = TRUE)
 #LOAD MODEL CLASSES
 cat("[SOURCES][INFO] Loading ML models and information handlers\n")
 source("source/models/utility/ModelFit.R", chdir = TRUE)
