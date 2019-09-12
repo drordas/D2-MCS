@@ -8,12 +8,11 @@ source("source/data/Dataset.R", chdir=TRUE)
 
 cat("[SOURCES][INFO] Loading clustering algorithms\n")
 #LOAD CLUSTERING ALGORITHMS CLASSES
-source("source/clustering/Cluster.R", chdir=TRUE)
-source("source/clustering/ClusterDistribution.R", chdir=TRUE)
-source("source/clustering/ClusterData.R", chdir=TRUE)
-source("source/clustering/BinaryFisherClustering.R", chdir=TRUE)
-source("source/clustering/MultiTypeClustering.R", chdir=TRUE)
-source("source/clustering/FSClustering.R", chdir=TRUE)
+source("source/clustering/Cluster.R", chdir = TRUE)
+
+
+
+
 
 #LOAD MODEL CLASSES
 cat("[SOURCES][INFO] Loading ML models and information handlers\n")
