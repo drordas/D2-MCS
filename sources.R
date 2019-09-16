@@ -24,7 +24,7 @@ source("source/clustering/heuristics/PearsonHeuristic.R", chdir = TRUE)
 source("source/clustering/plot/Plot.R", chdir = TRUE)
 source("source/clustering/plot/BinaryPlot.R", chdir = TRUE)
 source("source/clustering/plot/KendallPlot.R", chdir = TRUE)
-source("source/clustering/plot/PearsonPlot.R", chdir = TRUE)
+source("source/clustering/plot/SpearmanPlot.R", chdir = TRUE)
 source("source/clustering/plot/SimplePlot.R", chdir = TRUE)
 
 source("source/clustering/strategies/StrategyGeneric.R", chdir = TRUE)

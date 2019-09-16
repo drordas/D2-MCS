@@ -284,7 +284,7 @@ MultiTypeStrategy <- R6Class(
       })
       cluster.dist
     },
-    plot = function(dir.path = NULL, file.name = NULL, plotObjectBinary = BinaryPlot$new(), plotObjectReal = PearsonPlot$new(), ...) { 
+    plot = function(dir.path = NULL, file.name = NULL, plotObjectBinary = BinaryPlot$new(), plotObjectReal = SpearmanPlot$new(), ...) { 
       if (!"Plot" %in% class(plotObjectBinary)) {
         stop("[", super$getName(), "][ERROR] plotObjectBinary parameter must be defined as 'Plot' type")
       }

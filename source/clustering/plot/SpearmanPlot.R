@@ -1,10 +1,10 @@
 library("R6")
-PearsonPlot <- R6Class(
-  classname = "PearsonPlot",
+SpearmanPlot <- R6Class(
+  classname = "SpearmanPlot",
   inherit = Plot,
   portable = TRUE,
   public = list(
-    initialize = function(name = "PearsonPlot") {
+    initialize = function(name = "SpearmanPlot") {
       super$initialize(name = name)
     },
     plot = function(summary, ...) {
