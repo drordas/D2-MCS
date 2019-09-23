@@ -8,7 +8,7 @@ StrategyGeneric <- R6Class(
       }
       if (is.list(heuristic)) {
         for (h in heuristic) {
-          if (!"Heuristic" %in% class(h)) {
+          if (!"Heuristic" %in% class(h) && !is.null(h)) {
             stop("[StrategyGeneric][ERROR] heuristic parameter must be defined as a list of 'Heuristic' type objects")
           }
         }
@@ -34,12 +34,21 @@ StrategyGeneric <- R6Class(
     getBestDistribution = function() {
       private$best.distribution
     },
+    getNotDistribution = function() {
+      private$not.distribution
+    },
     setName = function(name) {
       private$name <- name
     },
     setHeuristic = function(heuristic) {
-      if (!"Heuristic" %in% class(heuristic)) {
-        stop("[StrategyGeneric][ERROR] heuristic parameter must be defined as 'Heuristic' type")
+      if (is.list(heuristic)) {
+        for (h in heuristic) {
+          if (!"Heuristic" %in% class(h) && !is.null(h)) {
+            stop("[StrategyGeneric][ERROR] heuristic parameter must be defined as a list of 'Heuristic' type objects")
+          }
+        }
+      } else {
+        stop("[StrategyGeneric][ERROR] heuristic parameter must be defined as a list of 'Heuristic' type objects")
       }
       private$heuristic <- heuristic
     },
@@ -61,6 +70,7 @@ StrategyGeneric <- R6Class(
     subset = NULL,
     heuristic = NULL,
     all.distribution = NULL,
-    best.distribution = NULL
+    best.distribution = NULL,
+    not.distribution = NULL
   )
 )

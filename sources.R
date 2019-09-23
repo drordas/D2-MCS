@@ -30,9 +30,9 @@ source("source/clustering/plot/SpearmanPlot.R", chdir = TRUE)
 source("source/clustering/plot/SimplePlot.R", chdir = TRUE)
 
 source("source/clustering/strategies/StrategyGeneric.R", chdir = TRUE)
-source("source/clustering/strategies/BinaryStrategy.R", chdir = TRUE)
 source("source/clustering/strategies/SimpleStrategy.R", chdir = TRUE)
-source("source/clustering/strategies/MultiTypeStrategy.R", chdir = TRUE)
+
+source("source/clustering/strategies/BinaryRealTypeStrategy.R", chdir = TRUE)
 #LOAD MODEL CLASSES
 cat("[SOURCES][INFO] Loading ML models and information handlers\n")
 source("source/models/utility/ModelFit.R", chdir = TRUE)
