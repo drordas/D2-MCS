@@ -7,15 +7,10 @@ ChiSquareHeuristic <- R6Class(
     initialize = function() {
       super$initialize(name = "ChiSquareHeuristic")
     },
-    heuristic = function(subset, ...) {
-      corpus <- subset$removeUnnecesary(ignore.class = TRUE)
-      class <- subset$getClass()
+    # Heuristic valid for both discrete and continuous variables
+    heuristic = function(col1, col2, namesColums = NULL) {
       # WARNING! Chi-squared approximation may be incorrect
-      chisq.result <- sapply(corpus,function(e, class){
-        chisq.test(class, e)$p.value
-      }, class)
-      names(chisq.result) <- names(corpus)
-      chisq.result
+      chisq.test(col1, col2)$p.value
     }
   )
 )

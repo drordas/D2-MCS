@@ -7,31 +7,14 @@ KendallHeuristic <- R6Class(
     initialize = function() {
       super$initialize(name = "KendallHeuristic")
     },
-    heuristic = function(subset, ...) {
-      corpus <- subset$removeUnnecesaryReal()
-      class <- subset$getClass()
-      positive.class <- subset$getPositiveClass()
-      negative.class <- names(table(class))[which(!names(table(class)) %in% positive.class)]
-      #RECODE FACTOR VALUES TO NUMERIC ONES (POSITIVE -> 1 & NEGATIVE -> 0)
-      binaryClass <-
-        car::recode(
-          class,
-          paste0(
-            "'",
-            positive.class,
-            "'='1'; '",
-            negative.class,
-            "'='0'"
-          ),
-          as.numeric = TRUE,
-          as.factor = FALSE
-        ) #IMPROVED REMOVED LOOP
-      
-      sapply(corpus, function(c) {
-        estimateValue <- cor.test(c, binaryClass, method = "kendall")$estimate
-        estimateValue <- unname(estimateValue, force = TRUE) #REMOVE TAU NAME.
-        estimateValue
-      })  
+    # Heuristic valid for continuous variables
+    heuristic = function(col1, col2, namesColums = NULL) {
+      if (private$isBinary(col1) || !private$isBinary(col2)) {
+        warning("[", super$getName(), "][WARNING] Columns must to be real. Return NA")
+        NA
+      } else {
+        unname(cor.test(col1, col2, method = "kendall")$estimate, force = TRUE)
+      }
     }
   )
 )

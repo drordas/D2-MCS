@@ -20,6 +20,8 @@ source("source/clustering/heuristics/MultinformationHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/OddsRatioHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/OddsRatioSHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/PearsonHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/SpearmanHeuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/MCCHeuristic.R", chdir = TRUE)
 
 source("source/clustering/plot/Plot.R", chdir = TRUE)
 source("source/clustering/plot/BinaryPlot.R", chdir = TRUE)

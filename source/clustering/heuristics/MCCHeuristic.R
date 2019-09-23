@@ -1,11 +1,11 @@
 library("R6")
-MultinformationHeuristic <- R6Class(
-  classname = "MultinformationHeuristic",
+MCCHeuristic <- R6Class(
+  classname = "MCCHeuristic",
   inherit = Heuristic,
   portable = TRUE,
   public = list(
     initialize = function() {
-      super$initialize(name = "MultinformationHeuristic")
+      super$initialize(name = "MCCHeuristic")
     },
     # Heuristic valid for discrete variables
     heuristic = function(col1, col2, namesColums = NULL) {
@@ -13,7 +13,7 @@ MultinformationHeuristic <- R6Class(
         warning("[", super$getName(), "][WARNING] Values must to be binary. Return NA")
         NA
       } else {
-        mutinformation(col1, col2)
+        mccr(col1, col2)
       }
     }
   )

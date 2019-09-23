@@ -7,25 +7,42 @@ InformationGainHeuristic <- R6Class(
     initialize = function() {
       super$initialize(name = "InformationGainHeuristic")
     },
-    heuristic = function(subset, ...) {
-      corpus <- subset$getBinaryFeatures()
-      class <- subset$getClass()
-      className <- subset$getClassName()
-      # corpusDiscretes <- 
-      # corpusContinues   <- 
-      #si son discretas
-      # ig.test.discretes <- private$information_gain(className, corpusDiscretes)
-      #Si son continuas
-      ig.test <- information.gain(as.formula(sprintf("`%s` ~.", className)), corpusContinues)
-      
-      # ig.test <- rbind(ig.test.discretes, ig.test.continues)
-      
-      ig.values <- ig.test$attr_importance
-      names(ig.values) <- row.names(ig.test)
-      ig.zero <- ig.values[which(ig.values == 0, arr.ind = TRUE)]
-      ig.nonzero <- ig.values[which(ig.values != 0, arr.ind = TRUE)]
-      ig.values <- list("NonZero" = ig.nonzero, "Zero" = ig.zero)
-      ig.values <- unlist(unname(ig.values["NonZero"]))
+    # heuristic = function(subset, ...) {
+    #   # corpusDiscretes <- 
+    #   # corpusContinues   <- 
+    #   #si son discretas
+    #   # ig.test.discretes <- private$information_gain(className, corpusDiscretes)
+    #   #Si son continuas
+    #   ig.test <- information.gain(as.formula(sprintf("`%s` ~.", className)), corpusContinues)
+    #   
+    #   # ig.test <- rbind(ig.test.discretes, ig.test.continues)
+    #   
+    #   ig.values <- ig.test$attr_importance
+    #   names(ig.values) <- row.names(ig.test)
+    #   ig.zero <- ig.values[which(ig.values == 0, arr.ind = TRUE)]
+    #   ig.nonzero <- ig.values[which(ig.values != 0, arr.ind = TRUE)]
+    #   ig.values <- list("NonZero" = ig.nonzero, "Zero" = ig.zero)
+    #   ig.values <- unlist(unname(ig.values["NonZero"]))
+    # },
+    heuristic = function(col1, col2) {
+      col1 <- as.integer(col1[,1]) - 1
+      if (!private$isBinary(col1)) {
+        warning("[", super$getName(), "][WARNING] Columns must to be binary. Return NA")
+        NA
+      } else {
+        if (private$isBinary(col1)) {
+          #if features are binary
+          # ig.test.discretes <- private$information_gain(className, corpusDiscretes)
+        } else {
+          ig.test <- information.gain(as.formula(sprintf("`%s` ~.", names(col1))), col2)$attr_importance
+        }
+        ig.values <- ig.test$attr_importance
+        names(ig.values) <- row.names(ig.test)
+        ig.zero <- ig.values[which(ig.values == 0, arr.ind = TRUE)]
+        ig.nonzero <- ig.values[which(ig.values != 0, arr.ind = TRUE)]
+        ig.values <- list("NonZero" = ig.nonzero, "Zero" = ig.zero)
+        ig.values <- unlist(unname(ig.values["NonZero"]))
+      }
     }
   ),
   private = list(

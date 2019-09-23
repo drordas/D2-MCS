@@ -7,15 +7,14 @@ OddsRatioHeuristic <- R6Class(
     initialize = function() {
       super$initialize(name = "OddsRatioHeuristic")
     },
-    heuristic = function(subset, ...) {
-      if (dim(subset$removeUnnecesaryReal())[2] > 0) {
-        corpus <- subset$removeUnnecesaryBinary()
+    heuristic = function(col1, col2) {
+      col1 <- as.integer(col1[, 1]) - 1
+      if (!private$isBinary(col1) || !private$isBinary(col2)) {
+        warning("[", super$getName(), "][WARNING] Columns must to be binary. Return NA")
+        NA
+      } else {
+        odds.ratio(col1, col2)$p
       }
-      class <- subset$getClass()
-      oddsrs.result <- sapply(corpus, function(e, class) {
-        odds.ratio(class, e)$p
-      }, class)
-      names(oddsrs.result) <- names(corpus)
     }
   )
 )
