@@ -1,254 +1,168 @@
-library("R6")
 Dataset <- R6Class(
   classname = "Dataset",
   portable = TRUE,
   public = list(
-    initialize = function(filepath, positive.class, header = TRUE, sep = ",", skip = 0, normalize.names = FALSE, classIndex) {
-      if (is.null(classIndex)) {
-        stop("[Dataset][ERROR] Class Index not defined")
-      }
-      if (!is.character(positive.class)) {
-        stop("[Dataset][ERROR] positive.class not defined")
-      } 
-      if (!file.exists(filepath)) {
-        stop("[Dataset][ERROR] Cannot initialize corpus")  
-      }
+    initialize = function( filepath, header = TRUE, sep = ",", skip = 0, normalize.names = FALSE, class.index, positive.class) {
+      if (missing(class.index) || is.null(class.index)) { stop(red("[Dataset][ERROR] Class Index not defined")) }
+      if (missing(positive.class) || !is.character(positive.class)) { stop(red("[Dataset][ERROR] positive.class not defined")) } 
+      if (!file.exists(filepath)) { stop(red("[Dataset][ERROR] Cannot initialize corpus")) }
+      
       if (header) {
-        private$positive.class <- positive.class
         private$corpus <- read.csv(filepath, header = header, skip = (skip + 1), sep = sep)
-        self$setClassIndex(classIndex)
+        if(! (class.index %in% 1:ncol(private$corpus)) ){ 
+          stop("[Dataset][ERROR] Class index exceeds dataset limits. Must be between 1 and ",ncol(private$corpus)," Aborting...\n")
+        }
         columNames <- unlist(strsplit(scan(file = filepath, nlines = 1, what = "character"), split = sep))
-        if (isTRUE(normalize.names)) {
-          self$setColumNames(make.names(columNames, unique = TRUE))
-        } else {
-          self$setColumNames(columNames)
-        }
-      } else {
+        if (isTRUE(normalize.names)) { columNames <- make.names(columNames, unique = TRUE) }
+        names(private$corpus) <- columNames
+      } else { private$corpus <- read.csv(filepath, header = header, skip = skip, sep = sep) }
+      
+      private$class.index <- class.index
+      private$class.name <- names(private$corpus)[private$class.index]
+      
+      if ( positive.class %in% private$corpus[,class.index] ){
         private$positive.class <- positive.class
-        private$corpus <- read.csv(filepath, header = header, skip = skip, sep = sep)
-        self$setClassIndex(classIndex)
-      }
+        private$class.values <- as.character(unique(private$corpus[,class.index]))
+      }else{ stop(red("[Dataset][ERROR] Positive class value not found. Aborting dataset loading...\n")) }
     },
-    setColumNames = function(names) {
-      names(private$corpus) <- names
-      self$setClassIndex(private$classIndex)
+    getColumNames = function() { names(private$corpus) },
+    getDataset = function() { private$corpus },
+    getClassName = function() { private$class.name },
+    getClassIndex = function() { private$class.index },
+    getClassValues = function(){private$class.values},
+    getPositiveClass = function() { private$positive.class },
+    getNcol = function() { ncol(private$corpus) },
+    getNrow = function() { nrow(private$corpus) },
+    setPositiveClass = function(positive.class) {
+      if ( positive.class %in% private$class.values ){
+        private$positive.class <- positive.class
+      }else{ stop(red("[Dataset][ERROR] Positive class value not found. Task not done\n")) } 
     },
-    getColumNames = function() {
-      names(private$corpus)
-    },
-    getDataset = function() {
-      private$corpus
-    },
-    getClassName = function() {
-      private$className
-    },
-    getClassIndex = function() {
-      private$classIndex
-    },
-    getNcol = function() {
-      ncol(private$corpus)
-    },
-    getNrow = function() {
-      nrow(private$corpus)
-    },
-    getPositiveClass = function() {
-      private$positive.class
-    },
-    setPositiveClass = function(positiveClass) {
-      private$positiveClass <- positiveClass
-    },
-    setClassIndex = function(classIndex) {
-      if (classIndex < ncol(private$corpus)) {
-        private$classIndex <- classIndex
-        private$className <- names(private$corpus)[classIndex]
+    setClassIndex = function(class.index, positive.class) {
+      if ( class.index %in% 1:ncol(private$corpus) ) {
+        if( (positive.class %in% as.character(unique(private$corpus[,class.index])) ) ){
+          private$class.values <- as.character(unique(private$corpus[,class.index]))
+          private$class.index <- class.index
+          private$class.name  <- names(private$corpus)[class.index]
+          private$positive.class <- positive.class
+        }else{ message( red("[Dataset][ERROR] Positive class value not found. Task not done.\n") ) }
+      }else {
+        message(red("[Dataset][ERROR] Class index exceeds dataset limits. Must be between 1 and ",ncol(private$corpus),". Task not done\n"))
       } 
     },
-    setClassName = function(className) {
-      private$classIndex <- which(names(private$corpus) == className)
-      private$className <- className
+    setClassName = function(class.name, positive.class) {
+      if( (length(which(self$getColumNames() == class.name )) == 0) ){
+        message(red("[Dataset][ERROR] Class name not found. Task not done")) }
+      else { self$setClassIndex(which(names(private$corpus) == class.name),positive.class) }
     },
-    executePartition = function(nfolds = 10){
-      private$partitions = Partitioner$new(data = private$corpus, nfolds = nfolds)
-      private$partitions$execute()
-    },
-    getPartitions = function() {
-      if (is.null(private$partitions)) {
-        message("[Dataset][WARNING] Dataset distribution is null. Executing default distribution process")
-        self$executePartition()
-      }
-      private$partitions
-    },
-    getSubset = function(numFolds = NULL){
-      if (is.null(private$partitions)) {
-        cat("[Dataset][WARNING] Dataset distribution is null. Executing default distribution process\n")
-        self$executePartition()
-      }
-      Subset$new(private$partitions$getInstances(numFolds), self$getClassIndex(), self$getPositiveClass())
-    }
-  ),
-  private = list(
-    corpus = NULL,
-    classIndex = NULL,
-    className = NULL,
-    partitions = NULL,
-    positive.class = NULL
-  )
-)
-
-Partitioner <- R6Class(
-  classname = "Partitioner",
-  portable = TRUE,
-  public = list(
-    initialize = function(data, nfolds = 10) {
-      if (is.null(data) || nrow(data) == 0) { 
-        stop("[DATASET][ERROR] Dataset not defined or empty")
-      }
-      private$data <- data
-      private$folds <- nfolds
-    },
-    execute = function() {
-      private$distribution <- caret::createFolds(data$getDataset()[, data$getClassIndex()], k = private$folds)
-    },
-    getFolds = function(numFolds = NULL) {
-      if (is.null(numFolds)) {
-        private$distribution 
-      } else {
-        if (length(numFolds) == 1 ) {
-          if (max(numFolds) <= length(private$distribution)) {
-            private$distribution[[numFolds]]
-          } else {
-            message("[Partitioner][ERROR] Required fold exceeds maximum number of folds")
+    createPartition = function( nfolds, pfolds ){
+      if( (missing(nfolds) && missing(pfolds)) || (!is.numeric(nfolds) && !is.numeric(pfolds)) ){
+        message(yellow("[Dataset][WARNING] Parameters are invalid. Assuming division with default k=10 folds"))
+        private$partitions = createFolds(private$corpus[,private$class.index],k = 10, list = TRUE)
+      }else{
+        if ( is.numeric(nfolds) && missing(pfolds) ){
+          message("[Dataset][INFO] Perfoming dataset partitioning into ",nfolds," groups")
+          private$partitions = createFolds(private$corpus[,private$class.index],k = nfolds, list = TRUE)
+        }else{
+          if( is.numeric(nfolds) && is.vector(pfolds) ){
+            if( length(pfolds) == nfolds && ( is.integer(pfolds) && sum(pfolds) == 100 || 
+                                              is.double(pfolds) && sum(pfolds) == 1 ) )
+            {
+              message("[Dataset][INFO] Perfoming dataset partitioning into",length(pfolds),"groups")
+              remaining <- private$corpus
+              for (index in 1:(nfolds)-1){
+                message("===============================================================\n")
+                message("[Dataset][INFO] Spliting ",index," group with ",pfolds[index],"\n")
+                message("===============================================================")
+                split <- createDataPartition(remaining$Activity, p=pfolds[index],list = FALSE)
+                private$partitions <- list.append( private$partitions, split)
+                remaining <- remaining[-split,]
+              }
+              private$partitions <-  list.append( private$partitions, remaining)
+              
+              ifelse( ( nfolds < 10),
+                      ( name(private$partitions) <- paste0("Fold0",which(1:nfolds < 10)) )
+                      ( name(private$partitions) <- c( paste0("Fold0",which(1:nfolds < 10)), 
+                                                       paste0("Fold",which(1:nfolds >=10)))) )
+            }else{ message(red("[Dataset][ERROR] Fold partition and/or probability mismatch. Task not performed")) }
+          }else{
+            if( ( missing(nfolds) || !is.integer(nfolds)) && is.vector(pfolds) && 
+                ( is.integer(pfolds) && sum(pfolds) == 100 || is.double(pfolds) && sum(pfolds) == 1 )  ){
+              message("[Dataset][INFO] Perfoming dataset partitioning into ",length(pfolds),"groups\n")
+              remaining <- private$corpus
+              for (index in 1:length(pfolds)-1){
+                message("===============================================================\n")
+                message("[Dataset][INFO] Spliting ",index," group with ",pfolds[index],"\n")
+                message("===============================================================")
+                split <- createDataPartition(remaining$Activity, p=pfolds[index],list = FALSE)
+                private$partitions <- list.append( private$partitions, split)
+                remaining <- remaining[-split,]
+              }
+              private$partitions <-  list.append( private$partitions, remaining)
+              ifelse( ( nfolds < 10),
+                      ( name(private$partitions) <- paste0("Fold0",which(1:nfolds < 10)) )
+                      ( name(private$partitions) <- c( paste0("Fold0",which(1:nfolds < 10)), 
+                                                       paste0("Fold",which(1:nfolds >=10)))) )
+              
+            }else{ message(red("[Dataset][ERROR] Cannot perform partition process. Aborted\n")) }
           }
-        } else {
-          sort(Reduce(union,private$distribution[numFolds]))
         }
       }
     },
-    getInstances = function(numPartition) {
-      if (is.null(numPartition) || numPartition > private$folds) {
-        stop("[Partitioner][ERROR] Number of folds must be inside 1 <= numPartitions <= ", private$folds)
+    getSubset = function(num.folds = NULL, opts = list(remove.na=FALSE, remove.const=FALSE) ){
+      subset <- NULL
+      if (is.null(private$partitions)) {
+        message(red("[Dataset][ERROR] Dataset distribution is null. Task not performed"))
+        return(NULL)
       }
-      dist <- self$getFolds(numPartition)
-      private$data[dist, ]
-    },
-    removeFolds = function() {
-      private$distribution <- vector(mode = "list", length = private$folds)
-    },
-    getNumFolds = function() {
-      private$folds
+      if ( missing(num.folds) || is.null(num.folds) || !is.numeric(num.folds) || 
+           !(max(num.folds) %in% c(1:length(private$partitions)) ) )
+      {
+        message(red("[Dataset][ERROR] Incorrect number of folds. Must be between 1 and ",
+                    length(private$partitions),". Task not performed")) 
+        return(NULL)
+      }
+      
+      subset.all <- private$corpus[ sort(Reduce(union,private$partitions[num.folds])), ]
+      subset.features <- subset.all[ ,-private$class.index]
+      subset.classValues <- data.frame(subset.all[ ,private$class.index])
+      names(subset.classValues) <- names(subset.all)[private$class.index]
+      
+      if( is.list(opts) ){
+        na.remov <- 0
+        const.remov <- 0
+        if(exists("remove.na",opts) && isTRUE(opts$remove.na) ) {
+          subset.features <- Filter(function(col) !all(is.na(col)), subset.features)
+          na.remov <- (ncol(subset.all)-1) - ncol(subset.features)
+          message("[Dataset][INFO] Removing columns containing NA values (total of ",na.remov,").")
+        }
+        if(exists("remove.const",opts) && isTRUE(opts$remove.const) ) { 
+          subset.features <- Filter(function(col) sd(col, na.rm = TRUE) != 0, subset.features)
+          const.remov <- ( (ncol(subset.all)-1) - ncol(subset.features) ) + na.remov
+          message("[Dataset][INFO] Removing columns containing constant values (total of ",const.remov,").")
+        }
+      }
+      
+      if( private$class.index == ncol(subset.all) ){
+        subset <- cbind(subset.features,subset.classValues)
+      }else{
+        if( private$class.index == 1 ){
+          subset <- cbind( subset.classValues, subset.features ) 
+        }else{ 
+          subset <- cbind( subset.features[1:private$class.index-1],subset.classValues,
+                           subset.features[private$class.index:ncol(subset.features)] )
+        }
+      }
+      Subset$new( dataset = subset,class.index = private$class.index, class.values = self$getClassValues(), 
+                  positive.class = self$getPositiveClass() )
     }
   ),
   private = list(
-    data = NULL,
-    folds = 10,
-    distribution = NULL
-  )
-)
-
-Subset <- R6Class(
-  classname = "Subset",
-  portable = TRUE,
-  public = list(
-    initialize = function(dataset, classIndex, positive.class) {
-      if (is.null(dataset) || is.null(classIndex)) { 
-        stop("[Subset][ERROR] Dataset not defined or empty")
-      }
-      if (!is.character(positive.class)) {
-        stop("[Subset][ERROR] positive.class not defined")
-      } 
-      private$data <- dataset
-      private$classIndex <- classIndex
-      private$positive.class <- positive.class
-      private$instances <- c(1:nrow(private$data))
-      private$features <- -(private$classIndex)
-      private$className <- names(private$data)[private$classIndex]
-    },
-    getInstances = function(instances = private$instances, features = NULL, ignore.class = FALSE) {
-      if (is.null(features) && isTRUE(ignore.class)) {
-        return(private$data[instances, -private$classIndex])
-      }
-      if (is.null(features) && !isTRUE(ignore.class)) {
-        return(private$data[instances, ])
-      }
-      if (!is.null(features) && (is.vector(features) || is.numeric(features))) {
-        return(private$data[instances, features])
-      }
-    },
-    getFeatures = function(features = private$features) {  
-      names(private$data)[features]
-    },
-    getClass = function() {
-      private$data[, private$classIndex]
-    },
-    getClassIndex = function() {
-      private$classIndex
-    },
-    getClassName = function() {
-      private$className
-    },
-    getNcol = function() {
-      ncol(private$data)
-    },
-    getNrow = function() {
-      nrow(private$data)
-    },
-    getPositiveClass = function() {
-      private$positive.class
-    },
-    setPositiveClass = function(positiveClass) {
-      private$positiveClass <- positiveClass
-    },
-    getBinaryFeatures = function(ignore.class = TRUE) {
-      binaryIndex <- sapply(self$getInstances(ignore.class = ignore.class), function(e) {
-        (private$isBinary(e) || length(unique(e)) == 2)
-      })
-      self$getInstances(ignore.class = ignore.class)[, binaryIndex]
-    },
-    getRealFeatures = function(ignore.class = TRUE) {
-      binaryIndex <- sapply(self$getInstances(ignore.class = ignore.class), function(e) {
-        (private$isBinary(e) || length(unique(e)) == 2)
-      })
-      self$getInstances(ignore.class = ignore.class)[, !binaryIndex]
-    },
-    removeUnnecesary = function(ignore.class = TRUE) {
-      private$removeUnnecesaryGeneric(self$getInstances(ignore.class = ignore.class))
-    },
-    removeUnnecesaryBinary = function() {
-      private$removeUnnecesaryGeneric(self$getBinaryFeatures())
-    },
-    removeUnnecesaryReal = function() {
-      private$removeUnnecesaryGeneric(self$getRealFeatures())
-    },
-    getUnnecesary = function() {
-      private$getUnnecesaryGeneric(self$getInstances(ignore.class = ignore.class))
-    },
-    getUnnecesaryBinary = function() {
-      private$getUnnecesaryGeneric(self$getBinaryFeatures())
-    },
-    getUnnecesaryReal = function() {
-      private$getUnnecesaryGeneric(self$getRealFeatures())
-    }
-  ),
-  private = list(
-    data = NULL,
-    classIndex = NULL,
-    className = NULL,
-    instances = NULL,
-    features = NULL,
     positive.class = NULL,
-    isBinary = function(column) {
-      unique <- unique(column)
-      if (!is.numeric(column) | any(is.na(column))) {
-        return(FALSE)
-      } else {
-        return(!(any(as.integer(unique) != unique) || length(unique) > 2 || min(column) != 0 || max(column) != 1))
-      }
-    },
-    removeUnnecesaryGeneric = function(corpus) {
-      corpus[, sapply(corpus, function(c) {length(unique(c)) >= 2})]
-    },
-    getUnnecesaryGeneric = function(corpus) {
-      names(corpus[, !sapply(corpus, function(c) {length(unique(c)) >= 2})])
-    }
+    corpus = NULL,
+    class.index = NULL,
+    class.name = NULL,
+    class.values = NULL,
+    partitions = list()
   )
 )

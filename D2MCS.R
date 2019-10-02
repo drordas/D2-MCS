@@ -4,30 +4,43 @@ D2MCS <- R6Class(
   classname = "D2MCS",
   portable = TRUE,                   
   public = list(
-    initialize = function(path="models", nCores = NULL, socket.type="PSOCK", outfile="d2mcs.log",
+    initialize = function(path, num.cores = NULL, socket.type="PSOCK", outfile,
                           serialize=FALSE, trainFunction = NULL ){ 
-      if(is.null(nCores) || nCores >=  detectCores() || nCores > 10  ){
-        cat("[D2MCS][WARNING] Invalid number of cores ")
-        if(detectCores() > 10)
-          cat(" (1>= nCores <= 10)\n", sep="")
-        else
-          cat(" (1>= nCores < ",detectCores(),")\n", sep="")
+      
+      if(missing(path)) { stop("[D2MCS][ERROR] Path not defined. Path should be given to store the models\n") }
+      
+      if (!file.exists(path)){
+        dir.create(path, recursive = TRUE)
+        message("[D2MCS][INFO] Path '",path, "' does not exist. Creating ...\n")
+      }
+      
+      if(missing(outfile)) { stop("[D2MCS][ERROR] Cluster log file not defined\n") }
+      
+      if (!file.exists(outfile)){
+        dir.create(outfile, recursive = TRUE)
+        message("[D2MCS][INFO] Cluster log  file '",path, "' does not exist. Creating ...\n")
+      }
+      
+      if(is.null(num.cores) || num.cores >=  detectCores() || num.cores > 10  ){
+        ifelse( (detectCores() > 10), 
+                (warning(yellow("[D2MCS][WARNING] Invalid number of cores (1>= num.cores <= 10)\n"))),
+                (warning(yellow("[D2MCS][WARNING] Invalid number of cores (1>= num.cores < ",detectCores(),")"))) )
         cores <- min(max(1,detectCores()-2),10)
-        cat("\t\t Using default configuration (",cores,"/",detectCores(),") \n", sep="")
+        message("[D2MCS][INFO] Using default number of cores (",cores,"/",detectCores(),") \n")
       }else cores <- nCores
       
       if( !socket.type %in% c("PSOCK","FORK") ){
-        cat("[D2MCS][WARNING] Invalid socket type. Assuming 'PSOCK' cluster\n")
+        warning(yellow("[D2MCS][WARNING] Invalid socket type. Assuming 'PSOCK' cluster\n"))
         socket <- "PSOCK"
       }else socket <- socket.type
       
       if(!is.logical(serialize)){
-        cat("[D2MCS][WARNING] Invalid serialization option. Assuming not serialization\n")
+        warning(yellow("[D2MCS][WARNING] Invalid serialization option. Assuming not serialization\n"))
         xdr <- FALSE
       }else xdr <- serialize
       
       if (missing(trainFunction) || is.null(trainFunction) || !"TrainFunction" %in% class(trainFunction) )
-        stop("[D2MCS][ERROR] TrainFunction not defined or incorrect type (should be inherit from TrainFunction abstract class)\n")
+        stop("[D2MCS][ERROR] TrainFunction not defined or incorrect (should inherit from TrainFunction abstract class)\n")
       else private$trainFunction <- trainFunction
       
       private$availableModels <- private$loadAvailableModels()
@@ -43,16 +56,17 @@ D2MCS <- R6Class(
       private$real.values <- NULL
     },
     train = function( train.set = NULL, num.clusters = NULL, ex.classifiers = c(), 
-                      ig.classifiers =c(), metric = NULL, saveAllModels = FALSE ){
+                      ig.classifiers=c(), metric = NULL, saveAllModels = FALSE ){
       if(missing(train.set) || is.null(train.set) || !"ClusterDistribution" %in% class(train.set) )
-        stop("[D2MCS][ERROR] Subset must be of type 'Cluster'\n")
+        stop(red("[D2MCS][ERROR] Train set not defined of incorrect (must be of type 'Cluster')\n"))
     
-      if(missing(num.clusters) || is.null(num.clusters) || !is.numeric(num.clusters) || !is.vector(num.clusters) ){
-        cat("[D2MCS][WARNING] Number of clusters missing or incorrect (must be numeric or vector). Using all clusters\n")
+      if (missing(num.clusters)) message("[D2MCS][INFO] Number of clusters not set. Using all clusters... \n")
+      if (is.null(num.clusters) || !is.numeric(num.clusters) || !is.vector(num.clusters) ){
+        warning(yellow("[D2MCS][WARNING] Number of clusters not set (must be numeric or vector). Using all clusters\n"))
         num.clusters <- c(1:train.set$getNumClusters())
       }else{
         if (is.numeric(num.clusters) && num.clusters > train.set$getNumClusters() ){
-          cat("[D2MCS][WARNING] num.clusters is higher than number of existing clusters. Using all clusters\n")
+          warning(yellow("[D2MCS][WARNING] num.clusters is higher than number of existing clusters. Using all clusters\n"))
           num.clusters <- c(1:train.set$getNumClusters())
         }else num.clusters <- c(1:num.clusters)
       }
@@ -62,13 +76,14 @@ D2MCS <- R6Class(
       }else usedModels <- ex.classifiers
       
       if(!missing(ig.classifiers) && !is.null(ig.classifiers) && length(ig.classifiers) > 0){
-        cat("[D2MCS][INFO] Ignoring '",length(ig.classifiers),"' M.L models\n", sep="")
+        message("[D2MCS][INFO] Ignoring '",length(ig.classifiers),"' M.L models\n")
         usedModels <- setdiff(usedModels,ig.classifiers)
-        cat("[D2MCS][INFO] Still '",length(usedModels),"' M.L models available\n", sep="")
+        message("[D2MCS][INFO] Still '",length(usedModels),"' M.L models available\n")
       }
       
-      cat("[D2MCS][INFO] Making parallel Socket Cluster with ",private$cluster.conf$cores," cores\n",sep="")
-      private$cluster.obj <- makeCluster(private$cluster.conf$cores, type= private$cluster.conf$socket, outfile= private$cluster.conf$outfile, useXDR=private$cluster.conf$xdr)
+      message("[D2MCS][INFO] Making parallel Socket Cluster with",private$cluster.conf$cores,"cores\n")
+      private$cluster.obj <- makeCluster( private$cluster.conf$cores, type= private$cluster.conf$socket, 
+                                          outfile= private$cluster.conf$outfile, useXDR=private$cluster.conf$xdr )
       
       private$bestModels <- ModelsList$new( size = length(num.clusters) )
       private$executedModels <- ExecutedModelsList$new( size = length(num.clusters) )
@@ -76,13 +91,15 @@ D2MCS <- R6Class(
       used.models <- private$availableModels[ (private$availableModels$name %in% usedModels), ]
         
       for (i in num.clusters ){
-        cat("[D2MCS][INFO] ---------------------------------------\n",sep="")
-        cat("[D2MCS][INFO] Training models for cluster '",i,"' of '", max(num.clusters),"'\n",sep="")
-        cat("[D2MCS][INFO] ---------------------------------------\n",sep="")
+        message("[D2MCS][INFO] ---------------------------------------\n")
+        message("[D2MCS][INFO] Training models for cluster '",i,"' of '", max(num.clusters),"'\n")
+        message("[D2MCS][INFO] ---------------------------------------\n")
         model.subset <- train.set$getAt(i)
         model.fitClass <- DefaultModelFit$new(model.subset)
 
-        model.savePath <- file.path(paste0(private$path,private$metric),paste0("C[",i,"-",train.set$getNumClusters(),"]") )
+        model.savePath <- file.path( paste0(private$path,private$metric),
+                                     paste0("C[",i,"-",train.set$getNumClusters(),"]") )
+        
         private$executedModels$loadFrom(file.path(model.savePath,".executed"),i)
         private$bestClusterModel <- NULL
 
@@ -95,31 +112,33 @@ D2MCS <- R6Class(
         }else private$bestClusterModel <- ModelEntry$new( name= "NULL", performance= 0.0 )
         
         if(abs(mean(cor(model.subset$getInstances(ignore.class = TRUE), as.numeric(model.subset$getClass())), na.rm=TRUE) ) < 0.3 ){ ##CORRELATION
-          cat("[D2MCS][INFO] High-Correlated Data (< 0.3). Ignoring Linear-based and Discriminant-based models\n", sep="")
+          warning(yellow("[D2MCS][WARNING] High-Correlated Data (< 0.3). Ignoring Linear-based and Discriminant-based models\n"))
           remaining.models <- subset(used.models,!grepl("Linea[l|r]|Discriminant",paste(used.models$description,used.models$family,sep=" ")) )
-          cat("[D2MCS][INFO] Removing ",nrow(used.models) - nrow(remaining.models)," incompatible M.L. models\n", sep="")
+          message("[D2MCS][INFO] Removing ",nrow(used.models) - nrow(remaining.models)," incompatible M.L. models\n")
         }else remaining.models <- used.models
         
         num.remaining <- nrow(remaining.models)
         cluster.models <- list()
-
         remaining.models <- remaining.models[ !(remaining.models$name %in% private$executedModels$getAt(i)$getNames()), ]
         
         if(nrow(remaining.models) == 0){
           private$bestModels$insertAt(i,private$bestClusterModel)
           private$models.weights <- c( private$models.weights,private$bestClusterModel$getPerformance() )
           if(i < max(num.clusters))
-            cat("[D2MCS][INFO] Remaining ",num.remaining," M.L. models has been already executed for cluster ",i,"/",max(num.clusters),". Executing next cluster...\n", sep="")
+            message( "[D2MCS][INFO] Remaining ",num.remaining,
+                     " M.L. models has been already executed for cluster ",i,"/",max(num.clusters),". Executing next cluster...\n")
           else {
-            cat("[D2MCS][INFO] Remaining ",num.remaining," M.L. models has been already executed for cluster ",i,"/",max(num.clusters),".\n", sep="")
-            cat("[D2MCS][INFO] Finish !",sep="")
+            message( "[D2MCS][INFO] Remaining ",num.remaining,
+                     " M.L. models has been already executed for cluster ",i,"/",max(num.clusters),".\n")
+            message("[D2MCS][INFO] Finish !")
             if(!is.null(private$cluster.obj)){ stopCluster(private$cluster.obj); private$cluster.obj <- NULL }
           }
           next
           
         }else{ 
-          cat("[D2MCS][INFO] ",(num.remaining-nrow(remaining.models)),"/",num.remaining," M.L. models has been already executed for cluster ",i,"/",max(num.clusters),"\n",sep="") 
-          cat("              Executing remaining " ,nrow(remaining.models)," M.L. model(s)\n", sep="")
+          message( "[D2MCS][INFO]",(num.remaining-nrow(remaining.models)),"/",num.remaining,
+                   " M.L. models has been already executed for cluster ",i,"/",max(num.clusters),"\n") 
+          message( "[D2MCS][INFO] Executing remaining",nrow(remaining.models),"M.L. model(s)\n" )
         }
         
         apply(remaining.models, 1, function(model, executedModel){
@@ -142,12 +161,12 @@ D2MCS <- R6Class(
               private$bestClusterModel$save()
             }
             executedModel$saveAt(paste0(model.savePath,"/.executed"),i)
-          }else cat("[D2MCS][INFO] Model '",model$name,"' has been previously trained\n", sep="")
+          }else message("[D2MCS][INFO] Model '",model$name,"' has been previously trained\n")
         }, executedModel = private$executedModels )
         
         private$bestModels$insertAt(i,private$bestClusterModel)
         private$models.weights <- as.numeric(c( private$models.weights,private$bestClusterModel$getPerformance() ))
-        cat("[D2MCS][INFO] Finish! \n", sep="")
+        message("[D2MCS][INFO] Finish! \n")
       }
       if(!is.null(private$cluster.obj)) { stopCluster(private$cluster.obj); private$cluster.obj <- NULL }
     },
@@ -164,9 +183,9 @@ D2MCS <- R6Class(
       if( is.null(private$bestModels) || private$bestModels$size() < 1 )
         stop("[D2MCS][ERROR] Models were not trained. Please run 'Train' method first\n")
 
-      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-      cat("[D2MCS][INFO] Starting classification operation\n")
-      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      message("[D2MCS][INFO] -------------------------------------------------------\n")
+      message("[D2MCS][INFO] Starting classification operation\n")
+      message("[D2MCS][INFO] -------------------------------------------------------\n")
       
       if( test.set$getClassIndex() > 0 && !is.null(test.set$getClass()) )
         private$real.values <- test.set$getClass()
@@ -176,23 +195,23 @@ D2MCS <- R6Class(
       prediction.cluster <- PredictionList$new( private$metric )
 
       for ( cluster in 1:private$bestModels$size() ){
-        cat("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '",private$bestModels$size(),"'\n",sep="")
-        cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+        message("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '",private$bestModels$size(),"'\n")
+        message("[D2MCS][INFO] -------------------------------------------------------\n")
         pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject(), 
                                 class.values = levels( test.set$getClass() ), positive.class = positive.class )
         pred$execute(instances)
         prediction.cluster$addPrediction(pred)
       }
       
-      cat("[D2MCS][INFO] Computing final prediction values using '",voting.scheme$getName(),"'\n", sep="")
+      message("[D2MCS][INFO] Computing final prediction values using '",voting.scheme$getName(),"'\n")
 
       private$classify.output <- ClassifyOutput$new( preds = voting.scheme$execute(prediction.cluster), models = private$bestModels,
                      metric = private$metric, weights = as.numeric(private$models.weights),
                      positive.class = positive.class, negative.class = negative.class )
        
-      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-      cat("[D2MCS][INFO] Classification operation finished \n",sep="")
-      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      message("[D2MCS][INFO] -------------------------------------------------------\n")
+      message("[D2MCS][INFO] Classification operation finished \n")
+      message("[D2MCS][INFO] -------------------------------------------------------\n")
       
       private$classify.output
     },
@@ -222,9 +241,9 @@ D2MCS <- R6Class(
         private$models.weights <- rep.int(1,times = private$bestModels$size() )
       }else private$models.weights <- as.numeric(private$models.weights)
       
-      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
-      cat("[D2MCS][INFO] D2MCS Optimization stage\n")
-      cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+      message("[D2MCS][INFO] -------------------------------------------------------\n")
+      message("[D2MCS][INFO] D2MCS Optimization stage\n")
+      message("[D2MCS][INFO] -------------------------------------------------------\n")
       
       if( opt.set$getClassIndex() > 0 && !is.null(opt.set$getClass()) )
         private$real.values <- opt.set$getClass()
@@ -237,8 +256,8 @@ D2MCS <- R6Class(
       prediction.cluster <- PredictionList$new( private$metric )
       
       for ( cluster in 1:private$bestModels$size() ){
-        cat("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '", private$bestModels$size(),"'\n",sep="")
-        cat("[D2MCS][INFO] -------------------------------------------------------\n",sep="")
+        message("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '", private$bestModels$size(),"'\n")
+        message("[D2MCS][INFO] -------------------------------------------------------\n")
         pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject(), 
                                 class.values = levels(opt.set$getClass()), positive.class = positive.class )
         pred$execute(instances)
@@ -251,7 +270,7 @@ D2MCS <- R6Class(
         return(mf)
       }
       
-      cat("[D2MCS][INFO] Starting optimization process: \n")
+      message("[D2MCS][INFO] Starting optimization process: \n")
       freq <- table(real.values)
       
       opt.data <- sapply( opt.algorithm, function(alg, wg, freq) { 
@@ -259,7 +278,7 @@ D2MCS <- R6Class(
         alg$getResult(n.positive = as.numeric(freq["1"]), n.negative = as.numeric(freq["0"]) )
       }, wg = private$models.weights, freq= freq)
       
-      cat("[D2MCS][INFO] Finish optimmization process!'\n")
+      message("[D2MCS][INFO] Finish optimmization process!'\n")
       
       return (Optimizers$new( voting.scheme = voting.scheme, cluster.models = private$bestModels, metric = private$metric, 
                               optimizers = opt.data, positive.class = positive.class, negative.class = negative.class))
@@ -276,7 +295,7 @@ D2MCS <- R6Class(
     },
     plotTrain = function(){
       if ( is.null(private$executedModels ) || private$executedModels$size() < 1 )
-        cat("[D2MCS][ERROR] Models were not trained. Please run 'executeTrain' method first\n")
+        stop("[D2MCS][ERROR] Models were not trained. Please run 'executeTrain' method first\n")
       else{
         plotPath <- paste0(private$path,"plots")
         if (!dir.exists(plotPath)) dir.create(plotPath,recursive = TRUE)
@@ -301,7 +320,7 @@ D2MCS <- R6Class(
             theme (axis.text.x = element_text(angle = 75, hjust = 1),
                    plot.title = element_text(hjust = 0.5))
           save.path <- file.path(plotPath,paste0("TRAIN_",toupper(measure),"_C[",i,"-",private$executedModels$size(),"].pdf") )
-          cat("[D2MCS][INFO] Plot saved from cluster ",i," of ",private$executedModels$size()," at: '",save.path,"'\n", sep="")
+          message("[D2MCS][INFO] Plot saved from cluster ",i," of ",private$executedModels$size()," at: '",save.path,"'\n")
           ggsave(filename = save.path,device="pdf")
         }
       }
@@ -343,8 +362,8 @@ D2MCS <- R6Class(
     removeAll = function(){
       if(!is.null(private$path) && dir.exists(private$path)){
         if(!unlink(private$path,recursive = TRUE,force = TRUE))
-          cat("[D2MCS][INFO] Path '",private$path,"' succesfully removed\n")
-        else cat("[D2MCS][ERROR] Path '",private$path,"' could not be removed\n")
+          message("[D2MCS][INFO] Path '",private$path,"' succesfully removed\n")
+        else message("[D2MCS][ERROR] Path '",private$path,"' could not be removed\n")
       }
     }
   ),
@@ -362,7 +381,7 @@ D2MCS <- R6Class(
         } 
       }, modelList=model.list ) )
       
-      cat("[D2MCS][INFO] ",nrow(models)," classifiers has been succesfully loaded\n", sep="")
+      message("[D2MCS][INFO] ",nrow(models)," classifiers has been succesfully loaded\n")
       models <- with(models,models[order(models$family,models$name),])
       models
     },

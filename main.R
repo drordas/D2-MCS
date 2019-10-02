@@ -1,10 +1,13 @@
+setwd("/mnt/Research/Leiden/D2-MCS/")
+
 source("sources.R")
 
 set.seed(1234)
-data <- Dataset$new(filepath ="/mnt/Research/Corpus/D4N/FCFP_6/TRAINNING/full_set_FCFP_6_physchem.csv",
-                    header=TRUE, sep="\t",skip = 1, normalize.names=TRUE, classIndex = 1)
-data$getNcol()
-data$getNrow()
+data <- Dataset$new( filepath ="<path_to_dataset>", header=TRUE, sep="\t", skip = 1, 
+                     normalize.names=TRUE, positive.class="Active", class.index = 1 )
+data$createPartition(nfolds = 4)
+
+subset.train <- data$getSubset(num.folds = c(1:2), opts = list(remove.na=TRUE, remove.const=TRUE) )
 
 data$executePartition(4)
 
@@ -14,19 +17,19 @@ ignore.classifiers <- c("awnb","awtan","manb","nbDiscrete","nbSearch","tan","tan
                         "PRIM","SLAVE","ada","bartMachine","chaid","C5.0Cost","lssvmLinear","avNNet",
                         "nnet","pcaNNet","lvq","rf","knn","deepboost","ordinalRF")
 
-
 trFunction <- TwoClass$new(method = "cv", number = 10, savePredictions = "final", 
                            classProbs = TRUE, allowParallel = TRUE, verboseIter = FALSE)
 
-cluster.subset <- readRDS(file = file.path(getwd(),"datasets","cluster.rds") )
-train.subset <- readRDS(file = file.path(getwd(),"datasets/BinaryFisherClustering","train.rds") )
-test.subset <- readRDS(file = file.path(getwd(),"datasets","test.rds") )
+data$getSubset(c(1:2))$getPositiveClass()
 
-test.subset$getClass()
+
+cluster.subset <- readRDS(file = file.path(getwd(),"datasets","cluster.rds") )
+train.subset <- readRDS(file = file.path(getwd(),"datasets","test.rds") )
+test.subset <- readRDS(file = file.path(getwd(),"datasets","test.rds") )
 
 
 #BEGIN
-Benchmarking <- D2MCS$new( path = "models/BinaryFisherCluster_prev/", trainFunction = trFunction )
+Benchmarking <- D2MCS$new( path = "<path_to_models>", trainFunction = trFunction )
 Benchmarking$train( train.set = train.subset, ig.classifiers = ignore.classifiers, metric = "MCC" )
 classify <- Benchmarking$classify( test.set = test.subset, voting.scheme = ClassWeightedVoting$new(), positive.class = "Active" )
 classify$computePerformance( ob = test.subset$getClass(), list(MCC$new(), PPV$new(), Accuracy$new()) )

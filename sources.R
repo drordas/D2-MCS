@@ -5,6 +5,7 @@ source("pkgChecker.R", chdir = TRUE)
 cat("[SOURCES][INFO] Loading required sources\n")
 source("utils.R", chdir = TRUE)
 source("source/data/Dataset.R", chdir=TRUE)
+source("source/data/Subset.R", chdir=TRUE)
 
 cat("[SOURCES][INFO] Loading clustering algorithms\n")
 #LOAD CLUSTERING ALGORITHMS CLASSES
@@ -98,6 +99,7 @@ source("source/measures/Precision.R", chdir = TRUE)
 source("source/measures/Recall.R", chdir = TRUE)
 source("source/measures/Sensitivity.R", chdir = TRUE)
 source("source/measures/Specificity.R", chdir = TRUE)
+source("source/measures/ConfMatrix.R", chdir = TRUE)
 
 cat("[SOURCES][INFO] Loading D2MCS core\n")
 source("D2MCS.R",chdir=TRUE)
