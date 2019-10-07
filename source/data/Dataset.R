@@ -2,7 +2,8 @@ Dataset <- R6Class(
   classname = "Dataset",
   portable = TRUE,
   public = list(
-    initialize = function( filepath, header = TRUE, sep = ",", skip = 0, normalize.names = FALSE, class.index, positive.class) {
+    initialize = function( filepath, header = TRUE, sep = ",", skip = 0, 
+                           normalize.names = FALSE, class.index, positive.class ) {
       if (missing(class.index) || is.null(class.index)) { stop(red("[Dataset][ERROR] Class Index not defined")) }
       if (missing(positive.class) || !is.character(positive.class)) { stop(red("[Dataset][ERROR] positive.class not defined")) } 
       if (!file.exists(filepath)) { stop(red("[Dataset][ERROR] Cannot initialize corpus")) }
@@ -12,9 +13,9 @@ Dataset <- R6Class(
         if(! (class.index %in% 1:ncol(private$corpus)) ){ 
           stop("[Dataset][ERROR] Class index exceeds dataset limits. Must be between 1 and ",ncol(private$corpus)," Aborting...\n")
         }
-        columNames <- unlist(strsplit(scan(file = filepath, nlines = 1, what = "character"), split = sep))
-        if (isTRUE(normalize.names)) { columNames <- make.names(columNames, unique = TRUE) }
-        names(private$corpus) <- columNames
+        columnNames <- unlist(strsplit(scan(file = filepath, nlines = 1, what = "character"), split = sep))
+        if (isTRUE(normalize.names)) { columnNames <- make.names(columnNames, unique = TRUE) }
+        names(private$corpus) <- columnNames
       } else { private$corpus <- read.csv(filepath, header = header, skip = skip, sep = sep) }
       
       private$class.index <- class.index
@@ -25,11 +26,11 @@ Dataset <- R6Class(
         private$class.values <- as.character(unique(private$corpus[,class.index]))
       }else{ stop(red("[Dataset][ERROR] Positive class value not found. Aborting dataset loading...\n")) }
     },
-    getColumNames = function() { names(private$corpus) },
+    getColumnNames = function() { names(private$corpus) },
     getDataset = function() { private$corpus },
     getClassName = function() { private$class.name },
     getClassIndex = function() { private$class.index },
-    getClassValues = function(){private$class.values},
+    getClassValues = function(){ private$class.values },
     getPositiveClass = function() { private$positive.class },
     getNcol = function() { ncol(private$corpus) },
     getNrow = function() { nrow(private$corpus) },
@@ -51,65 +52,75 @@ Dataset <- R6Class(
       } 
     },
     setClassName = function(class.name, positive.class) {
-      if( (length(which(self$getColumNames() == class.name )) == 0) ){
+      if( (length(which(self$getColumnNames() == class.name )) == 0) ){
         message(red("[Dataset][ERROR] Class name not found. Task not done")) }
       else { self$setClassIndex(which(names(private$corpus) == class.name),positive.class) }
     },
-    createPartition = function( nfolds, pfolds ){
-      if( (missing(nfolds) && missing(pfolds)) || (!is.numeric(nfolds) && !is.numeric(pfolds)) ){
+    createPartitions = function( num.folds, percent.folds ){
+      if( (missing(num.folds) && missing(percent.folds)) || 
+          (!is.numeric(num.folds) && !is.numeric(percent.folds)) ){
         message(yellow("[Dataset][WARNING] Parameters are invalid. Assuming division with default k=10 folds"))
-        private$partitions = createFolds(private$corpus[,private$class.index],k = 10, list = TRUE)
+        private$partitions <- createFolds( private$corpus[,private$class.index],
+                                           k = 10, list = TRUE )
       }else{
-        if ( is.numeric(nfolds) && missing(pfolds) ){
-          message("[Dataset][INFO] Perfoming dataset partitioning into ",nfolds," groups")
-          private$partitions = createFolds(private$corpus[,private$class.index],k = nfolds, list = TRUE)
+        if ( is.numeric(num.folds) && missing(percent.folds) ){
+          message( "[Dataset][INFO] Perfoming dataset partitioning into ",
+                   num.folds," groups" )
+          private$partitions <- createFolds( private$corpus[,private$class.index],
+                                             k = num.folds, list = TRUE )
         }else{
-          if( is.numeric(nfolds) && is.vector(pfolds) ){
-            if( length(pfolds) == nfolds && ( is.integer(pfolds) && sum(pfolds) == 100 || 
-                                              is.double(pfolds) && sum(pfolds) == 1 ) )
+          if( is.numeric(num.folds) && is.vector(percent.folds) ){
+            if( length(percent.folds) == num.folds && 
+                ( is.integer(percent.folds) && sum(percent.folds) == 100 || 
+                  is.double(percent.folds) && sum(percent.folds) == 1 ) )
             {
-              message("[Dataset][INFO] Perfoming dataset partitioning into",length(pfolds),"groups")
+              message("[Dataset][INFO] Perfoming dataset partitioning into",length(percent.folds),"groups")
               remaining <- private$corpus
-              for (index in 1:(nfolds)-1){
+              for (index in 1:(num.folds)-1){
                 message("===============================================================\n")
-                message("[Dataset][INFO] Spliting ",index," group with ",pfolds[index],"\n")
+                message("[Dataset][INFO] Spliting ",index," group with ",percent.folds[index],"\n")
                 message("===============================================================")
-                split <- createDataPartition(remaining$Activity, p=pfolds[index],list = FALSE)
+                split <- createDataPartition(remaining$Activity, p=percent.folds[index],list = FALSE)
                 private$partitions <- list.append( private$partitions, split)
                 remaining <- remaining[-split,]
               }
               private$partitions <-  list.append( private$partitions, remaining)
               
-              ifelse( ( nfolds < 10),
-                      ( name(private$partitions) <- paste0("Fold0",which(1:nfolds < 10)) )
-                      ( name(private$partitions) <- c( paste0("Fold0",which(1:nfolds < 10)), 
-                                                       paste0("Fold",which(1:nfolds >=10)))) )
+              ifelse( ( num.folds < 10),
+                      ( name(private$partitions) <- paste0("Fold0",which(1:num.folds < 10)) )
+                      ( name(private$partitions) <- c( paste0("Fold0",which(1:num.folds < 10)), 
+                                                       paste0("Fold",which(1:num.folds >=10)))) )
             }else{ message(red("[Dataset][ERROR] Fold partition and/or probability mismatch. Task not performed")) }
           }else{
-            if( ( missing(nfolds) || !is.integer(nfolds)) && is.vector(pfolds) && 
-                ( is.integer(pfolds) && sum(pfolds) == 100 || is.double(pfolds) && sum(pfolds) == 1 )  ){
-              message("[Dataset][INFO] Perfoming dataset partitioning into ",length(pfolds),"groups\n")
+            if( ( missing(num.folds) || !is.integer(num.folds) ) && 
+                is.vector(percent.folds) && 
+                ( is.integer(percent.folds) && sum(percent.folds) == 100 || 
+                  is.double(percent.folds) && sum(percent.folds) == 1 )  ){
+              message("[Dataset][INFO] Perfoming dataset partitioning into ",
+                      length(percent.folds),"groups\n")
               remaining <- private$corpus
-              for (index in 1:length(pfolds)-1){
+              for (index in 1:length(percent.folds)-1){
                 message("===============================================================\n")
-                message("[Dataset][INFO] Spliting ",index," group with ",pfolds[index],"\n")
+                message("[Dataset][INFO] Spliting ",index," group with ",percent.folds[index],"\n")
                 message("===============================================================")
-                split <- createDataPartition(remaining$Activity, p=pfolds[index],list = FALSE)
+                split <- createDataPartition( remaining$Activity, 
+                                              p=percent.folds[index],list = FALSE)
                 private$partitions <- list.append( private$partitions, split)
                 remaining <- remaining[-split,]
               }
               private$partitions <-  list.append( private$partitions, remaining)
-              ifelse( ( nfolds < 10),
-                      ( name(private$partitions) <- paste0("Fold0",which(1:nfolds < 10)) )
-                      ( name(private$partitions) <- c( paste0("Fold0",which(1:nfolds < 10)), 
-                                                       paste0("Fold",which(1:nfolds >=10)))) )
+              ifelse( ( num.folds < 10),
+                      ( name(private$partitions) <- paste0("Fold0",which(1:num.folds < 10)) )
+                      ( name(private$partitions) <- c( paste0("Fold0",which(1:num.folds < 10)), 
+                                                       paste0("Fold",which(1:num.folds >=10)))) )
               
             }else{ message(red("[Dataset][ERROR] Cannot perform partition process. Aborted\n")) }
           }
         }
       }
     },
-    getSubset = function(num.folds = NULL, opts = list(remove.na=FALSE, remove.const=FALSE) ){
+    createSubset = function( num.folds = NULL, 
+                             opts = list(remove.na=TRUE, remove.const=FALSE)){
       subset <- NULL
       if (is.null(private$partitions)) {
         message(red("[Dataset][ERROR] Dataset distribution is null. Task not performed"))
@@ -123,38 +134,43 @@ Dataset <- R6Class(
         return(NULL)
       }
       
-      subset.all <- private$corpus[ sort(Reduce(union,private$partitions[num.folds])), ]
-      subset.features <- subset.all[ ,-private$class.index]
-      subset.classValues <- data.frame(subset.all[ ,private$class.index])
-      names(subset.classValues) <- names(subset.all)[private$class.index]
+      subset <- private$corpus[ sort(Reduce(union,private$partitions[num.folds])), ]
+      class.index <- private$class.index
       
       if( is.list(opts) ){
         na.remov <- 0
         const.remov <- 0
+        filtered <- subset[,-private$class.index]
+        
         if(exists("remove.na",opts) && isTRUE(opts$remove.na) ) {
-          subset.features <- Filter(function(col) !all(is.na(col)), subset.features)
-          na.remov <- (ncol(subset.all)-1) - ncol(subset.features)
-          message("[Dataset][INFO] Removing columns containing NA values (total of ",na.remov,").")
+          filtered <- Filter(function(col) !all(is.na(col)), filtered)
+          na.remov <- ( (ncol(subset)-1) - ncol(filtered) )
+          message("[Dataset][INFO] Removed columns containing NA values (total of ",na.remov,").")
         }
-        if(exists("remove.const",opts) && isTRUE(opts$remove.const) ) { 
-          subset.features <- Filter(function(col) sd(col, na.rm = TRUE) != 0, subset.features)
-          const.remov <- ( (ncol(subset.all)-1) - ncol(subset.features) ) + na.remov
-          message("[Dataset][INFO] Removing columns containing constant values (total of ",const.remov,").")
+        if(exists("remove.const",opts) && isTRUE(opts$remove.const) ) {
+          filtered <- Filter(function(col) sd(col, na.rm = TRUE) != 0, filtered)
+          const.remov <- ( (ncol(subset)-1) - ncol(filtered) ) + na.remov
+          message("[Dataset][INFO] Removed columns containing constant values (total of ",const.remov,").")
         }
+        
+        if( private$class.index >= ncol(filtered) ){
+          subset <- cbind(filtered,subset[,private$class.index])
+          class.index <- ncol(filtered)
+        }else{
+          if( private$class.index == 1 ){
+            subset <- cbind( subset[,private$class.index], filtered )
+          }else{
+            subset <- cbind( filtered[1:private$class.index-1],
+                                      subset[,private$class.index], 
+                                      filtered[private$class.index:ncol(filtered)] )
+          }
+        }
+        names(subset)[class.index] <- private$class.name
       }
-      
-      if( private$class.index == ncol(subset.all) ){
-        subset <- cbind(subset.features,subset.classValues)
-      }else{
-        if( private$class.index == 1 ){
-          subset <- cbind( subset.classValues, subset.features ) 
-        }else{ 
-          subset <- cbind( subset.features[1:private$class.index-1],subset.classValues,
-                           subset.features[private$class.index:ncol(subset.features)] )
-        }
-      }
-      Subset$new( dataset = subset,class.index = private$class.index, class.values = self$getClassValues(), 
-                  positive.class = self$getPositiveClass() )
+
+      Subset$new( dataset = subset,class.index = private$class.index, 
+                   class.values = self$getClassValues(), 
+                   positive.class = self$getPositiveClass() )
     }
   ),
   private = list(

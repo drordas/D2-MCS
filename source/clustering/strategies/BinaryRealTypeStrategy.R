@@ -1,7 +1,7 @@
 library("R6")
 BinaryRealTypeStrategy <- R6Class(
   classname = "BinaryRealTypeStrategy",
-  inherit = StrategyGeneric,
+  inherit = GenericStrategy,
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, maxClusters = 50) {

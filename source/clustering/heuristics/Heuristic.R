@@ -1,4 +1,3 @@
-library("R6")
 Heuristic <- R6Class(
   classname = "Heuristic",
   portable = TRUE,
@@ -16,12 +15,7 @@ Heuristic <- R6Class(
   private = list(
     name = NULL,
     isBinary = function(column) {
-      unique <- unique(column)
-      if (!is.numeric(column) | any(is.na(column))) {
-        return(FALSE)
-      } else {
-        return(!(any(as.integer(unique) != unique) || length(unique) > 2 || min(column) != 0 || max(column) != 1))
-      }
+      all(levels(factor(column)) %in% c("0","1"))
     }
   )
 )

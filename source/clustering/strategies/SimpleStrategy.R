@@ -1,220 +1,194 @@
 library("R6")
+library("varhandle")
+
 SimpleStrategy <- R6Class(
   classname = "SimpleStrategy",
-  inherit = StrategyGeneric,
+  inherit = GenericStrategy,
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, maxClusters = 50) {
-      if (!"Subset" %in% class(subset)) {
-        stop("[SimpleStrategy][ERROR] subset parameter must be defined as 'Subset' type")
-      }
-      if ("Heuristic" %in% class(heuristic)) {
-        heuristic <- list(heuristic)
-      } else {
-        if (is.list(heuristic) && length(heuristic) >= 1) {
-          if (length(heuristic) > 1) {
-            message("[SimpleStrategy][INFO] SimpleStrategy only use one Heuristic. Assuming the first element on the heuristic list")
-          }
-          if (!"Heuristic" %in% class(heuristic[[1]])) {
-            stop("[SimpleStrategy][ERROR] heuristic parameter must be defined as a 'Heuristic' type")
-          } else {
-            heuristic <- list(heuristic[[1]])
-          }
-        } else {
-          stop("[SimpleStrategy][ERROR] heuristic parameter must be defined as a 'Heuristic' type or as a list of 'Heuristic' type")
-        }  
-      }  
-      if (!is.numeric(maxClusters)) {
-        stop("[SimpleStrategy][ERROR] maxClusters parameter must be defined as a 'numeric' type")
+      super$initialize( name = "SimpleStrategy", subset = subset, 
+                        heuristic = heuristic )
+      
+      if (!is.numeric(maxClusters) || maxClusters < 2) {
+        stop(red("[SimpleStrategy][ERROR] maxClusters should be an integer greater than 1"))
       } 
-      super$initialize(
-        name = "SimpleStrategy",
-        subset = subset,
-        heuristic = heuristic
-      )
       private$maxClusters <- maxClusters
     },
-    getMaxClusters = function() {
-      private$maxClusters
-    },
-    setMaxClusters = function(max) {
-      if (max > 1) {
-        private$maxClusters <- max
-      } else {
-        message("[", super$getName(), "][INFO] number of clusters must be greater than 1\n. Assuming default value")
-      } 
+    getMaxClusters = function() { private$maxClusters },
+    setMaxClusters = function(maxClusters) {
+      if (!is.numeric(maxClusters) || maxClusters < 2) {
+        message("[",super$getName(),"][INFO] maxClusters should be an integer greater than 1. Assuming default value (50)")
+        private$maxClusters <- 50
+      }else { private$maxClusters <- maxClusters }
     },
     execute = function(...) {
-      private$all.distribution <- vector(mode = "list", length = 1)
-      private$best.distribution <- vector(mode = "list", length = 1)
-      private$best.distribution[[1]] <- data.frame(cluster = integer(), features = I(list()))
-      private$not.distribution <- vector(mode = "list", length = 1)
-      private$not.distribution[[1]] <- data.frame(cluster = integer(), features = I(list()))
+      private$all.distribution <- data.frame(k = integer(), deltha = numeric(), dist = I(list()))
+      class <- private$subset$getClassValues()
+
+      colIndex <- which( levels(private$subset$getClassValues()) == private$subset$getPositiveClass() )
+      class <- varhandle::to.dummy( private$subset$getClassValues(), private$subset$getPositiveClass() )[, colIndex]
+
+      verbose <<- eval(substitute(alist(...)))[["verbose"]]
       
-      clusterData <- data.frame(k = integer(), homogeneity = numeric(), dist = I(list()))
-      class <- private$subset$getClass()
-      class <- car::recode(class, 
-                           paste0("'", 
-                                  private$subset$getPositiveClass(), 
-                                  "'='1'; '",
-                                  names(table(class))[which(!names(table(class)) %in% private$subset$getPositiveClass())],
-                                  "'='0'"),
-                          as.numeric = TRUE,
-                          as.factor = TRUE) #IMPROVED REMOVED LOOP
-      class <- as.integer(as.integer(class) - 1)
-      corpus <- private$subset$removeUnnecesary()
-      tableH <- sapply(names(corpus), function(colName, class) {
-        abs(private$heuristic[[1]]$heuristic(col1 = corpus[, colName], col2 = class, namesColums = c(colName, private$subset$getClassName())))
+      ##COMPUTING HEURISTIC (BETWEEN EACH FEATURE AND THE CLASS)
+      corpus <- private$subset$getFeatures()
+      heuristic.values <- sapply(names(corpus), function(colName, class) {
+        abs(private$heuristic[[1]]$heuristic( col1 = corpus[, colName], col2 = class, 
+                                              namesColums = c(colName, private$subset$getClassName())) )
       }, class)
-      table <- na.omit(tableH)
-      notHeuristic <- setdiff(names(tableH), names(table))
       
-      if (length(table) > 0) {
+      heuristic.valid <- heuristic.values[complete.cases(heuristic.values)]
+      notHeuristic <- setdiff(names(heuristic.values), names(heuristic.valid))
+      sorted.values <- heuristic.valid[order(heuristic.valid, decreasing = TRUE)]
+      
+      ##DISTRIBUTE FEATURES IN CLUSTERS (2 >= k <= maxClusters)
+      if(isTRUE(verbose)){
+        message( "[",self$getName(),"][INFO] Performing feature clustering using '",
+                 private$heuristic[[1]]$getName(),"' heuristic\n" )
+        title <- paste0("Performing feature clustering using '", 
+                        private$heuristic[[1]]$getName(),"' heuristic\n")
+        pb <- txtProgressBar(min = 0, max = (self$getMaxClusters()-1), style = 3 ) 
+      }
+      
+      if (length(heuristic.valid) > 0) {
         for (k in 2:self$getMaxClusters()) {
-          clustering <- rep(c(1:k, (k:1)), length(table)/(2 * k) + 1)[1:length(table)] 
-          cluster <- vector(mode = "list", length = length(table))
-          names(cluster) <- names(table)
+          clustering <- rep( c(1:k, (k:1)), length(sorted.values)/(2 * k) + 1 )[1:length(sorted.values)] 
+          cluster <- vector( mode = "list", length = length(sorted.values) )
+          names(cluster) <- names(sorted.values)
           sumGroup <- vector(mode = "list", length = k)
           for (i in 1:k) {
-            sumGroup[[i]] <- table[order(table, decreasing = TRUE)[clustering == i]]
-            for (j in order(table, decreasing = TRUE)[clustering == i]) {
-              cluster[[j]] <- list(i)
-            }
+            sumGroup[[i]] <- sorted.values[clustering == i]
+            for (j in names(sorted.values[clustering == i])) { cluster[[j]] <- c(i) }
           }
-          groupMeasure <- lapply(sumGroup, sum)
-          deltha <- max(unlist(groupMeasure)) - min(unlist(groupMeasure))
-          clusterData <- rbind(clusterData, data.frame(k = k, homogeneity = deltha, dist = I(list(cluster))))
+          groupMeasure <- sapply(sumGroup, sum)
+          deltha <- (max(groupMeasure) - min(groupMeasure))
+          df <- data.frame( k = k, deltha = deltha, dist = I(list(cluster)))
+          private$all.distribution <- rbind(private$all.distribution, df)
+          if(isTRUE(verbose)) { setTxtProgressBar(pb, (k-1)) }
         }
-        private$all.distribution[[1]] <- clusterData
-        aux <- unlist(private$all.distribution[[1]][private$all.distribution[[1]]$k == private$all.distribution[[1]][which.min(private$all.distribution[[1]][, 2]), 1], ]$dist)
-        for (i in 1:private$all.distribution[[1]][which.min(private$all.distribution[[1]][, 2]), 1]) {
-          private$best.distribution[[1]] <- rbind(private$best.distribution[[1]], 
-                                                  data.frame(cluster = i, 
-                                                             dist = I(list(names(aux[aux == i])))))
+        
+        if(isTRUE(verbose)) { close(pb) }
+        
+        for (i in 1:nrow(private$all.distribution)){
+          aux.dist <- unlist(private$all.distribution[i,]$dist, recursive = FALSE)
+          aux.list <- list()
+          for ( j in 1:private$all.distribution[i,]$k ) {
+            aux.list <- append( aux.list,list(names(aux.dist[ aux.dist == j ])) )
+            private$all.distribution[i,]$dist <- I(list(aux.list))
+          }
+        }
+        
+        bestK <- which.min(private$all.distribution$deltha)
+        aux.dist <- unlist( private$all.distribution[bestK, ]$dist, 
+                            recursive = FALSE )
+        private$best.distribution <- data.frame( cluster= integer(), 
+                                                 dist= I(list()) )
+        for ( i in 1:length(aux.dist) ){
+          df <- data.frame(cluster=i, dist=I(list(aux.dist[[i]])))
+          private$best.distribution <- rbind(private$best.distribution, df)
         }
       }
       if (length(notHeuristic) > 0) {
-        message("[", super$getName(), "][INFO] Adding features not distributed with ", private$heuristic[[1]]$getName(), " heuristic")
-        private$not.distribution[[1]] <- rbind(private$not.distribution[[1]],
-                                                data.frame(cluster = (nrow(private$not.distribution[[1]]) + 1),
-                                                           dist = I(list(notHeuristic))))
-      }      
+        message( "[", super$getName(), "][WARNING] ",
+                 length(notHeuristic)," features were incompatible with '",
+                 private$heuristic[[1]]$getName(), "' heuristic." )
+        private$not.distribution <- data.frame( cluster = 1, 
+                                                dist = I(list(notHeuristic)))
+      }   
     },
-    getDistribution = function(cluster = NULL, group = NULL, includeClass = "NONE", ...) {
+    getAllDistributions = function() {
+      list(private$all.distribution)
+    },
+    getBestClusterDistribution = function() {
+      list(private$best.distribution)
+    },
+    getUnclustered = function() {
+      list(private$not.distribution)
+    },
+    getDistribution = function( num.clusters= NULL, num.groups=NULL, 
+                                include.unclustered = FALSE){
       if (is.null(private$best.distribution) || is.null(private$all.distribution)) {
-        message("[", super$getName(), "][INFO] Function 'execute()' must be called first. Automatically run execute function")
-        self$execute(...)
+        stop(red("[", super$getName(), "][WARNING] Clusteing not done or errorneous. Returning NULL"))
       }
-      if (!toupper(includeClass) %in% c("NONE","BEGIN","END")) {
-        message("[", super$getName(), "][INFO] Class parameter not included. Assuming class not included")
-        class <- "NONE"
-      } else { 
-        class <- toupper(includeClass)
-      }
-      if (missing(cluster) || is.null(cluster) || (is.numeric(cluster) && (cluster == private$all.distribution[[1]][which.min(private$all.distribution[[1]][, 2]), 1]))) {
-        switch(class,
-               "NONE" = {
-                 final.distr <- private$best.distribution[[1]][, 2]
-               },
-               "END" =  {
-                 final.distr <-
-                   lapply(private$best.distribution[[1]][, 2], function(x) {
-                     append(x, private$subset$getClassName())
-                   })
-               },
-               "BEGIN" = {
-                 final.distr <-
-                   lapply(private$best.distribution[[1]][, 2], function(x) {
-                     append(x, private$subset$getClassName(), 0)
-                   })
-               })
-        if (!missing(group) &&
-            !is.null(group) &&
-            is.numeric(group) && group <= length(final.distr)) {
-          final.distr[[group]]
-        } else {
-          if (!(is.numeric(group) && group <= length(final.distr))) {
-            message("[", super$getName(), "][INFO] Group selected is not exist in the cluster. Assuming best distribution.")
-          }
-          final.distr
-        }
-      } else {
-        distribution <- data.frame(cluster = integer(), features = I(list()))
-        aux <- unlist(private$all.distribution[[1]][private$all.distribution[[1]]$k == cluster, ]$dist)
-        if (!is.null(aux)) {
-          for (i in 1:cluster) {
-            distribution <-
-              rbind(distribution, data.frame(cluster = i, dist = I(list(names(
-                aux[aux == i]
-              )))))
-          }
-          switch(class,
-                 "NONE" = {
-                   final.distr <- distribution[, 2]
-                 },
-                 "END" = {
-                   final.distr <-
-                     lapply(distribution[, 2], function(x) {
-                       append(x, private$subset$getClassName())
-                     })
-                 },
-                 "BEGIN" = {
-                   final.distr <-
-                     lapply(distribution[, 2], function(x) {
-                       append(x, private$subset$getClassName(), 0)
-                     })
-                 })
-          if (!missing(group) &&
-              !is.null(group) &&
-              is.numeric(group) && group <= length(final.distr)) {
-            final.distr[[group]]
-          } else {
-            if (!(is.numeric(group) && group <= length(final.distr))) {
-              message("[", super$getName(), "][INFO] Group selected is not exist in the cluster. Assuming best distribution.")
-            }
-            final.distr
-          }
-        } else {
-          warning("[", super$getName(), "][WARNING] Cluster selected is not exist")
+      
+      if(is.null(num.clusters)){
+        message("[",super$getName(),"][INFO] Number of clusters not defined. Assuming best cluster distribution.") 
+        distribution <- unlist(private$all.distribution[which.min(private$all.distribution$k), ]$dist,recursive = FALSE)
+      }else{
+        if( is.numeric(num.clusters) && (num.clusters %in% c(2:tail(private$all.distribution$k,n=1))) ){
+          distribution <- unlist(private$all.distribution[which(num.clusters==private$all.distribution$k), ]$dist,recursive = FALSE)
+        }else{
+          message("[",super$getName(),"][INFO] Number of clusters not found. Assuming best cluster distribution.")
+          distribution <- unlist(private$all.distribution[which.min(private$all.distribution$k), ]$dist,recursive = FALSE)
         }
       }
+      if ( !missing(num.groups) && is.numeric(num.groups) && 
+           num.groups %in% c(1:length(distribution)) ){
+          distribution <- distribution[num.groups]
+      }
+      if( isTRUE(include.unclustered) && nrow(private$not.distribution) ){
+        distribution <- append(distribution,lapply(private$not.distribution$dist, 
+                                                   function(x) {x} ))
+      }
+      return(distribution)
     },
-    createSubset = function(subset, cluster = NULL, ...) {
-      na.rm <- eval(substitute(alist(...))[["na.rm"]])
-      if (!is.logical(na.rm)) {
-        message("[", super$getName(), "][INFO] 'na.rm' parameter must be a logical value (TRUE or FALSE). Assuming na.rm = TRUE.")
-        na.rm <- TRUE
+    createSubset = function(subset, num.clusters = NULL, ...) {
+      if ( !inherits(subset,"Subset") ) {
+        stop(red("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object"))
       }
-      if (is.null(private$all.distribution)) {
-        message("[", super$getName(), "][INFO] Function 'execute()' must be called first. Automatically run execute function")
-        self$execute(...)
+      
+      if (is.null(private$best.distribution) || is.null(private$all.distribution)) {
+        stop("[",super$getName(),"][ERROR] Clustering not done or errorneous. Aborting...")
       }
-      if (!"Subset" %in% class(subset)) {
-        stop("[", super$getName(), "][ERROR] Subset parameter must be defined as 'Subset' object")
+      #na.rm <- eval(substitute(alist(...))[["na.rm"]])
+      include.unclustered <- eval(substitute(alist(...))[["include.unclustered"]])
+      num.groups <- eval(substitute(alist(...))[["num.groups"]])
+      
+      #num.clusters= NULL, num.groups=NULL,
+      # if (!is.logical(na.rm)) {
+      #   message("[",super$getName(),"][INFO] 'na.rm' parameter must contain a logical value (TRUE or FALSE). Assuming na.rm = TRUE.")
+      #   na.rm <- TRUE
+      # }
+      if (!is.logical(include.unclustered)){
+        message("[",super$getName(),"][INFO] 'include.unclustered' parameter must contain a logical value (TRUE or FALSE). Assuming FALSE as default")
+        include.unclustered <- FALSE
       }
-      if (is.null(cluster) || missing(cluster) || !is.numeric(cluster) || (is.numeric(cluster) && !cluster %in% c(min(private$all.distribution[[1]]$k):max(private$all.distribution[[1]]$k)))) {
-        message("[", super$getName(), "][INFO] Incorrect cluster parameter. Should be between: ", min(private$all.distribution[[1]]$k), " <= cluster <= ", max(private$all.distribution[[1]]$k))
-        message("[", super$getName(), "][INFO] Assuming best cluster configuration (", private$all.distribution[[1]][which.min(private$all.distribution[[1]][, 2]), 1], ")")
-        cluster <- private$all.distribution[[1]][which.min(private$all.distribution[[1]][, 2]), 1]
-      }
-      distribution <- self$getDistribution(cluster = cluster, includeClass = "NONE")
-      cluster.dist <- vector(mode = "list")
-      if (na.rm) {
-        cluster.dist <- lapply(distribution, function(group) {
-          group.features <- subset$getInstances(features = c(unlist(group)))
-          sd.result <- apply(group.features, 2, sd, na.rm = TRUE)
-          sd.result <- sd.result[-which(sd.result == 0, arr.ind = TRUE)]
-          if (length(sd.result != 0)) {
-            Subset$new(dataset = subset$getInstances(features = c(subset$getClassName(), names(sd.result))), classIndex = 1, positive.class = subset$getPositiveClass())
-          } else {
-            Subset$new(dataset = subset$getInstances(features = c(subset$getClassName(), unlist(group))), classIndex = 1, positive.class = subset$getPositiveClass())
+      
+      distribution <- self$getDistribution( num.clusters = num.clusters, 
+                                            num.groups = num.groups,
+                                            include.unclustered = include.unclustered )
+      cluster.dist <- list() #vector(mode = "list")
+      # if (na.rm) {
+      #   cluster.dist <- lapply(distribution, function(group) {
+      #     group.features <- subset$getInstances(features = c(unlist(group)))
+      #     sd.result <- apply(group.features, 2, sd, na.rm = TRUE)
+      #     sd.result <- sd.result[-which(sd.result == 0, arr.ind = TRUE)]
+      #     if (length(sd.result != 0)) {
+      #       Subset$new(dataset = subset$getInstances(features = c(subset$getClassName(), names(sd.result))), classIndex = 1, positive.class = subset$getPositiveClass())
+      #     } else {
+      #       Subset$new(dataset = subset$getInstances(features = c(subset$getClassName(), unlist(group))), classIndex = 1, positive.class = subset$getPositiveClass())
+      #     }
+      #   })
+      # } else {
+      cluster.dist <- lapply(distribution, function(group) {
+        instances <- subset$getFeatures(feature.names= group)
+        if(subset$getClassIndex() == 1){
+          instances <- cbind(subset$getClassValues(),instances)
+        }else{
+          if(subset$getClassIndex() >=nrow() ){
+            instances <- cbind(instances,subset$getClassValues())
+          }else{
+            instances <- cbind( instances[1:private$class.index-1],
+                                subset$getClassValues(), 
+                                instances[private$class.index:ncol(instances)] )
           }
-        })
-      } else {
-        cluster.dist <- lapply(distribution, function(group) {
-          Subset$new(dataset = subset$getInstances(features = c(subset$getClassName(), unlist(group))), classIndex = 1, positive.class = subset$getPositiveClass())
-        })
-      }
+        }
+        Subset$new( dataset = instances, class.index = subset$getClassIndex(),
+                    class.values = as.character(unique(subset$getClassValues())),
+                    positive.class = subset$getPositiveClass() )
+      })
+      # }
       cluster.dist
     },
     plot = function(dir.path = NULL, file.name = NULL, plotObject = list(BinaryPlot$new()), ...) {
@@ -236,8 +210,8 @@ SimpleStrategy <- R6Class(
           }
         }
       }
-      summary <- data.frame(k = private$all.distribution[[1]][, 1],
-                            dispersion = private$all.distribution[[1]][, 2],
+      summary <- data.frame(k = private$all.distribution$k,
+                            dispersion = private$all.distribution$deltha,
                             row.names = NULL)
       plot <- plotObject[[1]]$plot(summary)
       if (!is.null(dir.path)) {
@@ -251,7 +225,5 @@ SimpleStrategy <- R6Class(
       }
     }
   ),
-  private = list(
-    maxClusters = NULL
-  )
+  private = list( maxClusters = NULL )
 )
