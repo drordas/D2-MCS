@@ -8,7 +8,7 @@ Heuristic <- R6Class(
     getName = function() {
       private$name
     },
-    heuristic = function(col1, col2, namesColums = NULL, ...) {
+    heuristic = function(col1, col2, column.names = NULL, ...) {
       stop("[Heuristic][ERROR] Function 'heuristic must be implemented in inherited class'")
     }
   ),

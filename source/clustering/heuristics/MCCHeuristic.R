@@ -8,13 +8,11 @@ MCCHeuristic <- R6Class(
       super$initialize(name = "MCCHeuristic")
     },
     # Heuristic valid for discrete variables
-    heuristic = function(col1, col2, namesColums = NULL) {
+    heuristic = function(col1, col2, column.names = NULL) {
       if (!(private$isBinary(col1) && private$isBinary(col2))) {
-        warning("[", super$getName(), "][WARNING] Values must to be binary. Return NA")
+        warning("[", super$getName(), "][WARNING] Values must be binary. Return NA")
         NA
-      } else {
-        mccr(col1, col2)
-      }
+      } else { mccr(col1, col2) }
     }
   )
 )

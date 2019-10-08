@@ -8,7 +8,7 @@ SpearmanHeuristic <- R6Class(
       super$initialize(name = "SpearmanHeuristic")
     },
     # Heuristic valid for both discrete and continuous variables
-    heuristic = function(col1, col2, namesColums = NULL) {
+    heuristic = function(col1, col2, column.names = NULL) {
       cor.test(col1, col2, method = "spearman", exact = FALSE)$p.value
     }
   )

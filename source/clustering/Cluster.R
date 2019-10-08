@@ -1,4 +1,3 @@
-library("R6")
 Cluster <- R6Class(
   classname = "Cluster",
   portable = TRUE,                   

@@ -8,9 +8,9 @@ KendallHeuristic <- R6Class(
       super$initialize(name = "KendallHeuristic")
     },
     # Heuristic valid for continuous variables
-    heuristic = function(col1, col2, namesColums = NULL) {
+    heuristic = function(col1, col2, column.names = NULL) {
       if (private$isBinary(col1) || !private$isBinary(col2)) {
-        warning("[", super$getName(), "][WARNING] Columns must to be real. Return NA")
+        warning("[", super$getName(), "][WARNING] Columns must be real. Return NA")
         NA
       } else {
         unname(cor.test(col1, col2, method = "kendall")$estimate, force = TRUE)

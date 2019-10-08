@@ -22,20 +22,18 @@ SimpleStrategy <- R6Class(
         private$maxClusters <- 50
       }else { private$maxClusters <- maxClusters }
     },
-    execute = function(...) {
+    execute = function(verbose=FALSE, ...) {
       private$all.distribution <- data.frame(k = integer(), deltha = numeric(), dist = I(list()))
       class <- private$subset$getClassValues()
 
       colIndex <- which( levels(private$subset$getClassValues()) == private$subset$getPositiveClass() )
       class <- varhandle::to.dummy( private$subset$getClassValues(), private$subset$getPositiveClass() )[, colIndex]
-
-      verbose <<- eval(substitute(alist(...)))[["verbose"]]
       
       ##COMPUTING HEURISTIC (BETWEEN EACH FEATURE AND THE CLASS)
       corpus <- private$subset$getFeatures()
       heuristic.values <- sapply(names(corpus), function(colName, class) {
         abs(private$heuristic[[1]]$heuristic( col1 = corpus[, colName], col2 = class, 
-                                              namesColums = c(colName, private$subset$getClassName())) )
+                                              column.names = c(colName, private$subset$getClassName())) )
       }, class)
       
       heuristic.valid <- heuristic.values[complete.cases(heuristic.values)]
@@ -45,9 +43,7 @@ SimpleStrategy <- R6Class(
       ##DISTRIBUTE FEATURES IN CLUSTERS (2 >= k <= maxClusters)
       if(isTRUE(verbose)){
         message( "[",self$getName(),"][INFO] Performing feature clustering using '",
-                 private$heuristic[[1]]$getName(),"' heuristic\n" )
-        title <- paste0("Performing feature clustering using '", 
-                        private$heuristic[[1]]$getName(),"' heuristic\n")
+                 private$heuristic[[1]]$getName(),"' heuristic" )
         pb <- txtProgressBar(min = 0, max = (self$getMaxClusters()-1), style = 3 ) 
       }
       
@@ -141,15 +137,9 @@ SimpleStrategy <- R6Class(
       if (is.null(private$best.distribution) || is.null(private$all.distribution)) {
         stop("[",super$getName(),"][ERROR] Clustering not done or errorneous. Aborting...")
       }
-      #na.rm <- eval(substitute(alist(...))[["na.rm"]])
       include.unclustered <- eval(substitute(alist(...))[["include.unclustered"]])
       num.groups <- eval(substitute(alist(...))[["num.groups"]])
       
-      #num.clusters= NULL, num.groups=NULL,
-      # if (!is.logical(na.rm)) {
-      #   message("[",super$getName(),"][INFO] 'na.rm' parameter must contain a logical value (TRUE or FALSE). Assuming na.rm = TRUE.")
-      #   na.rm <- TRUE
-      # }
       if (!is.logical(include.unclustered)){
         message("[",super$getName(),"][INFO] 'include.unclustered' parameter must contain a logical value (TRUE or FALSE). Assuming FALSE as default")
         include.unclustered <- FALSE
@@ -158,19 +148,7 @@ SimpleStrategy <- R6Class(
       distribution <- self$getDistribution( num.clusters = num.clusters, 
                                             num.groups = num.groups,
                                             include.unclustered = include.unclustered )
-      cluster.dist <- list() #vector(mode = "list")
-      # if (na.rm) {
-      #   cluster.dist <- lapply(distribution, function(group) {
-      #     group.features <- subset$getInstances(features = c(unlist(group)))
-      #     sd.result <- apply(group.features, 2, sd, na.rm = TRUE)
-      #     sd.result <- sd.result[-which(sd.result == 0, arr.ind = TRUE)]
-      #     if (length(sd.result != 0)) {
-      #       Subset$new(dataset = subset$getInstances(features = c(subset$getClassName(), names(sd.result))), classIndex = 1, positive.class = subset$getPositiveClass())
-      #     } else {
-      #       Subset$new(dataset = subset$getInstances(features = c(subset$getClassName(), unlist(group))), classIndex = 1, positive.class = subset$getPositiveClass())
-      #     }
-      #   })
-      # } else {
+
       cluster.dist <- lapply(distribution, function(group) {
         instances <- subset$getFeatures(feature.names= group)
         if(subset$getClassIndex() == 1){
@@ -191,7 +169,8 @@ SimpleStrategy <- R6Class(
       # }
       cluster.dist
     },
-    plot = function(dir.path = NULL, file.name = NULL, plotObject = list(BinaryPlot$new()), ...) {
+    plot = function(dir.path = NULL, file.name = NULL, 
+                    plotObject = list(BinaryPlot$new()), ...) {
       if (!is.list(plotObject)) {
         stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as 'list' type")
       }
@@ -218,11 +197,48 @@ SimpleStrategy <- R6Class(
         if (!dir.exists(dir.path)) {
           dir.create(dir.path, recursive = TRUE)
         }
-        ggsave(paste0(file.path(dir.path, file.name), ".pdf"), device = "pdf", plot = plot, limitsize = FALSE)
-        message("[", super$getName(), "][INFO] Plot has been succesfully saved at: ", paste0(file.path(dir.path, file.name), ".pdf"))
-      } else { 
-        invisible(show(plot))
+        ggsave( paste0(file.path(dir.path, file.name), ".pdf"), device = "pdf", 
+                plot = plot, limitsize = FALSE )
+        message("[",super$getName(),"][INFO] Plot has been succesfully saved at: ",file.path(dir.path,file.name,".pdf"))
+      } else {  invisible(show(plot)) }
+    },
+    saveCSV = function(dir.path, name=NULL, num.clusters=NULL){
+      if(missing(dir.path))
+        stop("[",super$getName(),"][INFO] Path not defined. Aborting.")
+      
+      if(is.null(name)){
+        name <- private$heuristic[[1]]$getName()
+        message("[",super$getName(),"][INFO] File name not defined. Using '",name,".csv'.")
       }
+      
+      if(is.null(private$all.distribution) || nrow(private$all.distribution) == 0){
+        stop("[",super$getName(),"][INFO] Clustering method not performed. Aborting.")
+      }
+      
+      if (!dir.exists(dir.path)) { 
+        dir.create(dir.path, recursive = TRUE) 
+        if(dir.exists(dir.path)) {
+          message("[",super$getName(),"][INFO] Directory has been succesfully created")
+        }else {stop("[",super$getName(),"][ERROR] Cannot create directory.") }
+      }
+
+      if( is.null(num.clusters) ){
+        message( "[",super$getName(),"][WARNING] Number of clusters not defined.",
+                 " Saving all cluster configurations" )
+        num.clusters <- (max(private$all.distribution$k)-1)
+      }else{
+        if( !(num.clusters %in%c(2:max(private$all.distribution$k)) ) ) {
+          message( "[",super$getName(),"][WARNING] Number of clusters exceeds ",
+                   "maximun number of clusters. Saving all cluster configurations." )
+          num.clusters <- (max(private$all.distribution$k)-1)
+        }
+      }
+      
+      write.table( data.frame( k = private$all.distribution[c(2:num.clusters),"k"],
+                               dispersion = private$all.distribution[c(2:num.clusters),"deltha"],
+                               row.names = NULL), 
+                   file=file.path(dir.path, paste0(name,".csv")),row.names = FALSE, 
+                   col.names = TRUE, sep=";")
     }
   ),
   private = list( maxClusters = NULL )

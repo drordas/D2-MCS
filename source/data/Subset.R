@@ -38,7 +38,7 @@ Subset <- R6Class(
     getFeatureNames = function() { names(private$data[,-private$class.index]) },
     getFeatures = function(feature.names=NULL){
       if(is.vector(feature.names) && length(feature.names) > 0){
-        private$data[,self$getFeatureNames()[match(self$getFeatureNames(), feature.names, nomatch = FALSE)] ]
+        private$data[,intersect(names(private$data[,-private$class.index]), feature.names)]
       }else { private$data[,-private$class.index] }
     },
     getBinaryFeatures = function() { 
