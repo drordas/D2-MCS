@@ -41,7 +41,7 @@ GenericStrategy <- R6Class(
     },
     plot = function(dir.path = NULL, file.name = NULL, ...) {
       stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
-    }
+    },
     saveCSV = function(dir.path, name, num.clusters= NULL){
       stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
     }

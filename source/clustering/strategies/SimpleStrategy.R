@@ -105,18 +105,18 @@ SimpleStrategy <- R6Class(
     getDistribution = function( num.clusters= NULL, num.groups=NULL, 
                                 include.unclustered = FALSE){
       if (is.null(private$best.distribution) || is.null(private$all.distribution)) {
-        stop(red("[", super$getName(), "][WARNING] Clusteing not done or errorneous. Returning NULL"))
+        stop(red("[", super$getName(), "][WARNING] Clustering not done or errorneous. Returning NULL"))
       }
-      
+
       if(is.null(num.clusters)){
-        message("[",super$getName(),"][INFO] Number of clusters not defined. Assuming best cluster distribution.") 
-        distribution <- unlist(private$all.distribution[which.min(private$all.distribution$k), ]$dist,recursive = FALSE)
+        message("[",super$getName(),"][INFO] Number of clusters not defined. Assuming best cluster distribution.")
+        distribution <- unlist(private$all.distribution[which.min(private$all.distribution$deltha), ]$dist,recursive = FALSE)
       }else{
         if( is.numeric(num.clusters) && (num.clusters %in% c(2:tail(private$all.distribution$k,n=1))) ){
           distribution <- unlist(private$all.distribution[which(num.clusters==private$all.distribution$k), ]$dist,recursive = FALSE)
         }else{
           message("[",super$getName(),"][INFO] Number of clusters not found. Assuming best cluster distribution.")
-          distribution <- unlist(private$all.distribution[which.min(private$all.distribution$k), ]$dist,recursive = FALSE)
+          distribution <- unlist(private$all.distribution[which.min(private$all.distribution$deltha), ]$dist,recursive = FALSE)
         }
       }
       if ( !missing(num.groups) && is.numeric(num.groups) && 
