@@ -1,7 +1,7 @@
 GenericStrategy <- R6Class(
   classname = "GenericStrategy",
   public = list(
-    initialize = function(name, subset, heuristic) {
+    initialize = function(name, subset, heuristic, configuration) {
       if ( missing(name) ){ stop(red("[GenericStrategy][ERROR] Strategy name not defined.")) }
       
       if ( !inherits(subset,"Subset") ) {
@@ -19,14 +19,21 @@ GenericStrategy <- R6Class(
         }else { stop(red("[GenericStrategy][ERROR] Heuristics is not correct",
                          "(must inherit from 'Heuristic' class).")) }
       }
+
+      if( !inherits(configuration,"StrategyConfiguration") ){
+        stop( red( "[GenericStrategy][ERROR] Configuration parameter must inherit from 'StrategyConfiguration' class." ) )
+      }
+
       private$name <- name
       private$subset <- subset
       private$heuristic <- heuristic
+      private$configuration <- configuration
     },
     getName = function() { private$name },
     getHeuristic = function() { private$heuristic },
+    getConfiguration = function() { private$configuration },
     getSubset = function() { private$subset },
-    getAllDistributions = function() { private$all.distribution }, #TO BE DELETED. NO SENSE RETURNING ALL DE DISTRIBUTIONS.
+    getAllDistributions = function() { private$all.distribution }, #TO BE DELETED. NO SENSE RETURNING ALL THE DISTRIBUTIONS.
     getBestClusterDistribution = function() { private$best.distribution },
     getUnclustered = function() { private$not.distribution },
     setName = function(name) { private$name <- name },
@@ -50,6 +57,7 @@ GenericStrategy <- R6Class(
     name = NULL,
     subset = NULL,
     heuristic = NULL,
+    configuration = NULL,
     all.distribution = NULL,
     best.distribution = NULL,
     not.distribution = NULL

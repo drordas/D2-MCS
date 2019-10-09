@@ -6,21 +6,9 @@ SimpleStrategy <- R6Class(
   inherit = GenericStrategy,
   portable = TRUE,
   public = list(
-    initialize = function(subset, heuristic, maxClusters = 50) {
-      super$initialize( name = "SimpleStrategy", subset = subset, 
-                        heuristic = heuristic )
-      
-      if (!is.numeric(maxClusters) || maxClusters < 2) {
-        stop(red("[SimpleStrategy][ERROR] maxClusters should be an integer greater than 1"))
-      } 
-      private$maxClusters <- maxClusters
-    },
-    getMaxClusters = function() { private$maxClusters },
-    setMaxClusters = function(maxClusters) {
-      if (!is.numeric(maxClusters) || maxClusters < 2) {
-        message("[",super$getName(),"][INFO] maxClusters should be an integer greater than 1. Assuming default value (50)")
-        private$maxClusters <- 50
-      }else { private$maxClusters <- maxClusters }
+    initialize = function(subset, heuristic, configuration = StrategyConfiguration$new()) {
+      super$initialize( name = "SimpleStrategy", subset = subset,
+                        heuristic = heuristic, configuration = configuration )
     },
     execute = function(verbose=FALSE, ...) {
       private$all.distribution <- data.frame(k = integer(), deltha = numeric(), dist = I(list()))
@@ -44,12 +32,12 @@ SimpleStrategy <- R6Class(
       if(isTRUE(verbose)){
         message( "[",self$getName(),"][INFO] Performing feature clustering using '",
                  private$heuristic[[1]]$getName(),"' heuristic" )
-        pb <- txtProgressBar(min = 0, max = (self$getMaxClusters()-1), style = 3 ) 
+        pb <- txtProgressBar(min = 0, max = (private$configuration$maxNumClusters()-1), style = 3 )
       }
       
       if (length(heuristic.valid) > 0) {
-        for (k in 2:self$getMaxClusters()) {
-          clustering <- rep( c(1:k, (k:1)), length(sorted.values)/(2 * k) + 1 )[1:length(sorted.values)] 
+        for ( k in private$configuration$minNumClusters():private$configuration$maxNumClusters() ){
+          clustering <- rep( c(1:k, (k:1)), length(sorted.values)/(2 * k) + 1 )[1:length(sorted.values)]
           cluster <- vector( mode = "list", length = length(sorted.values) )
           names(cluster) <- names(sorted.values)
           sumGroup <- vector(mode = "list", length = k)
@@ -240,6 +228,5 @@ SimpleStrategy <- R6Class(
                    file=file.path(dir.path, paste0(name,".csv")),row.names = FALSE, 
                    col.names = TRUE, sep=";")
     }
-  ),
-  private = list( maxClusters = NULL )
+  )
 )
