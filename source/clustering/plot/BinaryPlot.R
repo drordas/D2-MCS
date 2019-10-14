@@ -1,12 +1,10 @@
 library("R6")
 BinaryPlot <- R6Class(
   classname = "BinaryPlot",
-  inherit = Plot,
+  inherit = GenericPlot,
   portable = TRUE,
   public = list(
-    initialize = function(name = "BinaryPlot") {
-      super$initialize(name = name)
-    },
+    initialize = function() { },
     plot = function(summary, ...) {
       if (!is.data.frame(summary)) {
         stop("[", super$getName(), "][ERROR] summary parameter must be defined as 'data.frame' type")

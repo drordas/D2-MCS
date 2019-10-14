@@ -1,12 +1,10 @@
 library("R6")
 KendallHeuristic <- R6Class(
   classname = "KendallHeuristic",
-  inherit = Heuristic,
+  inherit = GenericHeuristic,
   portable = TRUE,
   public = list(
-    initialize = function() {
-      super$initialize(name = "KendallHeuristic")
-    },
+    initialize = function() { },
     # Heuristic valid for continuous variables
     heuristic = function(col1, col2, column.names = NULL) {
       if (private$isBinary(col1) || !private$isBinary(col2)) {

@@ -29,29 +29,12 @@ Subset <- R6Class(
       private$class.name <- names(private$data)[private$class.index]
       private$class.values <- class.values
       private$feature.names <- -(private$class.index)
-      
-      private$binary.features <- Filter(function(x) { all(levels(factor(x)) %in% c("0","1")) },
-                                                      private$data[,-private$class.index] )
-      private$real.features <- Filter(function(x) { !all(levels(factor(x)) %in% c("0","1")) },
-                                                    private$data[,-private$class.index] )
     },
     getFeatureNames = function() { names(private$data[,-private$class.index]) },
     getFeatures = function(feature.names=NULL){
       if(is.vector(feature.names) && length(feature.names) > 0){
         private$data[,intersect(names(private$data[,-private$class.index]), feature.names)]
       }else { private$data[,-private$class.index] }
-    },
-    getBinaryFeatures = function() { 
-      if ( nrow(private$binary.features) == 0 ){
-        message(yellow("[Subset][WARNING] Dataset without Binary Features. Returning empty data.frame"))
-      }
-      private$binary.features 
-    },
-    getRealFeatures = function() { 
-      if ( nrow(private$real.features) == 0 ){
-        message(yellow("[Subset][WARNING] Dataset without Binary Features. Returning empty data.frame"))
-      }
-      private$real.features 
     },
     getClassValues = function() { private$data[, private$class.index] },
     getClassIndex = function() { private$class.index },
@@ -66,8 +49,6 @@ Subset <- R6Class(
     class.name = NULL,
     feature.names = NULL,
     class.values = NULL,
-    binary.features = NULL,
-    real.features = NULL,
     positive.class = NULL
   )
 )

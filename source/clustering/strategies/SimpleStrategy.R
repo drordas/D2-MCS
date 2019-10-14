@@ -7,7 +7,9 @@ SimpleStrategy <- R6Class(
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new()) {
-      super$initialize( name = "SimpleStrategy", subset = subset,
+      private$valid.heuristics <- c()
+      description <- "<<Pending>>"
+      super$initialize( description = description, subset = subset, 
                         heuristic = heuristic, configuration = configuration )
     },
     execute = function(verbose=FALSE, ...) {
@@ -163,17 +165,17 @@ SimpleStrategy <- R6Class(
         stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as 'list' type")
       }
       if (length(plotObject) == 0) {
-        stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of Plots")
+        stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of GenericPlots")
       } else {
         for (p in plotObject) {
-          if (!"Plot" %in% class(p)) {
-            stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of 'Plot' type objects")
+          if (!"GenericPlot" %in% class(p)) {
+            stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of 'GenericPlot' type objects")
           }
         }
         if (length(plotObject) == 1) {
           message("[", super$getName(), "][INFO] ", super$getName(), " use one Plot. Assuming only binary plot")  
-          if (!"Plot" %in% class(plotObject[[1]])) {
-            stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of Plot")
+          if (!"GenericPlot" %in% class(plotObject[[1]])) {
+            stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of GenericPlots")
           }
         }
       }

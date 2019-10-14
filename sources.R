@@ -9,9 +9,8 @@ source("source/data/Subset.R", chdir=TRUE)
 
 cat("[SOURCES][INFO] Loading clustering algorithms\n")
 #LOAD CLUSTERING ALGORITHMS CLASSES
-source("source/clustering/Cluster.R", chdir = TRUE)
 
-source("source/clustering/heuristics/Heuristic.R", chdir = TRUE)
+source("source/clustering/heuristics/GenericHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/ChiSquareHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/FisherTestHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/GainRatioHeuristic.R", chdir = TRUE)
@@ -24,7 +23,7 @@ source("source/clustering/heuristics/PearsonHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/SpearmanHeuristic.R", chdir = TRUE)
 source("source/clustering/heuristics/MCCHeuristic.R", chdir = TRUE)
 
-source("source/clustering/plot/Plot.R", chdir = TRUE)
+source("source/clustering/plot/GenericPlot.R", chdir = TRUE)
 source("source/clustering/plot/BinaryPlot.R", chdir = TRUE)
 source("source/clustering/plot/KendallPlot.R", chdir = TRUE)
 source("source/clustering/plot/SpearmanPlot.R", chdir = TRUE)

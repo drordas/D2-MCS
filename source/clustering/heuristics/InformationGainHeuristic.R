@@ -1,12 +1,10 @@
 library("R6")
 InformationGainHeuristic <- R6Class(
   classname = "InformationGainHeuristic",
-  inherit = Heuristic,
+  inherit = GenericHeuristic,
   portable = TRUE,
   public = list(
-    initialize = function() {
-      super$initialize(name = "InformationGainHeuristic")
-    },
+    initialize = function() { },
     # heuristic = function(subset, ...) {
     #   # corpusDiscretes <- 
     #   # corpusContinues   <- 

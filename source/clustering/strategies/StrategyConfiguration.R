@@ -3,8 +3,8 @@ StrategyConfiguration <- R6Class(
   classname = "StrategyConfiguration",
   portable = TRUE,
   public = list(
-    initialize = function(name = NULL){ private$name <- name },
-    getName = function() { private$name },
+    initialize = function(){ },
+    getName = function() { class(self)[1] },
     minNumClusters = function(...){
       message( yellow( "[StrategyConfiguration][WARNING] Using the configuration for default: 2 clusters minimun" ) )
       2
@@ -13,6 +13,5 @@ StrategyConfiguration <- R6Class(
       message( yellow( "[StrategyConfiguration][WARNING] Using the configuration for default: 50 clusters maximun" ) )
       50
     }
-  ),
-  private = list( name = NULL )
+  )
 )

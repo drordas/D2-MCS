@@ -1,12 +1,10 @@
 library("R6")
 KendallPlot <- R6Class(
   classname = "KendallPlot",
-  inherit = Plot,
+  inherit = GenericPlot,
   portable = TRUE,
   public = list(
-    initialize = function(name = "KendallPlot") {
-      super$initialize(name = name)
-    },
+    initialize = function() { },
     plot = function(summary, ...) {
       ggplot(data = summary, aes(x = interval, y = value)) +
         geom_bar(stat = "identity", fill = "steelblue") +
