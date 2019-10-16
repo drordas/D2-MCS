@@ -144,7 +144,7 @@ SimpleStrategy <- R6Class(
         if(subset$getClassIndex() == 1){
           instances <- cbind(subset$getClassValues(),instances)
         }else{
-          if(subset$getClassIndex() >=nrow() ){
+          if(subset$getClassIndex() >= ncol(instances) ){
             instances <- cbind(instances,subset$getClassValues())
           }else{
             instances <- cbind( instances[1:private$class.index-1],
@@ -156,8 +156,35 @@ SimpleStrategy <- R6Class(
                     class.values = as.character(unique(subset$getClassValues())),
                     positive.class = subset$getPositiveClass() )
       })
-      # }
       cluster.dist
+    },
+    createTrain = function(subset, num.clusters = NULL, ...) {
+      if ( !inherits(subset,"Subset") ) {
+        stop(red("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object"))
+      }
+      
+      if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
+        stop("[",super$getName(),"][ERROR] Clustering not done or errorneous. Aborting...")
+      }
+      include.unclustered <- eval(substitute(alist(...))[["include.unclustered"]])
+      num.groups <- eval(substitute(alist(...))[["num.groups"]])
+      
+      if ( !is.logical(include.unclustered) ) {
+        message("[",super$getName(),"][INFO] 'include.unclustered' parameter must contain a logical value (TRUE or FALSE). Assuming FALSE as default")
+        include.unclustered <- FALSE
+      }
+      
+      distribution <- self$getDistribution( num.clusters = num.clusters, 
+                                            num.groups = num.groups,
+                                            include.unclustered = include.unclustered )
+      
+      train.dist <- lapply(distribution, function(group) {
+        instances <- subset$getFeatures(feature.names = group)
+        instances
+      })
+      TrainSet$new( clusters = train.dist, class.name= subset$getClassName(),
+                    class.values = as.character(unique(subset$getClassValues())),
+                    positive.class = subset$getPositiveClass() )
     },
     plot = function(dir.path = NULL, file.name = NULL, 
                     plotObject = list(BinaryPlot$new()), ...) {
