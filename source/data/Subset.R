@@ -31,7 +31,7 @@ Subset <- R6Class(
       private$feature.names <- -(private$class.index)
     },
     getFeatureNames = function() { names(private$data[,-private$class.index]) },
-    getFeatures = function(feature.names=NULL){
+    getFeatures = function (feature.names=NULL){
       if(is.vector(feature.names) && length(feature.names) > 0){
         private$data[,intersect(names(private$data[,-private$class.index]), feature.names)]
       }else { private$data[,-private$class.index] }

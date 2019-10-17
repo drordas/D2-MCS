@@ -1,5 +1,4 @@
 library("R6")
-library("varhandle")
 
 SimpleStrategy <- R6Class(
   classname = "SimpleStrategy",
@@ -7,7 +6,6 @@ SimpleStrategy <- R6Class(
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new()) {
-      private$valid.heuristics <- c()
       description <- "<<Pending>>"
       super$initialize( description = description, subset = subset, 
                         heuristic = heuristic, configuration = configuration )
@@ -18,6 +16,9 @@ SimpleStrategy <- R6Class(
 
       colIndex <- which( levels(private$subset$getClassValues()) == private$subset$getPositiveClass() )
       class <- varhandle::to.dummy( private$subset$getClassValues(), private$subset$getPositiveClass() )[, colIndex]
+      
+      minClusters <- private$configuration$minNumClusters()
+      maxClusters <- private$configuration$maxNumClusters()
       
       ##COMPUTING HEURISTIC (BETWEEN EACH FEATURE AND THE CLASS)
       corpus <- private$subset$getFeatures()
@@ -34,11 +35,11 @@ SimpleStrategy <- R6Class(
       if(isTRUE(verbose)){
         message( "[",self$getName(),"][INFO] Performing feature clustering using '",
                  private$heuristic[[1]]$getName(),"' heuristic" )
-        pb <- txtProgressBar(min = 0, max = (private$configuration$maxNumClusters()-1), style = 3 )
+        pb <- txtProgressBar(min = 0, max = (maxClusters-1), style = 3 )
       }
       
       if (length(heuristic.valid) > 0) {
-        for ( k in private$configuration$minNumClusters():private$configuration$maxNumClusters() ){
+        for ( k in minClusters:maxClusters ){
           clustering <- rep( c(1:k, (k:1)), length(sorted.values)/(2 * k) + 1 )[1:length(sorted.values)]
           cluster <- vector( mode = "list", length = length(sorted.values) )
           names(cluster) <- names(sorted.values)
@@ -83,9 +84,6 @@ SimpleStrategy <- R6Class(
                                                 dist = I(list(notHeuristic)))
       }   
     },
-    getAllDistributions = function() {
-      list(private$all.distribution)
-    },
     getBestClusterDistribution = function() {
       list(private$best.distribution)
     },
@@ -99,8 +97,9 @@ SimpleStrategy <- R6Class(
       }
 
       if(is.null(num.clusters)){
-        message("[",super$getName(),"][INFO] Number of clusters not defined. Assuming best cluster distribution.")
-        distribution <- unlist(private$all.distribution[which.min(private$all.distribution$deltha), ]$dist,recursive = FALSE)
+        #message("[",super$getName(),"][INFO] Number of clusters not defined. Assuming best cluster distribution.")
+        distribution <- sapply(private$best.distribution$dist, function(x) {x})
+          #unlist(private$all.distribution[which.min(private$all.distribution$deltha), ]$dist,recursive = FALSE)
       }else{
         if( is.numeric(num.clusters) && (num.clusters %in% c(2:tail(private$all.distribution$k,n=1))) ){
           distribution <- unlist(private$all.distribution[which(num.clusters==private$all.distribution$k), ]$dist,recursive = FALSE)
@@ -119,46 +118,8 @@ SimpleStrategy <- R6Class(
       }
       return(distribution)
     },
-    createSubset = function(subset, num.clusters = NULL, ...) {
-      if ( !inherits(subset,"Subset") ) {
-        stop(red("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object"))
-      }
-      
-      if (is.null(private$best.distribution) || is.null(private$all.distribution)) {
-        stop("[",super$getName(),"][ERROR] Clustering not done or errorneous. Aborting...")
-      }
-      include.unclustered <- eval(substitute(alist(...))[["include.unclustered"]])
-      num.groups <- eval(substitute(alist(...))[["num.groups"]])
-      
-      if (!is.logical(include.unclustered)){
-        message("[",super$getName(),"][INFO] 'include.unclustered' parameter must contain a logical value (TRUE or FALSE). Assuming FALSE as default")
-        include.unclustered <- FALSE
-      }
-      
-      distribution <- self$getDistribution( num.clusters = num.clusters, 
-                                            num.groups = num.groups,
-                                            include.unclustered = include.unclustered )
-
-      cluster.dist <- lapply(distribution, function(group) {
-        instances <- subset$getFeatures(feature.names= group)
-        if(subset$getClassIndex() == 1){
-          instances <- cbind(subset$getClassValues(),instances)
-        }else{
-          if(subset$getClassIndex() >= ncol(instances) ){
-            instances <- cbind(instances,subset$getClassValues())
-          }else{
-            instances <- cbind( instances[1:private$class.index-1],
-                                subset$getClassValues(), 
-                                instances[private$class.index:ncol(instances)] )
-          }
-        }
-        Subset$new( dataset = instances, class.index = subset$getClassIndex(),
-                    class.values = as.character(unique(subset$getClassValues())),
-                    positive.class = subset$getPositiveClass() )
-      })
-      cluster.dist
-    },
-    createTrain = function(subset, num.clusters = NULL, ...) {
+    createTrain = function( subset, num.clusters= NULL, num.groups=NULL,
+                            include.unclustered= FALSE) {
       if ( !inherits(subset,"Subset") ) {
         stop(red("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object"))
       }
@@ -166,24 +127,17 @@ SimpleStrategy <- R6Class(
       if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
         stop("[",super$getName(),"][ERROR] Clustering not done or errorneous. Aborting...")
       }
-      include.unclustered <- eval(substitute(alist(...))[["include.unclustered"]])
-      num.groups <- eval(substitute(alist(...))[["num.groups"]])
-      
-      if ( !is.logical(include.unclustered) ) {
-        message("[",super$getName(),"][INFO] 'include.unclustered' parameter must contain a logical value (TRUE or FALSE). Assuming FALSE as default")
-        include.unclustered <- FALSE
-      }
-      
+
       distribution <- self$getDistribution( num.clusters = num.clusters, 
                                             num.groups = num.groups,
                                             include.unclustered = include.unclustered )
       
       train.dist <- lapply(distribution, function(group) {
-        instances <- subset$getFeatures(feature.names = group)
-        instances
+        subset$getFeatures(feature.names = group)
       })
-      TrainSet$new( clusters = train.dist, class.name= subset$getClassName(),
-                    class.values = as.character(unique(subset$getClassValues())),
+      
+      TrainSet$new( cluster.dist = train.dist, class.name= subset$getClassName(),
+                    class.values = subset$getClassValues(),
                     positive.class = subset$getPositiveClass() )
     },
     plot = function(dir.path = NULL, file.name = NULL, 

@@ -1,7 +1,7 @@
 GenericStrategy <- R6Class(
   classname = "GenericStrategy",
   public = list(
-    initialize = function(description, subset, heuristic, configuration) {
+    initialize = function( subset, heuristic, description, configuration) {
       
       if ( missing(description) ){ stop(red("[GenericStrategy][ERROR] Strategy description not defined.")) }
 
@@ -9,8 +9,7 @@ GenericStrategy <- R6Class(
         stop(red("[GenericStrategy][ERROR] Subset parameter must inherit from 'Subset' class."))
       }
       if(is.list(heuristic)){ 
-        heuristic <- Filter( function(x) inherits(x,"GenericHeuristic"), heuristic )
-        if( length(heuristic) == 0 ) {
+        if( length(Filter( function(x) inherits(x,"GenericHeuristic"), heuristic) ) == 0 ) {
           stop( red("[GenericStrategy][ERROR] Adequate heuristics not found",
                     "(must inherit from 'GenericHeuristic' class).") )
         }
@@ -22,12 +21,13 @@ GenericStrategy <- R6Class(
       }
 
       if( !inherits(configuration,"StrategyConfiguration") ){
-        stop( red( "[GenericStrategy][ERROR] Configuration parameter must inherit from 'StrategyConfiguration' class." ) )
+        stop( "[GenericStrategy][ERROR] Configuration parameter must",
+              "inherit from 'StrategyConfiguration' class." )
       }
       
-      if( !all(sapply(heuristic, function(h){ class(h)[1] %in% private$valid.heuristics })) ){
-        stop( red( "[GenericStrategy][ERROR] heuristic parameter must include on list of valid heuristics" ) )
-      }
+      # if( !all(sapply(heuristic, function(h){ class(h)[1] %in% private$valid.heuristics })) ){
+      #   stop( red( "[GenericStrategy][ERROR] heuristic parameter must include on list of valid heuristics" ) )
+      # }
       
       private$description <- description
       private$subset <- subset
@@ -38,7 +38,6 @@ GenericStrategy <- R6Class(
     getDescription = function() { private$description },
     getHeuristic = function() { private$heuristic },
     getConfiguration = function() { private$configuration },
-    getAllDistributions = function() { private$all.distribution }, #TO BE DELETED. NO SENSE RETURNING ALL THE DISTRIBUTIONS.
     getBestClusterDistribution = function() { private$best.distribution },
     getUnclustered = function() { private$not.distribution },
     setValidHeuristics = function(valid.heuristics) {
@@ -49,9 +48,6 @@ GenericStrategy <- R6Class(
     },
     getDistribution = function(num.clusters = NULL, num.groups = NULL, 
                                include.unclustered = FALSE )  {
-      stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
-    },
-    createSubset = function(subset, num.cluster = NULL, ...) {
       stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
     },
     createTrain = function(subset, num.cluster = NULL, ...) {
@@ -71,7 +67,7 @@ GenericStrategy <- R6Class(
     configuration = NULL,
     all.distribution = NULL,
     best.distribution = NULL,
-    not.distribution = NULL,
-    valid.heuristics = c()
+    not.distribution = NULL#,
+    #valid.heuristics = c()
   )
 )

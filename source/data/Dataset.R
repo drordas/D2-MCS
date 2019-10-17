@@ -161,6 +161,7 @@ Dataset <- R6Class(
           na.remov <- ( (ncol(subset)-1) - ncol(filtered) )
           message("[Dataset][INFO] Removed columns containing NA values (total of ",na.remov,").")
         }
+        
         if(exists("remove.const",opts) && isTRUE(opts$remove.const) ) {
           filtered <- Filter(function(col) sd(col, na.rm = TRUE) != 0, filtered)
           const.remov <- ( (ncol(subset)-1) - ncol(filtered) ) + na.remov
