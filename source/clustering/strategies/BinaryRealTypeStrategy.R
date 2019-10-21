@@ -335,16 +335,8 @@ BinaryRealTypeStrategy <- R6Class(
                     class.values = subset$getClassValues(),
                     positive.class = subset$getPositiveClass() )
     },
-    plot = function(dir.path = NULL, file.name = NULL, 
-                    plotObject = list(BinaryPlot$new()), ...) {
-      if ( any(!is.list(plotObject),length(plotObject) == 0, 
-               !all(sapply(plotObject, function(plot) { 
-                          inherits(plot,"GenericPlot") } )) ) ) 
-      {
-        stop( "[", super$getName(), "][ERROR] plotObject parameter must be",
-              "defined as a list of 'GenericPlot' objects" )
-      }
-      
+    plot = function(dir.path = NULL, file.name = NULL, ...) {
+
       binary.summary <- data.frame( k = private$all.distribution[[1]]$k,
                                     dispersion = private$all.distribution[[1]]$deltha,
                                     row.names = NULL )

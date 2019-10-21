@@ -7,8 +7,8 @@ SimpleStrategy <- R6Class(
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new()) {
       description <- "<<Pending>>"
-      super$initialize( description = description, subset = subset, 
-                        heuristic = heuristic, configuration = configuration )
+      super$initialize( subset = subset, heuristic = heuristic, 
+                        description = description, configuration = configuration )
     },
     execute = function(verbose=FALSE, ...) {
       private$all.distribution <- data.frame(k = integer(), deltha = numeric(), dist = I(list()))
@@ -140,30 +140,12 @@ SimpleStrategy <- R6Class(
                     class.values = subset$getClassValues(),
                     positive.class = subset$getPositiveClass() )
     },
-    plot = function(dir.path = NULL, file.name = NULL, 
-                    plotObject = list(BinaryPlot$new()), ...) {
-      if (!is.list(plotObject)) {
-        stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as 'list' type")
-      }
-      if (length(plotObject) == 0) {
-        stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of GenericPlots")
-      } else {
-        for (p in plotObject) {
-          if (!"GenericPlot" %in% class(p)) {
-            stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of 'GenericPlot' type objects")
-          }
-        }
-        if (length(plotObject) == 1) {
-          message("[", super$getName(), "][INFO] ", super$getName(), " use one Plot. Assuming only binary plot")  
-          if (!"GenericPlot" %in% class(plotObject[[1]])) {
-            stop("[", super$getName(), "][ERROR] plotObject parameter must be defined as a list of GenericPlots")
-          }
-        }
-      }
+    plot = function(dir.path = NULL, file.name = NULL, ...) {
+
       summary <- data.frame(k = private$all.distribution$k,
                             dispersion = private$all.distribution$deltha,
                             row.names = NULL)
-      plot <- plotObject[[1]]$plot(summary)
+      plot <- BinaryPlot$new()$plot(summary)
       if (!is.null(dir.path)) {
         if (!dir.exists(dir.path)) {
           dir.create(dir.path, recursive = TRUE)
