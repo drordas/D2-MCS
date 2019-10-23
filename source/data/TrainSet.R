@@ -29,7 +29,7 @@ TrainSet <- R6Class(
       }
       names(private$clusters[[num.cluster]])
     },
-    getFeatures = function(num.cluster){
+    getFeatureValues = function(num.cluster){
       if ( any(missing(num.cluster),!is.numeric(num.cluster),
                !num.cluster %in% c(1:length(private$clusters))) ) 
       {
@@ -37,6 +37,17 @@ TrainSet <- R6Class(
              "Must be included between 1 and ",length(private$clusters))
       }
       private$clusters[[num.cluster]]
+    },
+    getInstances = function(num.cluster){
+      if ( any(missing(num.cluster),!is.numeric(num.cluster),
+               !num.cluster %in% c(1:length(private$clusters))) ) 
+      {
+        stop("[TrainSet][ERROR] Position not defined or incorrect.",
+             "Must be included between 1 and ",length(private$clusters))
+      }
+      instances <- cbind(private$clusters[[num.cluster]],private$class.values)
+      names(instances)[length(instances)] <- private$class.name
+      instances
     },
     getNumClusters = function() { length(private$clusters) }
   ),

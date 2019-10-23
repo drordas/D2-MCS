@@ -4,50 +4,76 @@ D2MCS <- R6Class(
   classname = "D2MCS",
   portable = TRUE,                   
   public = list(
-    initialize = function(path, num.cores = NULL, socket.type="PSOCK", outfile,
+    initialize = function(dir.path, num.cores = NULL, socket.type="PSOCK", outfile,
                           serialize=FALSE, trainFunction = NULL ){ 
       
-      if(missing(path)) { stop("[D2MCS][ERROR] Path not defined. Path should be given to store the models\n") }
+      if(missing(dir.path)) { 
+        stop( "[",class(self)[1],"][ERROR] Path to store ML models should be defined" ) 
+      }
+      dir.path <- gsub("\\/$","",dir.path)
       
-      if (!file.exists(path)){
-        dir.create(path, recursive = TRUE)
-        message("[D2MCS][INFO] Path '",path, "' does not exist. Creating ...\n")
+      if(missing(outfile)) { 
+        message("[",class(self)[1],"][INFO] Path for Log file not defined") 
+        outfile <- "/dev/null"
+      } 
+      else{
+        if (!file.exists(outfile)){
+          dir.create(outfile, recursive = TRUE)
+          message("[",class(self)[1],"][INFO] Logs path not definded '",
+                  outfile, "' does not exist. Creating ..." )
+        }
       }
       
-      if(missing(outfile)) { stop("[D2MCS][ERROR] Cluster log file not defined\n") }
-      
-      if (!file.exists(outfile)){
-        dir.create(outfile, recursive = TRUE)
-        message("[D2MCS][INFO] Cluster log  file '",path, "' does not exist. Creating ...\n")
-      }
-      
-      if(is.null(num.cores) || num.cores >=  detectCores() || num.cores > 10  ){
-        ifelse( (detectCores() > 10), 
-                (warning(yellow("[D2MCS][WARNING] Invalid number of cores (1>= num.cores <= 10)\n"))),
-                (warning(yellow("[D2MCS][WARNING] Invalid number of cores (1>= num.cores < ",detectCores(),")"))) )
+      if (!dir.exists(dir.path)) { 
+        dir.create(dir.path, recursive = TRUE) 
+        if(dir.exists(dir.path)) {
+          message("[",class(self)[1],"][INFO] Directory '",dir.path,
+                  "' has been succesfully created")
+        }else { stop("[",class(self)[1],"][ERROR] Cannot create directory '",
+                     dir.path,"'") }
+      } 
+      else { message("[",class(self)[1],"][INFO] Directory already exists") }
+
+      if( any(is.null(num.cores), (num.cores >= detectCores()), num.cores > 10)  ){
+        if(detectCores() > 10){
+          message(yellow(paste0("[",class(self)[1],"][WARNING] Invalid number of cores",
+                         " (1>= num.cores <= 10)")))
+        }else{
+          message(yellow(paste0("[",class(self)[1],"][WARNING] Invalid number of cores",
+                         " (1>= num.cores < ",detectCores(),")")))
+        }
         cores <- min(max(1,detectCores()-2),10)
-        message("[D2MCS][INFO] Using default number of cores (",cores,"/",detectCores(),") \n")
-      }else cores <- nCores
+        message("[",class(self)[1],"][INFO] Using default number of cores (",
+                cores,"/",detectCores(),")")
+      } 
+      else {cores <- nCores}
       
       if( !socket.type %in% c("PSOCK","FORK") ){
-        warning(yellow("[D2MCS][WARNING] Invalid socket type. Assuming 'PSOCK' cluster\n"))
+        warning(yellow("[",class(self)[1],"][WARNING] Invalid socket type.",
+                       "Assuming 'PSOCK' cluster\n"))
         socket <- "PSOCK"
-      }else socket <- socket.type
+      }
+      else { socket <- socket.type }
       
       if(!is.logical(serialize)){
-        warning(yellow("[D2MCS][WARNING] Invalid serialization option. Assuming not serialization\n"))
+        message(yellow("[",class(self)[1],"][WARNING] Invalid serialization",
+                       "option. Assuming not serialization\n"))
         xdr <- FALSE
-      }else xdr <- serialize
+      }
+      else xdr <- serialize
       
-      if (missing(trainFunction) || is.null(trainFunction) || !"TrainFunction" %in% class(trainFunction) )
-        stop("[D2MCS][ERROR] TrainFunction not defined or incorrect (should inherit from TrainFunction abstract class)\n")
-      else private$trainFunction <- trainFunction
+      if ( any( missing(trainFunction), is.null(trainFunction), 
+                (!"TrainFunction" %in% class(trainFunction)) ) ){
+        stop( "[",class(self)[1],"][ERROR] TrainFunction not defined or",
+              "incorrect (should inherit from TrainFunction abstract class)" )
+      }
+      else { private$trainFunction <- trainFunction }
       
       private$availableModels <- private$loadAvailableModels()
-      private$path <- file.path(getwd(),path)
-      dir.create( private$path, recursive = TRUE, showWarnings = FALSE )
+      private$path <- dir.path
       
-      private$cluster.conf <- list( cores=cores, socket=socket, outfile=outfile, xdr=xdr )
+      private$cluster.conf <- list( cores=cores, socket=socket, 
+                                    outfile=outfile, xdr=xdr )
       private$cluster.obj <- NULL
       private$executedModels <- NULL
       private$classify.output <- NULL
@@ -55,49 +81,72 @@ D2MCS <- R6Class(
       private$models.weights <- c()
       private$real.values <- NULL
     },
-    train = function( train.set = NULL, num.clusters = NULL, ex.classifiers = c(), 
-                      ig.classifiers=c(), metric = NULL, saveAllModels = FALSE ){
-      if(missing(train.set) || is.null(train.set) || !"ClusterDistribution" %in% class(train.set) )
-        stop(red("[D2MCS][ERROR] Train set not defined of incorrect (must be of type 'Cluster')\n"))
-    
-      if (missing(num.clusters)) message("[D2MCS][INFO] Number of clusters not set. Using all clusters... \n")
-      if (is.null(num.clusters) || !is.numeric(num.clusters) || !is.vector(num.clusters) ){
-        warning(yellow("[D2MCS][WARNING] Number of clusters not set (must be numeric or vector). Using all clusters\n"))
+    train = function( train.set = NULL, num.clusters = NULL, 
+                      ex.classifiers = c(), ig.classifiers=c(), 
+                      metric = NULL, saveAllModels = FALSE ) {
+      
+      #CHECK IF TRAIN.SET IS VALID
+      if(!"TrainSet" %in% class(train.set) ){
+        stop("[",class(self)[1],"][ERROR] Train set not defined of",
+             "incorrect (must be of type 'Cluster')\n")
+      }
+
+      #CHECK IF NUM.CLUSTER IS VALID    
+      if (missing(num.clusters)){
+        message("[",class(self)[1],"][INFO] Number of clusters not set.",
+                "Using all clusters..." )
+      }
+      if (any( is.null(num.clusters),!is.numeric(num.clusters), 
+               !is.vector(num.clusters) )) {
+        message(yellow(paste0("[",class(self)[1],"][WARNING] Number of clusters not set",
+                       " (must be numeric or vector). Using all clusters")))
         num.clusters <- c(1:train.set$getNumClusters())
-      }else{
-        if (is.numeric(num.clusters) && num.clusters > train.set$getNumClusters() ){
-          warning(yellow("[D2MCS][WARNING] num.clusters is higher than number of existing clusters. Using all clusters\n"))
+      }
+      else{
+        if (all(is.numeric(num.clusters), num.clusters > train.set$getNumClusters()) ){
+          message(yellow(paste0("[",class(self)[1],"][WARNING] num.clusters is higher",
+                         "than number of existing clusters. Using all clusters")))
           num.clusters <- c(1:train.set$getNumClusters())
-        }else num.clusters <- c(1:num.clusters)
+        }
+        else num.clusters <- c(1:num.clusters)
       }
 
-      if(missing(ex.classifiers) || is.null(ex.classifiers) || length(ex.classifiers) == 0){
-        usedModels <- private$availableModels$name
-      }else usedModels <- ex.classifiers
+      #VERIFY IF EX.CLASSIFIERS PARAMETER IS DEFINED (AND VALID)
+      if(all(is.character(ex.classifiers),length(ex.classifiers) > 0) ) {
+        usedModels <- ex.classifiers
+      }
+      else { usedModels <- private$availableModels$name }
       
-      if(!missing(ig.classifiers) && !is.null(ig.classifiers) && length(ig.classifiers) > 0){
-        message("[D2MCS][INFO] Ignoring '",length(ig.classifiers),"' M.L models\n")
+      #VERIFY IF IG.CLASSIFIERS PARAMETER IS DEFINED (AND VALID)
+      if( all(is.character(ig.classifiers), length(ig.classifiers) > 0) ){
+        message("[",class(self)[1],"][INFO] Ignoring '",
+                length(ig.classifiers),"' M.L models")
         usedModels <- setdiff(usedModels,ig.classifiers)
-        message("[D2MCS][INFO] Still '",length(usedModels),"' M.L models available\n")
+        message("[",class(self)[1],"][INFO] Still '",length(usedModels),
+                "' M.L models available")
       }
       
-      message("[D2MCS][INFO] Making parallel Socket Cluster with",private$cluster.conf$cores,"cores\n")
-      private$cluster.obj <- makeCluster( private$cluster.conf$cores, type= private$cluster.conf$socket, 
-                                          outfile= private$cluster.conf$outfile, useXDR=private$cluster.conf$xdr )
+      message("[",class(self)[1],"][INFO] Making parallel socket cluster with ",
+              private$cluster.conf$cores," cores")
       
-      private$bestModels <- ModelsList$new( size = length(num.clusters) )
-      private$executedModels <- ExecutedModelsList$new( size = length(num.clusters) )
+      private$cluster.obj <- makeCluster( private$cluster.conf$cores, 
+                                          type= private$cluster.conf$socket, 
+                                          outfile= private$cluster.conf$outfile, 
+                                          useXDR=private$cluster.conf$xdr )
+      
+      private$bestModels <- ModelsList$new(size = length(num.clusters))
+      private$executedModels <- ExecutedModelsList$new(size= length(num.clusters))
       private$metric <- metric
-      used.models <- private$availableModels[ (private$availableModels$name %in% usedModels), ]
-        
+      execute.models <- private$availableModels[(private$availableModels$name %in% usedModels), ]
+      
+      #START TRAINING PROCESS  
       for (i in num.clusters ){
-        message("[D2MCS][INFO] ---------------------------------------\n")
-        message("[D2MCS][INFO] Training models for cluster '",i,"' of '", max(num.clusters),"'\n")
-        message("[D2MCS][INFO] ---------------------------------------\n")
-        model.subset <- train.set$getAt(i)
-        model.fitClass <- DefaultModelFit$new(model.subset)
+        message("[",class(self)[1],"][INFO] ---------------------------------------")
+        message("[",class(self)[1],"][INFO] Training models for cluster '",i,
+                "' of '", max(num.clusters),"'")
+        message("[",class(self)[1],"][INFO] ---------------------------------------")
 
-        model.savePath <- file.path( paste0(private$path,private$metric),
+        model.savePath <- file.path( private$path,private$metric,
                                      paste0("C[",i,"-",train.set$getNumClusters(),"]") )
         
         private$executedModels$loadFrom(file.path(model.savePath,".executed"),i)
@@ -105,53 +154,82 @@ D2MCS <- R6Class(
 
         if(private$executedModels$size(i) > 0 ){
           bestModel <- private$executedModels$getBestModel(i)
-          
           private$bestClusterModel <- ModelEntry$new( name= bestModel$method, object= NULL,
                                                       performance= bestModel$performance,
                                                       path= file.path(model.savePath,paste0(bestModel$method,".rds")) )
-        }else private$bestClusterModel <- ModelEntry$new( name= "NULL", performance= 0.0 )
+        }else private$bestClusterModel <- ModelEntry$new(name= "NULL", performance= 0.0)
         
-        if(abs(mean(cor(model.subset$getInstances(ignore.class = TRUE), as.numeric(model.subset$getClass())), na.rm=TRUE) ) < 0.3 ){ ##CORRELATION
-          warning(yellow("[D2MCS][WARNING] High-Correlated Data (< 0.3). Ignoring Linear-based and Discriminant-based models\n"))
-          remaining.models <- subset(used.models,!grepl("Linea[l|r]|Discriminant",paste(used.models$description,used.models$family,sep=" ")) )
-          message("[D2MCS][INFO] Removing ",nrow(used.models) - nrow(remaining.models)," incompatible M.L. models\n")
-        }else remaining.models <- used.models
+        #DEPURANDO POR AQUI. HABRIA QUE CAMBIAR LA FORMA DE CARGAR LOS MODELOS.
+        stop()
+        
+        if(abs(mean(cor(train.set$getFeatureValues(i), 
+                        as.numeric(train.set$getClassValues()) ), 
+                    na.rm=TRUE) ) < 0.3 ) { ##CORRELATION
+          message(yellow(paste0("[",class(self)[1],"][WARNING] High-Correlated Data (< 0.3).",
+                         "Ignoring Linear-based and Discriminant-based models")))
+          remaining.models <- subset(execute.models,
+                                     !grepl("Linea[l|r]|Discriminant",
+                                            paste(execute.models$description,
+                                                  execute.models$family,sep=" ")) 
+                                     )
+          message("[",class(self)[1],"][INFO] Removing ",
+                  (nrow(execute.models) - nrow(remaining.models)),
+                  " incompatible M.L. models")
+        }else remaining.models <- execute.models
         
         num.remaining <- nrow(remaining.models)
         cluster.models <- list()
-        remaining.models <- remaining.models[ !(remaining.models$name %in% private$executedModels$getAt(i)$getNames()), ]
+        remaining.models <- remaining.models[!(remaining.models$name %in% 
+                                              private$executedModels$getAt(i)$getNames()), ]
         
         if(nrow(remaining.models) == 0){
           private$bestModels$insertAt(i,private$bestClusterModel)
-          private$models.weights <- c( private$models.weights,private$bestClusterModel$getPerformance() )
+          private$models.weights <- c(private$models.weights,
+                                      private$bestClusterModel$getPerformance())
           if(i < max(num.clusters))
-            message( "[D2MCS][INFO] Remaining ",num.remaining,
-                     " M.L. models has been already executed for cluster ",i,"/",max(num.clusters),". Executing next cluster...\n")
+            message( "[",class(self)[1],"][INFO] Remaining ",num.remaining,
+                     " M.L. models has been already executed for cluster ",
+                     i,"/",max(num.clusters),". Executing next cluster...\n")
           else {
-            message( "[D2MCS][INFO] Remaining ",num.remaining,
-                     " M.L. models has been already executed for cluster ",i,"/",max(num.clusters),".\n")
-            message("[D2MCS][INFO] Finish !")
-            if(!is.null(private$cluster.obj)){ stopCluster(private$cluster.obj); private$cluster.obj <- NULL }
+            message( "[",class(self)[1],"][INFO] Remaining ",num.remaining,
+                     " M.L. models has been already executed for cluster ",
+                     i,"/",max(num.clusters),".\n")
+            message("[",class(self)[1],"][INFO] Finish !")
+            if(!is.null(private$cluster.obj)){ 
+              stopCluster(private$cluster.obj) 
+              private$cluster.obj <- NULL 
+            }
           }
           next
           
         }else{ 
-          message( "[D2MCS][INFO]",(num.remaining-nrow(remaining.models)),"/",num.remaining,
-                   " M.L. models has been already executed for cluster ",i,"/",max(num.clusters),"\n") 
-          message( "[D2MCS][INFO] Executing remaining",nrow(remaining.models),"M.L. model(s)\n" )
+          message("[",class(self)[1],"][INFO] ",
+                   (num.remaining-nrow(remaining.models)),"/",num.remaining,
+                   " M.L. models has been already executed for cluster ",
+                   i,"/",max(num.clusters),"") 
+          message("[",class(self)[1],"][INFO] Executing remaining ",
+                  nrow(remaining.models)," M.L. model(s)" )
         }
         
         apply(remaining.models, 1, function(model, executedModel){
-          ifelse( isTRUE(model$prob), private$trainFunction$create( UseProbability$new(), search.method= "random", class.probs = TRUE ),
-                                      private$trainFunction$create( NoProbability$new(), search.method= "random", class.probs = FALSE ) )
-
-          model.fit <- model.fitClass$createRecipe()
+          ifelse(isTRUE(model$prob), 
+                 private$trainFunction$create(UseProbability$new(), 
+                                              search.method= "random", 
+                                              class.probs = TRUE ),
+                 private$trainFunction$create(NoProbability$new(), 
+                                              search.method= "random", 
+                                              class.probs = FALSE)
+          )
+          model.instances <- train.set$getInstances(i)
+          model.recipe <- DefaultModelFit$new(model.instances, 
+                                              train.set$getClassName())$createRecipe()
           model.type <- Model$new( dir = model.savePath, method = model$name,
                                    family = model$family, description = model$description,
                                    pkgName = as.vector( unlist(model$library) ), 
                                    trFunction = private$trainFunction, metric = metric )
+          
           if( !executedModel$isTrained(i,model$name) ){
-            model.type$train(dataset = model.subset$getInstances(), fitting = model.fit )
+            model.type$train(dataset = model.instances, fitting = model.recipe )
             if( isTRUE(saveAllModels) ) model.type$saveModel() 
             executedModel$insertModeltAt(i,model.type)
             if( private$bestClusterModel$getPerformance() < model.type$getPerformance() ){
@@ -161,27 +239,34 @@ D2MCS <- R6Class(
               private$bestClusterModel$save()
             }
             executedModel$saveAt(paste0(model.savePath,"/.executed"),i)
-          }else message("[D2MCS][INFO] Model '",model$name,"' has been previously trained\n")
+          }else message("[",class(self)[1],"][INFO] Model '",
+                        model$name,"' has been previously trained\n")
         }, executedModel = private$executedModels )
         
         private$bestModels$insertAt(i,private$bestClusterModel)
-        private$models.weights <- as.numeric(c( private$models.weights,private$bestClusterModel$getPerformance() ))
-        message("[D2MCS][INFO] Finish! \n")
+        private$models.weights <- as.numeric(c(private$models.weights,
+                                               private$bestClusterModel$getPerformance()))
+        message("[",class(self)[1],"][INFO] Finish! \n")
       }
-      if(!is.null(private$cluster.obj)) { stopCluster(private$cluster.obj); private$cluster.obj <- NULL }
+      if(!is.null(private$cluster.obj)) { 
+        stopCluster(private$cluster.obj)
+        private$cluster.obj <- NULL 
+      }
     },
     classify = function( test.set = NULL, voting.scheme, positive.class){
       if( !"Subset" %in% class(test.set)  )
-        stop("[D2MCS][ERROR] Test dataset missing or incorrect. Must be a Subset object\n")
+        stop("[",class(self)[1],"][ERROR] Test dataset missing or incorrect.",
+             "Must be a Subset object\n")
       
       if (missing(voting.scheme) || !"VotingScheme" %in% class(voting.scheme) )
-        stop("[D2MCS][ERROR] Voting Scheme missing or invalid\n")
+        stop("[",class(self)[1],"][ERROR] Voting Scheme missing or invalid\n")
       
       if ( is.null(positive.class) || !positive.class %in% levels(test.set$getClass()) )
-        stop("[D2MCS][ERROR] Positive class missing or invalid (must be: ",paste0(levels(test.set$getClass()),collapse=", "),"). Aborting...\n")
+        stop("[",class(self)[1],"][ERROR] Positive class missing or invalid",
+             "(must be: ",paste0(levels(test.set$getClass()),collapse=", "),"). Aborting...\n")
       
       if( is.null(private$bestModels) || private$bestModels$size() < 1 )
-        stop("[D2MCS][ERROR] Models were not trained. Please run 'Train' method first\n")
+        stop("[",class(self)[1],"][ERROR] Models were not trained. Please run 'Train' method first\n")
 
       message("[D2MCS][INFO] -------------------------------------------------------\n")
       message("[D2MCS][INFO] Starting classification operation\n")
@@ -385,6 +470,7 @@ D2MCS <- R6Class(
       models <- with(models,models[order(models$family,models$name),])
       models
     },
+    getName = function(){ class(self)[1] },
     cluster.conf = NULL,
     cluster.obj = NULL,
     availableModels = NULL,

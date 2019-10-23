@@ -34,7 +34,7 @@ GenericStrategy <- R6Class(
       private$heuristic <- heuristic
       private$configuration <- configuration
     },
-    getName = function() { class(self)[1]  },
+    getName = function() { class(self)[1] },
     getDescription = function() { private$description },
     getHeuristic = function() { private$heuristic },
     getConfiguration = function() { private$configuration },
