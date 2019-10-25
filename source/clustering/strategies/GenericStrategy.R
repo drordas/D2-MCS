@@ -50,7 +50,8 @@ GenericStrategy <- R6Class(
                                include.unclustered = FALSE )  {
       stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
     },
-    createTrain = function(subset, num.cluster = NULL, ...) {
+    createTrain = function(subset, num.cluster = NULL, num.groups = NULL,
+                           include.unclustered = FALSE) {
       stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
     },
     plot = function(dir.path = NULL, file.name = NULL, ...) {

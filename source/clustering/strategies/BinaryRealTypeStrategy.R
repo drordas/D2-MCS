@@ -161,7 +161,7 @@ BinaryRealTypeStrategy <- R6Class(
                                                                    private$subset$getClassName())) )
           }, class)
           
-          real.valid <- heuristic.values[complete.cases(rheuristic.values)]
+          real.valid <- rheuristic.values[complete.cases(rheuristic.values)]
           real.invalid <- setdiff(names(rheuristic.values), names(real.valid))
           real.sorted <- real.valid[order(real.valid, decreasing = TRUE)]
           
