@@ -31,8 +31,11 @@ source("source/clustering/plot/SpearmanPlot.R", chdir = TRUE)
 source("source/clustering/plot/SimplePlot.R", chdir = TRUE)
 
 source("source/clustering/strategies/StrategyConfiguration.R", chdir = TRUE)
+source("source/clustering/strategies/DependencyBasedStrategyConfiguration.R", chdir = TRUE)
+
 source("source/clustering/strategies/GenericStrategy.R", chdir = TRUE)
 source("source/clustering/strategies/SimpleStrategy.R", chdir = TRUE)
+source("source/clustering/strategies/DependencyBasedStrategy.R", chdir = TRUE)
 source("source/clustering/strategies/BinaryRealTypeStrategy.R", chdir = TRUE)
 
 #LOAD MODEL CLASSES

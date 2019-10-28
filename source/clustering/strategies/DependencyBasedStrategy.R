@@ -1,0 +1,782 @@
+library("R6")
+DependencyBasedStrategy <- R6Class(
+  classname = "DependencyBasedStrategy",
+  inherit = GenericStrategy,
+  portable = TRUE,
+  public = list(
+    initialize = function(subset, heuristic, configuration = DependencyBasedStrategyConfiguration$new()) {
+      if ( !inherits(subset, "Subset" ) ) {
+        stop("[", super$getName(), "][ERROR] Subset parameter must be defined as",
+             "'Subset' type")
+      }
+      if ( !is.list(heuristic) || length(heuristic) != 2 ) {
+        stop("[", super$getName(), "][ERROR] Heuristic parameter is not defined",
+             " or incorrect. Must contain two elements.")
+      }
+      
+      if ( !any(sapply(heuristic, inherits, "GenericHeuristic")) ) {
+        stop("[", super$getName() ,"][ERROR] Defined heuristics are not correct.",
+             " Must inherit from 'GenericHeuristic' class.")
+      }
+      if ( is.null(heuristic[[1]]) ) {
+        message("[", super$getName(), "][INFO] Heuristic for binary data not defined")
+      } else { 
+        message("[", super$getName(), "][INFO] Heuristic for binary data defined",
+                " as '", heuristic[[1]]$getName(), "'")
+      }
+      
+      if ( is.null(heuristic[[2]]) ) {
+        message("[", super$getName(),"][INFO] Heuristic for real data not defined")
+      } else {
+        message("[", super$getName(), "][INFO] Heuristic for real data defined",
+                " as '", heuristic[[2]]$getName(), "'")
+      }
+
+      if (!"StrategyConfiguration" %in% class(configuration)) {
+        stop("[DependencyBasedStrategy][ERROR] configuration parameter must be defined as 'StrategyConfiguration' type")
+      }
+      if (!exists("getBinaryCutoff", configuration)) {
+        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have getCutoffBinary method")
+      }
+      if (!exists("getRealCutoff", configuration)) {
+        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have getCutoffReal method")
+      }
+      if (!exists("tiebreak", configuration)) {
+        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have tiebreak method")
+      }
+      if (!exists("qualityOfCluster", configuration)) {
+        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have qualityOfCluster method")
+      }
+      if (!exists("isImprovingClustering", configuration)) {
+        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have isImprovingClustering method")
+      }
+      super$initialize(  subset = subset, heuristic = heuristic, 
+                         description = "<<Pending>>",configuration = configuration
+      )
+    },
+    execute = function(verbose = TRUE, ...) {
+
+      private$not.distribution[[1]] <- list()
+      private$not.clus.fea[[1]] <- list()
+      private$not.distribution[[2]] <- list()
+      private$not.clus.fea[[2]] <- list()
+      
+      private$best.distribution <- vector( mode = "list", length = 2 )
+      private$all.distribution <- vector( mode = "list", length = 2 )
+      private$not.distribution <- vector( mode = "list", length = 2 )
+      
+      binary.cutoff <- private$configuration$getBinaryCutoff()
+      binary.heuristic <- private$heuristic[[1]]
+      ##COMPUTING HEURISTIC FOR BINARY DATA
+      if ( !is.null(binary.heuristic) ) {
+        binary.data <- private$getBinaryFeatures(private$subset$getFeatures())
+        message("[", super$getName(), "][INFO] Using '", binary.heuristic$getName(),
+                "' heuristic to distribute binary features")
+        if ( nrow(binary.data) > 0 ) {
+          private$computeGrouping(binary.data, binary.heuristic, binary.cutoff, verbose, binary = T)
+          message("[", super$getName(), "][INFO] Computing the distributions to binary features with the strategy")
+          private$all.distribution[[1]] <- private$computeDistribution( binary.data,
+                                                                        binary.heuristic,
+                                                                        private$dep.fea[[1]], #dependent features grouping
+                                                                        private$indep.fea[[1]],  #independet features grouping
+                                                                        verbose )
+
+          bestK <- which.min( private$all.distribution[[1]]$deltha )
+          aux.dist <- unlist( private$all.distribution[[1]][bestK, ]$dist,
+                              recursive = FALSE )
+          private$best.distribution[[1]] <- data.frame( cluster = integer(),
+                                                        dist = I(list()) )
+
+          for ( i in 1:length(aux.dist) ) {
+            df <- data.frame( cluster = i,
+                              dist = I(list(aux.dist[[i]])) )
+            private$best.distribution[[1]] <- rbind(private$best.distribution[[1]], df)
+          }
+          if ( length(private$not.clus.fea[[1]]) > 0) {
+            message( "[", super$getName(), "][WARNING] ",
+                     length(private$not.clus.fea[[1]])," features were incompatible with '",
+                     private$heuristic[[1]]$getName(), "' heuristic." )
+            private$notDistribution[[1]] <- data.frame( cluster = 1,
+                                                        dist = I(list(private$not.clus.fea[[1]])))
+          }
+        } else {
+          message("[", super$getName(), "][INFO] Not binary features for clustering")
+          private$best.distribution[[1]] <- append( private$best.distribution[[1]],
+                                                    list(NULL) )
+          private$all.distribution[[1]] <- append( private$all.distribution[[1]],
+                                                   list(NULL) )
+        }
+      } else {
+        message("[", super$getName(), "][INFO] ", super$getName(),
+                " has not heuristic to binary features. Assuming one cluster by default")
+        private$all.distribution[[1]] <- data.frame( k = 1, homogeneity = 0,
+                                                     dist = I(list(names(binary.data))) )
+        private$best.distribution[[1]] <- data.frame( cluster = 1,
+                                                      dist = I(list(names(binary.data))) )
+      }
+      
+      real.cutoff <- private$configuration$getRealCutoff()
+      real.heuristic <- private$heuristic[[2]]
+      ##COMPUTING HEURISTIC FOR REAL DATA
+      if ( !is.null(real.heuristic) ) {
+        real.data <- private$getRealFeatures( private$subset$getFeatures() ) 
+        message("[", super$getName(), "][INFO] Using '", real.heuristic$getName(), 
+                "' heuristic to distribute real features")
+        if ( nrow(real.data) > 0 ) {
+          private$computeGrouping(real.data, real.heuristic, real.cutoff, verbose, binary = F)
+          message("[", super$getName(), "][INFO] Computing the distributions to real features with the strategy")
+          private$all.distribution[[2]] <- private$computeDistribution( real.data,
+                                                                        real.heuristic,
+                                                                        private$dep.fea[[2]], #dependent features grouping
+                                                                        private$indep.fea[[2]],  #independet features grouping
+                                                                        verbose )
+
+          bestK <- which.min( private$all.distribution[[2]]$deltha )
+          aux.dist <- unlist( private$all.distribution[[2]][bestK, ]$dist, 
+                              recursive = FALSE )
+          private$best.distribution[[2]] <- data.frame( cluster = integer(), 
+                                                        dist = I(list()) )
+          
+          for ( i in 1:length(aux.dist) ) {
+            df <- data.frame( cluster = i, 
+                              dist = I(list(aux.dist[[i]])) )
+            private$best.distribution[[2]] <- rbind( private$best.distribution[[2]], 
+                                                     df )
+          }
+          if ( length(private$not.clus.fea[[2]]) > 0) {
+            message( "[", super$getName(), "][WARNING] ",
+                     length(private$not.clus.fea[[2]])," features were incompatible with '",
+                     real.heuristic$getName(), "' heuristic." )
+            private$notDistribution[[2]] <- data.frame( cluster = 1, 
+                                                        dist = I(list(private$not.clus.fea[[2]])) )
+          }
+          
+        } else {
+          message("[", super$getName(), "][INFO] Not real features for clustering")
+          private$best.distribution[[2]] <- append( private$best.distribution[[2]], 
+                                                    list(NULL) )
+          private$all.distribution[[2]] <- append( private$all.distribution[[2]], 
+                                                   list(NULL) )
+        }
+      } else {
+        message("[", super$getName(), "][INFO] ", super$getName(),
+                " has not heuristic to real features. Assuming one cluster by default")  
+        private$all.distribution[[2]] <- data.frame( k = 1, homogeneity = 0, 
+                                                     dist = I(list(names(real.data))) )
+        private$best.distribution[[2]] <- data.frame( cluster = 1, 
+                                                      dist = I(list(names(real.data))) )
+      }
+    },
+    getDistribution = function(num.clusters = NULL, num.groups = NULL, 
+                               include.unclustered = FALSE) {
+      distribution <- list() 
+      if ( is.null(private$best.distribution) || 
+           is.null(private$all.distribution) || 
+           all(sapply(private$best.distribution,is.null)) || 
+           all(sapply(private$all.distribution,is.null)) ) {
+        stop("[",super$getName(),"][WARNING] Clustering not done or errorneous.",
+             " Returning NULL")
+      }
+      
+      if ( is.null(num.clusters) || !is.numeric(num.clusters) ) {
+        #message("[",super$getName(),"][INFO] Number of clusters not defined",
+        #        "or incorrect. Assuming best cluster distribution for both heuristics.")
+        dist.binary <- sapply(private$best.distribution[[1]]$dist, function(x) { x })
+        dist.real <- sapply(private$best.distribution[[2]]$dist, function(x) { x })
+      } else {
+        all.binary <- private$all.distribution[[1]]
+        all.real <- private$all.distribution[[2]]
+        
+        if ( length(num.clusters) >= length(private$all.distribution) ) {
+          num.clusters <- num.clusters[c(1:length(private$all.distribution))]
+        }else{
+          num.clusters <- c(num.clusters,rep(0,length(private$all.distribution) - length(num.clusters)))
+        }
+        
+        if ( !( num.clusters[1] %in% c(min(all.binary$k):max(all.binary$k)) ) ) {
+          message("[",super$getName(),"][WARNING] Number of clusters incorrect.",
+                  " Must be between ", min(all.binary$k)," and ", max(all.binary$k),
+                  ". Ignoring clustering for binary type features...")
+          dist.binary <- NULL
+        } else {
+          dist.binary <- unlist( all.binary[which(all.binary$k == num.clusters[1]), ]$dist, 
+                                 recursive = FALSE )
+        }
+        
+        if ( !( num.clusters[2] %in% c(min(all.real$k):max(all.real$k)) ) ) {
+          message("[",super$getName(),"][INFO] Number of clusters incorrect.",
+                  " Must be between ",min(all.real$k)," and ",max(all.real$k),
+                  ". Ignoring clustering for real type features...")
+          dist.real <- NULL
+        } else {
+          dist.real <- unlist( all.real[which(all.real$k == num.clusters[2]), ]$dist, 
+                               recursive = FALSE )
+        }
+      }
+      
+      if ( !is.null(num.groups) && is.numeric(num.groups) ) {
+        if ( length(num.groups) >= length(private$all.distribution) )  {
+          num.groups <- num.groups[c(1:length(private$all.distribution))]
+        } else {
+          num.groups <- c(num.groups,rep(0,length(private$all.distribution) - length(num.groups)))
+        }
+        if ( !( num.groups[1] %in% c(1:length(dist.binary)) ) ) {
+          message( "[",super$getName(),"][WARNING] Number of clusters incorrect.",
+                   " Returning all groups ..." )
+          
+        } else { dist.binary <- dist.binary[num.groups[1]] }
+        
+        if ( !( num.groups[2] %in% c(1:length(dist.real)) ) ) {
+          message( "[",super$getName(),"][WARNING] Number of clusters incorrect.",
+                   " Returning all groups ..." )
+          
+        } else { dist.real <- dist.real[num.groups[2]] }
+      }
+      
+      distribution <- append(distribution, c(dist.binary,dist.real) )
+      
+      if ( isTRUE(include.unclustered) && nrow(private$not.distribution) ) {
+        distribution <- append(distribution, lapply(private$not.distribution$dist, 
+                                                   function(x) {x} ))
+      }
+      return(distribution)
+    },
+    createTrain = function(subset, num.clusters = NULL, num.groups=NULL,
+                           include.unclustered = FALSE) {
+      if ( !inherits(subset,"Subset") ) {
+        stop("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object")
+      }
+      
+      if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
+        stop("[",super$getName(),"][ERROR] Clustering not done or erroneous. Aborting...")
+      }
+      
+      distribution <- self$getDistribution( num.clusters = num.clusters, 
+                                            num.groups = num.groups,
+                                            include.unclustered = include.unclustered )
+      
+      train.dist <- lapply( distribution, function(group) {
+        subset$getFeatures(feature.names = group)
+        instances <- subset$getFeatures(feature.names = group)
+      } )
+      
+      TrainSet$new( cluster.dist = train.dist, class.name = subset$getClassName(),
+                    class.values = subset$getClassValues(),
+                    positive.class = subset$getPositiveClass() )
+    },
+    plot = function(dir.path = NULL, file.name = NULL, ...) {
+
+      binary.summary <- data.frame( k = private$all.distribution[[1]]$k,
+                                    dispersion = private$all.distribution[[1]]$deltha,
+                                    row.names = NULL )
+      
+      real.summary <- data.frame( k = private$all.distribution[[2]]$k,
+                                  dispersion = private$all.distribution[[2]]$deltha,
+                                  row.names = NULL )
+      
+      if ( nrow(binary.summary) > 0 && nrow(real.summary) > 0) {
+        plot <- grid.arrange(BinaryPlot$new()$plot(binary.summary), 
+                             BinaryPlot$new()$plot(real.summary), 
+                             nrow = 2, ncol = 1)
+      } else {
+        if ( nrow(binary.summary) > 0 ) {
+          plot <- BinaryPlot$new()$plot(binary.summary)
+        } else { plot <- BinaryPlot$new()$plot(real.summary) } 
+      }
+      
+      if (!is.null(dir.path)) {
+        if (!dir.exists(dir.path)) {
+          dir.create(dir.path, recursive = TRUE)
+        }
+        ggsave( paste0(file.path(dir.path, file.name), ".pdf"), device = "pdf", 
+                plot = plot, limitsize = FALSE )
+        message("[", super$getName(), "][INFO] Plot has been succesfully saved at: ",
+                file.path(dir.path,file.name,".pdf"))
+      } else { invisible(show(plot)) }
+    },
+    saveCSV = function(dir.path, name = NULL, num.clusters = NULL) {
+      if ( missing(dir.path) )
+        stop("[",super$getName(),"][INFO] Path not defined. Aborting.")
+      
+      if ( is.null(name)) {
+        name <- private$heuristic[[1]]$getName()
+        message("[", super$getName(), "][INFO] File name not defined. Using '",
+                name, ".csv'.")
+      }
+      
+      if ( is.null(private$all.distribution) || 
+           length(private$all.distribution) == 0 ) {
+        stop("[", super$getName(), "][WARNING] Clustering not done or errorneous.",
+             " Returning NULL")
+      }
+      
+      if (!dir.exists(dir.path)) { 
+        dir.create(dir.path, recursive = TRUE) 
+        if (dir.exists(dir.path)) {
+          message("[", super$getName(), "][INFO] Directory '", dir.path,
+                  "'has been succesfully created")
+        } else { stop("[", super$getName(), "][ERROR] Cannot create directory '",
+                      dir.path, "'.") }
+      }
+      
+      if ( is.null(num.clusters) ) {
+        message( "[", super$getName(), "][WARNING] Number of clusters not defined.",
+                 " Saving all cluster configurations" )
+        num.clusters <- c( (max(private$all.distribution[[1]]$k) - 1),
+                           (max(private$all.distribution[[2]]$k) - 1) )
+      }else{
+        if ( length(num.clusters) >= length(private$all.distribution) ) {
+          num.clusters <- num.clusters[c(1:length(private$all.distribution))]
+        }else{ num.clusters <- sapply(private$all.distribution, 
+                                      function(x) {nrow + 1 }) }
+      }
+      
+      all.binary <- private$all.distribution[[1]]
+      all.real <- private$all.distribution[[2]]
+      
+      if ( !(num.clusters[1] %in% c(1:nrow(all.binary)) )) {
+        message("[", super$getName(), "][WARNING] Number of clusters incorrect.",
+                " Must be between ", min(all.binary$k), " and ", max(all.binary$k),
+                ". Ignoring clustering for binary type features...")
+        dist.binary <- data.frame( k = numeric(), dispersion = numeric(),
+                                   feature_type = character() )
+      } else { 
+        dist.binary <- data.frame(k = all.binary[c(1:(num.clusters[1] - 1) ), "k"],
+                                  dispersion = all.binary[c(1:(num.clusters[1] - 1) ), "deltha"],
+                                  feature_type = "binary", row.names = NULL) 
+      }
+      
+      if ( !(num.clusters[2] %in% c(1:nrow(all.real))) ) {
+        message("[", super$getName(), "][INFO] Number of clusters incorrect.",
+                " Must be between ", min(all.real$k), " and ", max(all.real$k),
+                ". Ignoring clustering for real type features...")
+        dist.real <- data.frame( k = numeric(),dispersion = numeric(),
+                                 feature_type = character() )
+      }else{
+        dist.real <- data.frame(k = all.real[c(1:(num.clusters[2] - 1) ), "k"],
+                                dispersion = all.real[c(1:(num.clusters[2] - 1) ), "deltha"],
+                                feature_type = "real", row.names = NULL) 
+      }
+      
+      write.table( rbind(dist.binary,dist.real), 
+                   file = file.path(dir.path,paste0(name,".csv")),
+                   row.names = FALSE, col.names = TRUE, sep = ";")
+    }
+  ),
+  private = list(
+    not.clus.fea = vector( mode = "list", length = 2 ),
+    dep.fea = vector( mode = "list", length = 2 ),#dependentFeatures
+    indep.fea = vector( mode = "list", length = 2 ),#independentFeatures
+    computeDistribution = function(corpus, heuristic, dep.fea.groups, indep.fea.list, verbose) {
+      #Initializing variables ----
+
+      heu <- heuristic 
+      cluster.data <- data.frame( k = integer(),
+                                  deltha = numeric(),
+                                  dist = I(list()) )
+
+      min.num.clusters <- private$configuration$minNumClusters( features = dep.fea.groups )
+      max.num.clusters <- private$configuration$maxNumClusters( features = dep.fea.groups )
+
+      mean.indep.fea <- c()
+      mean.indep.tar <- c()
+      
+      positive.class <- private$subset$getPositiveClass()
+      class.values <- private$subset$getClassValues()
+      class <- to.dummy( class.values,
+                        positive.class )[, which(levels(class.values) == positive.class)]
+      class.name <- private$subset$getClassName()
+      
+      all.fea.dep <- unique(unlist(dep.fea.groups))
+
+      #Computing the metrics with independent features ----
+
+      message(white("[", super$getName(), "][INFO] Computing metric of dependency between independent features and the target"))
+      message(white("[", super$getName(), "][INFO] Computing metric of dependency between independent features (", length(indep.fea.list), ")"))
+      
+      if ( isTRUE( verbose ) ) {
+        pb <- txtProgressBar( min = 0, max = (length(indep.fea.list)), style = 3 )
+      }
+      
+      for (feature1 in 1:(length(indep.fea.list) - 1)) {
+        #Updates metric of dependecy between features and target
+        result.heuristic <- abs( heu$heuristic(corpus[, indep.fea.list[[feature1]]],
+                                               class,
+                                               column.names = c(indep.fea.list[[feature1]],
+                                                                class.name)) )
+        
+        mean.indep.tar <- c(mean.indep.tar, result.heuristic)
+        #Updates metric of dependecy between features
+        for (feature2 in (feature1 + 1):length(indep.fea.list)) {
+          result.heuristic <- abs(heu$heuristic(corpus[, indep.fea.list[[feature1]]],
+                                                corpus[, indep.fea.list[[feature2]]],
+                                                column.names = c(indep.fea.list[[feature1]],
+                                                                 indep.fea.list[[feature2]])))
+          mean.indep.fea <- c(mean.indep.fea, result.heuristic)
+        }
+        if ( isTRUE( verbose ) ) { setTxtProgressBar(pb, (feature1 - 1)) }
+      }
+      
+      #Computing metric beetween class and the last independent feature
+      result.heuristic <- abs( heu$heuristic(corpus[, indep.fea.list[[length(indep.fea.list)]]],
+                                             class,
+                                             column.names = c(names(corpus)[indep.fea.list[[length(indep.fea.list)]]],
+                                                              className)) )
+      if ( isTRUE( verbose ) ) { setTxtProgressBar( pb, (length(indep.fea.list)) ) }
+      if ( isTRUE( verbose ) ) { close(pb) }
+      mean.indep.tar <- mean( c(mean.indep.tar, result.heuristic) )
+      mean.indep.fea <- mean( mean.indep.fea )
+      message(white("[", super$getName(), "][INFO] Metric of dependency between independent features and the target:", mean.indep.tar))
+      message(white("[", super$getName(), "][INFO] Metric of dependency between independent features", mean.indep.fea))
+      message("---------------------------------------------------------------")
+
+      #Clustering dependent features... ----
+      message(white("[", super$getName(), "][INFO] Start of clustering dependent features..."))
+      message(white("[", super$getName(), "][INFO] Checking set of clusters:", min.num.clusters, ":", max.num.clusters))
+      for (actual.num.cluster in min.num.clusters:max.num.clusters) {
+        message(white("[", super$getName(), "][INFO] Checking next set of clusters:", actual.num.cluster, "/", max.num.clusters))
+        ##########################Independent features...#########################
+        #Initializing clusters with independent features ----
+
+        message(green("[", super$getName(), "][INFO] Independent elements:", length(indep.fea.list)))
+        fea.indep.dist.clus <- vector( mode = "list", length = length(indep.fea.list) )
+        fea.indep.dist.clus <- rep_len( list(list()), length(indep.fea.list) )
+        names(fea.indep.dist.clus) <- indep.fea.list
+        ##Adds independent features to all clusters
+        fea.indep.dist.clus <- lapply(fea.indep.dist.clus, function(fea, actual.num.cluster){
+          list(1:actual.num.cluster)
+        }, actual.num.cluster) 
+
+        #Initializing metrics of independent features
+        metrics.indep <- list(
+          dep.fea = vector( mode = "numeric", length = actual.num.cluster ), #dependencyFeatures
+          dep.tar  = vector( mode = "numeric", length = actual.num.cluster ) #dependencyTarget
+        )
+        names(metrics.indep$dep.fea) <- paste("Cluster", 1:actual.num.cluster)
+        names(metrics.indep$dep.tar) <- paste("Cluster", 1:actual.num.cluster)
+        ##Updates metric of dependecy between features
+        metrics.indep[["dep.fea"]] <- sapply(metrics.indep[["dep.fea"]], function(fea, actual.num.cluster){
+          mean.indep.fea
+        }, actual.num.cluster) 
+        ##Updates metric of dependecy between features and target
+        metrics.indep[["dep.tar"]] <- sapply(metrics.indep[["dep.tar"]], function(fea, actual.num.cluster){
+          mean.indep.tar
+        }, actual.num.cluster) 
+        message(white("[", super$getName(), "][INFO] Added independent features to all clusters"))
+
+        #Dependet features
+        #Initializing clusters of dependent features ----
+        message(green("[", super$getName(), "][INFO] Dependent elements:", length(all.fea.dep)))
+        fea.dep.dist.clus <- vector( mode = "list", length = length(all.fea.dep) )
+        fea.dep.dist.clus <- rep_len(list(list()),length(all.fea.dep))
+        names(fea.dep.dist.clus) <- all.fea.dep
+        metrics.dep <- list(
+          dep.fea = vector( mode = "numeric", length = actual.num.cluster ),#dependencyFeatures
+          dep.tar  = vector( mode = "numeric", length = actual.num.cluster ) #dependencyTarget
+        )
+        names(metrics.dep$dep.fea) <- paste("Cluster", 1:actual.num.cluster)
+        names(metrics.dep$dep.tar) <- paste("Cluster", 1:actual.num.cluster)
+        #Adding feature ----
+        ##All features that have dependency are checked
+        if (isTRUE(verbose)) {
+          message(white("[", super$getName(), "][INFO] Beginning add features"))
+          pb <- txtProgressBar(min = 0, max = (length(all.fea.dep)), style = 3 )
+        }
+        for (fea in all.fea.dep) {
+          if (isTRUE(verbose)) { setTxtProgressBar(pb, (which(fea == all.fea.dep))) }
+          ##Obtains the subgroups where feature are in the list of dependent feature groups
+          pos.groups.list <- lapply(names(dep.fea.groups), function(pos, fea, dep.fea.groups) {
+            if (fea %in% dep.fea.groups[[pos]]) { pos }
+          }, fea, dep.fea.groups)
+          pos.groups.list <- as.integer(pos.groups.list[lengths(pos.groups.list) != 0])
+          clus.candidates <- 1:actual.num.cluster
+          ##Groups containing the current characteristic are traversed to
+          ##get the candidate clusters
+          for (group in dep.fea.groups[pos.groups.list]) {
+            for (fea.group in group) {
+              if (fea.group == fea) {
+                next
+              }
+              clus.candidates <- setdiff(clus.candidates,
+                                         fea.dep.dist.clus[[fea.group]])
+              if (length(clus.candidates) == 0) {
+                break
+              }
+            }
+          }
+          ##If there is a single candidate cluster, the element is introduced into it
+          if (length(clus.candidates) == 1) {
+            fea.dep.dist.clus[[fea]] <- c(fea.dep.dist.clus[[fea]],
+                                          clus.candidates[[1]])
+          } else {
+            ##In the case that no candidate clusters have been found, it is looking
+            ##for the best option among all.
+            if (length(clus.candidates) == 0) {
+              clus.candidates <- 1:actual.num.cluster
+            }
+            # message(blue("[", super$getName(), "][INFO] Element", fea, "tiebreak: clusters candidates", paste(clus.candidates, collapse = ",")))
+            fea.dep.dist.clus[[fea]] <- private$configuration$tiebreak(fea,
+                                                                       clus.candidates,
+                                                                       fea.dep.dist.clus,
+                                                                       corpus,
+                                                                       heu)
+          }
+          # message(blue("[", super$getName(), "][INFO] Element", fea, "added to cluster", paste(fea.dep.dist.clus[[fea]], collapse = ",")))
+          #Computing metrics of dependent features on clusters ----
+          clus.recal.metrics <- fea.dep.dist.clus[[fea]]
+          result.heuristic.tar <- abs(heu$heuristic(corpus[, fea],
+                                                    class,
+                                                    column.names = c(fea,
+                                                                     class.name)))
+          for (clus in clus.recal.metrics) {
+            ##Update metric of dependecy between features and target
+            numerator <- metrics.dep[["dep.tar"]][[clus]] * (length(which(unlist(fea.dep.dist.clus) == clus)) - 1) + result.heuristic.tar
+            denominator <- length(which(unlist(fea.dep.dist.clus) == clus))
+            metrics.dep[["dep.tar"]][[clus]] <- numerator / denominator
+            mean.fea <- c()
+            for (fea.clus in names(fea.dep.dist.clus)) {
+              if (clus %in% fea.dep.dist.clus[[fea.clus]]) {
+                result.heuristic.fea <- abs(heu$heuristic(corpus[, fea],
+                                                          corpus[, fea.clus],
+                                                          column.names = c(fea,
+                                                                           fea.clus)))
+                mean.fea <- c(mean.fea, result.heuristic.fea)
+              }
+            }
+            #Update metric of dependecy between features of the cluster
+            numerator <- metrics.dep[["dep.fea"]][[clus]] * (length(which(unlist(fea.dep.dist.clus) == clus)) - 1) + mean(mean.fea)
+            denominator <- length(which(unlist(fea.dep.dist.clus) == clus))
+            metrics.dep[["dep.fea"]][[clus]] <- numerator / denominator
+          }
+        }
+        if (isTRUE(verbose)) { setTxtProgressBar(pb, (length(all.fea.dep))) }
+        if (isTRUE(verbose)) { close(pb) }
+
+        #Computing final distribution ----
+        message(white("[", super$getName(), "][INFO] Added dependent features to all clusters (", length(all.fea.dep), ")"))
+  
+        metrics <- list(
+          dep.fea = vector( mode = "numeric", length = actual.num.cluster ),#dependencyFeatures
+          dep.tar  = vector( mode = "numeric", length = actual.num.cluster )#dependencyTarget
+        )
+        metrics$dep.fea <- c(metrics.dep$dep.fea,
+                             metrics.indep$dep.fea)
+        metrics$dep.tar <- c(metrics.dep$dep.tar,
+                             metrics.indep$dep.tar)
+        
+        features.dis.actual.cluster <- append(fea.dep.dist.clus,
+                                              fea.indep.dist.clus)
+        
+        final.dist.actual.cluster <- vector( mode = "list", length = length(1:actual.num.cluster) )
+        for (fea in names(features.dis.actual.cluster)) {
+          clus.dist <- features.dis.actual.cluster[[fea]][[1]]
+          for (clus in clus.dist) {
+            final.dist.actual.cluster[[clus]] <- append(final.dist.actual.cluster[[clus]], fea)
+          }
+        }
+        aux <- paste0("[", super$getName(), "][INFO] Number of clusters:\t")
+        for (clus in 1:length(final.dist.actual.cluster)) {
+          aux <- paste0(aux, clus, "\t")
+        }        
+        message(blue(aux))
+        aux <- paste0("[", super$getName(), "][INFO] Number of features:\t")
+        for (clus in 1:length(final.dist.actual.cluster)) {
+          aux <- paste0(aux, length(final.dist.actual.cluster[[clus]]), "\t")
+        }   
+        message(blue(aux))
+        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "independencyTarget:", mean(metrics.indep[["dep.tar"]]))))
+        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "independencyFeatures:", mean(metrics.indep[["dep.fea"]]))))
+        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "dependencyTarget:", mean(metrics.dep[["dep.tar"]]))))
+        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "dependencyFeatures:", mean(metrics.dep[["dep.fea"]]))))
+        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "Target:", mean(metrics[["dep.tar"]]))))
+        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "Features:", mean(metrics[["dep.fea"]]))))
+        
+        #Quality of the distribution of features between the clusters
+        quality.cluster <- private$configuration$qualityOfCluster(final.dist.actual.cluster,
+                                                                  metrics)
+        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, ":", quality.cluster)))
+
+        cluster.data <- rbind(cluster.data,
+                              data.frame(k = actual.num.cluster,
+                                         deltha = quality.cluster,
+                                         dist = I(list(final.dist.actual.cluster))))
+        #Checking the progression of the groups, taking into account deltha ----
+        clusters.deltha <- c()
+        clusters.deltha <- cluster.data$deltha
+        names(clusters.deltha) <- cluster.data$k
+        if (!private$configuration$isImprovingClustering(clusters.deltha)) {
+          message(yellow("[", super$getName(), "][INFO] Clustering is not considered to improve from the number of clusters:", actual.num.cluster))
+          message(red("[", super$getName(), "][WARNING] Stopping to check the following clusters (", min.num.clusters, ":", max.num.clusters, ")"))
+          return(cluster.data)
+        }
+      }
+      cluster.data
+    },
+    computeGrouping = function(corpus, heuristic, cutoff, verbose, binary = TRUE) {
+      names.corpus <- names(corpus)
+      heu <- heuristic
+      dep.fea <- list()
+      indep.fea <- list()
+      not.clus.fea <- list()
+      if ( isTRUE(verbose) ) {
+        message("[", self$getName(),"][INFO] Performing feature grouping through dependency between them using '",
+                heu$getName(),"' heuristic")
+      }
+      for (i in 1:(length(corpus) - 1)) {
+        for (j in (i + 1):length(corpus)) {
+          val.heu <- abs( heu$heuristic(corpus[, i],
+                                        corpus[, j],
+                                        column.names = c(names.corpus[i],
+                                                         names.corpus[j])) )
+          #INVALID VALUE OF HEURISTIC, FEATURE IS DISCARDED
+          if ( is.na(val.heu) ) {
+            not.clus.fea <- append( not.clus.fea,
+                                    names.corpus[i] )
+            break
+          }
+          if ( val.heu >= cutoff ) {
+            added <- FALSE
+            included <- FALSE
+            pos.list <- 1
+            while ( pos.list < length(dep.fea) ) {
+              #If "i" and "j" are not in the actual group, continue the checking to
+              #the next group.
+              if ( names.corpus[[i]] %in% dep.fea[[pos.list]] ||
+                   names.corpus[[j]] %in% dep.fea[[pos.list]] ) {
+                #If there is "i" in the sublist, checks the dependent.
+                if ( names.corpus[[i]] %in% dep.fea[[pos.list]] ) {
+                  #If "j" is not included in the group, checks the dependence with the
+                  #all elements on the list.
+                  if ( !names.corpus[[j]] %in% dep.fea[[pos.list]] ) {
+                    for (value.sub.list in  dep.fea[[pos.list]]) {
+                      dependent.in.the.list <- TRUE
+                      if ( names.corpus[[i]] != value.sub.list ) {
+                        val.heu <- abs( heu$heuristic(corpus[, j],
+                                                      corpus[, value.sub.list],
+                                                      column.names = c(names.corpus[j],
+                                                                       names.corpus[value.sub.list])) )
+                        if ( is.na(val.heu) ) {
+                          not.clus.fea <- append( not.clus.fea,
+                                                  names.corpus[j] )
+                          break
+                        }
+                        if ( val.heu < cutoff ) {
+                          dependent.in.the.list <- FALSE
+                          break
+                        }
+                      }
+                    }
+                    #If "j" is dependent with all elements on the list and it is not
+                    #included on the subgroup, it is added to the sublist.
+                    if ( dependent.in.the.list &
+                         !names.corpus[[j]] %in% dep.fea[[pos.list]] ) {
+                      dep.fea[[pos.list]] <- append( dep.fea[[pos.list]],
+                                                     names.corpus[[j]])
+                      added <- TRUE
+                      if ( isTRUE(verbose) ) {
+                        message(blue("[", self$getName(),"][INFO] Added:",
+                                     names.corpus[[j]],
+                                     "to an existent group. Group",
+                                     pos.list,
+                                     "(Actual column:", i, ")"))
+                      }
+                    }
+                  } else {
+                    included <- TRUE
+                  }
+                }
+              }
+              pos.list <- pos.list + 1
+            }
+            #If there are not any group which all colums dependent with "i" and "j".
+            #And, it is already included in some group.
+            if ( !added & !included ) {
+              aux <- vector( mode = "list", length = 1 )
+              aux[[1]] <- append( aux[[1]],
+                                  names.corpus[[i]] )
+              aux[[1]] <- append( aux[[1]],
+                                  names.corpus[[j]] )
+              dep.fea <- append( dep.fea,
+                                 aux )
+              if ( isTRUE(verbose) ) {
+                message(silver("[", self$getName(),"][INFO] New group(",
+                               length(dep.fea), "):",
+                               names(corpus)[[i]], "-",
+                               names.corpus[[j]],
+                               "(Actual column:", i, ")"))
+              }
+            }
+          }
+        }
+        
+        if ( is.na(val.heu) ) {
+          not.clus.fea <- append( not.clus.fea,
+                                  names.corpus[i] )
+          if ( isTRUE(verbose) ) {
+            message(magenta("[", self$getName(),"][INFO] Column",
+                            names.corpus[[i]],
+                            "no clustering",
+                            "(Actual column:", i, ")"))
+          }
+          next
+        }
+        
+        if ( !names.corpus[[i]] %in% unlist(dep.fea) ) {
+          indep.fea <- append( indep.fea,
+                               names.corpus[[i]] )
+          if ( isTRUE(verbose) ) {
+            message(green("[", self$getName(),"][INFO] Column",
+                          names.corpus[[i]],
+                          "independent",
+                          "(Actual column:", i, ")"))
+          }
+        } else {
+          if ( isTRUE(verbose) ) {
+            message(cyan("[", self$getName(),"][INFO] Column",
+                         names.corpus[[i]],
+                         "dependent",
+                         "(Actual column:", i, ")"))
+          }
+        }
+      }
+      
+      #CHECKING LAST FEATURES
+      if ( !names(corpus)[[length(corpus)]] %in% unlist(dep.fea) ) {
+        indep.fea <- append( indep.fea,
+                             names.corpus[[length(corpus)]] )
+        if ( isTRUE(verbose) ) {
+          message(green("[", self$getName(),"][INFO] Column", 
+                        names.corpus[[length(corpus)]], "independent",
+                        "(Actual column:", length(corpus), ")"))
+        }
+      } else {
+        if ( isTRUE(verbose) ) {
+          message(cyan("[", self$getName(),"][INFO] Column", 
+                       names.corpus[[length(corpus)]], "dependent",
+                       "(Actual column:", length(corpus), ")"))
+        }
+      }
+      if ( binary ) {
+        private$indep.fea[[1]] <- indep.fea
+        private$dep.fea[[1]] <- dep.fea
+        private$not.clus.fea[[1]] <- append( private$not.clus.fea[[1]], 
+                                             not.clus.fea )
+        names(private$dep.fea[[1]]) <- 1:length(private$dep.fea[[1]])
+        names(private$indep.fea[[1]]) <- 1:length(private$indep.fea[[1]])
+      } else {
+        private$indep.fea[[2]] <- indep.fea
+        private$dep.fea[[2]] <- dep.fea
+        private$not.clus.fea[[2]] <- append( private$not.clus.fea[[2]], 
+                                             not.clus.fea )
+        names(private$dep.fea[[2]]) <- 1:length(private$dep.fea[[2]])
+        names(private$indep.fea[[2]]) <- 1:length(private$indep.fea[[2]])
+      }
+    },
+    getBinaryFeatures = function(data){
+      Filter( function(x) { all(levels(factor(x)) %in% c("0","1")) },  data )
+    },
+    getRealFeatures = function(data){
+      Filter( function(x) { !all(levels(factor(x)) %in% c("0","1")) }, data )
+    }
+  )
+)
