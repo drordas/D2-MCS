@@ -145,14 +145,17 @@ SimpleStrategy <- R6Class(
       summary <- data.frame(k = private$all.distribution$k,
                             dispersion = private$all.distribution$deltha,
                             row.names = NULL)
-      plot <- BinaryPlot$new()$plot(summary)
+      plot <- BinaryPlot$new()$plot(binary.summary) + 
+                  labs(title = "Binary Data") + theme_light() + 
+                  theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
       if (!is.null(dir.path)) {
         if (!dir.exists(dir.path)) {
           dir.create(dir.path, recursive = TRUE)
         }
         ggsave( paste0(file.path(dir.path, file.name), ".pdf"), device = "pdf", 
                 plot = plot, limitsize = FALSE )
-        message("[",super$getName(),"][INFO] Plot has been succesfully saved at: ",file.path(dir.path,file.name,".pdf"))
+        message("[",super$getName(),"][INFO] Plot has been succesfully saved",
+                "at: ",file.path(dir.path,file.name,".pdf"))
       } else {  invisible(show(plot)) }
     },
     saveCSV = function(dir.path, name=NULL, num.clusters=NULL){

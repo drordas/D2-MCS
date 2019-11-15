@@ -346,13 +346,22 @@ BinaryRealTypeStrategy <- R6Class(
                                   row.names = NULL )
       
       if( nrow(binary.summary) > 0 && nrow(real.summary) > 0){
-        plot <- grid.arrange(BinaryPlot$new()$plot(binary.summary), 
-                     BinaryPlot$new()$plot(real.summary), 
-                     nrow = 2, ncol = 1)
+        plot <- grid.arrange(
+                      BinaryPlot$new()$plot(binary.summary) + 
+                       labs(title = "Binary Data") + theme_light() + 
+                       theme(axis.text.x = element_text(angle = 90, hjust = 0.5)), 
+                      GenericPlot$new()$plot(real.summary) + 
+                       labs(title = "Real Data") + theme_light() + 
+                       theme(axis.text.x = element_text(angle = 90, hjust = 0.5)), 
+                       nrow = 2, ncol = 1 )
       }else{
         if(nrow(binary.summary) > 0){
-          plot <- BinaryPlot$new()$plot(binary.summary)
-        }else {plot <- BinaryPlot$new()$plot(real.summary)} 
+          plot <- BinaryPlot$new()$plot(binary.summary) + 
+                    labs(title = "Binary Data") + theme_light() + 
+                    theme(axis.text.x = element_text(angle= 90, hjust= 0.5))
+        }else { plot <- BinaryPlot$new()$plot(binary.summary) + 
+                          labs(title = "Real Data") + theme_light() + 
+                          theme(axis.text.x = element_text(angle= 90, hjust= 0.5)) } 
       }
       
       if (!is.null(dir.path)) {

@@ -4,71 +4,77 @@ Prediction <- R6Class(
   portable = TRUE,                   
   public = list(
     initialize = function(model, class.values, positive.class){
-      if (!"ModelData" %in% class(model) )
-        stop("[Prediction][ERROR] Parameter model must be defined as 'ModelData' Object. Aborting... \n")
+      if ( !inherits(model,"list") || length(model) != 5 )
+        stop("[",class(self)[1],"][ERROR] Model must be defined as a list of four ",
+             "elements. Aborting...")
       
       if (length(class.values) != 2 )
-        stop("[Prediction][ERROR] Incorrect argument. Class should be binary. Aborting... \n")
+        stop("[",class(self)[1],"][ERROR] Incorrect argument. Target class", 
+             "should be binary. Aborting... ")
       
-      if (length(positive.class) != 1)
-        stop("[Prediction][ERROR] Incorrect argument. Positive class values should be a character string. Aborting... \n")
-      
-      private$class.results <- NULL
-      private$prob.results <- NULL
-      private$binary.results <- NULL
-      private$model.name <- model$getModelMethod()
-      private$model.performance <- model$getBestModelPerformance()
-      private$model.trained <- model$getTrainModel()
-      private$model.pkgs <- model$getModelPkgs()
-      private$class.values <- class.values
+      if (!is.character(positive.class) && length(positive.class) != 1)
+        stop("[",class(self)[1],"][ERROR] Incorrect argument. ",
+             "Positive class values should be a character string. Aborting...")
+      private$results <- list(raw=NULL, prob=NULL, bin=NULL)
+      private$model <- model
       private$positive.class <- positive.class
-      private$negative.class <- class.values[which(class.values != positive.class)]
+      private$negative.class <- setdiff(class.values,positive.class)
     },
-    execute = function( pred.values ){
-      if( !missing(pred.values) && !is.null(pred.values) ){
-        loadPackages(private$model.pkgs)
-        private$class.results <- predict(object = private$model.trained, newdata=pred.values, type="raw" )
-        private$prob.results <- predict(object = private$model.trained, newdata=pred.values, type="prob" )
-        private$binary.results <- as.numeric( as.character( factor( private$class.results,
-                                                                    levels=c(private$negative.class,private$positive.class), 
-                                                                    labels = c(0, 1) ) ) )
-        #unloadPackages(private$model.pkgs)
+    execute = function(pred.values){
+      if( !missing(pred.values) && !is.null(pred.values) && 
+          inherits(pred.values,"data.frame") )
+      {
+        loadPackages(private$model$model.libs)
+        private$results$raw <- predict(object = private$model$model.data, 
+                                       newdata=pred.values, type="raw" )
+        private$results$prob <- predict(object = private$model$model.data, 
+                                        newdata=pred.values, type="prob" )
+        col.index <- which(levels(private$results$raw)==private$positive.class)
+        private$results$bin <- varhandle::to.dummy(private$results$raw, 
+                                                   private$positive.class)[,col.index]
       }
-      else stop("[Prediction][ERROR] Parameter pred.values is missing or empty\n")
+      else stop("[",class(self)[1],"][ERROR] Prediction values are missing or ",
+                "incorrect. Aborting..")
     },
-    getClassPrediction = function(){
-      private$class.results
+    getPrediction = function(type=NULL, target=NULL){
+      if( is.null(type) || !type %in% c("raw","prob","bin") ){
+        message(yellow(paste0("[",class(self)[1],"][WARNING] Probability type ",
+                              "missing or incorrect. Should be 'raw', 'prob' ",
+                              "or 'bin'. Assuming 'raw' by default")))
+        type <- "raw"
+      }
+      class.values <- c(private$positive.class,private$negative.class)
+      
+      switch (type,
+        "prob"= {
+          if(is.null(target) || !(target %in% class.values) ){
+            message(yellow(paste0("[",class(self)[1],"][WARNING] Target not ",
+                                  "specified or invalid. Using '",
+                                  private$positive.class,"' as default value")))
+            target <- private$positive.class
+          }
+          private$results$prob[,target]},
+        "bin" = {
+          if( is.null(target) || !(target %in% class.values ) ){
+            message(yellow(paste0("[",class(self)[1],"][WARNING] Target not ",
+                                  "specified or invalid. Using '",
+                                  private$positive.class,"' as default value")))
+            target <- private$positive.class
+          }
+          if (target %in% private$positive.class)
+            private$results$bin
+          else abs(private$results$bin-1)
+          },
+        "raw" = {private$results$raw}
+      )
     },
-    getBinaryPrediction = function(){
-      private$binary.results
-    },
-    getProbPrediction = function(){
-      private$prob.results
-    },
-    getModelName = function(){
-      private$model.name
-    },
-    getModelPerformance = function(){
-      private$model.performance
-    },
-    getPositiveClass = function(){
-      private$positive.class
-    },
-    getNegativeClass = function(){
-      private$negative.class
-    }
+    getModelName = function(){ private$model$model.name },
+    getModelPerformance = function(){ private$model$model.performance }
   ),
   private = list(
-    model.pkgs = NULL,
-    model.name = NULL,
-    model.performance = NULL,
-    model.trained = NULL,
-    class.results = NULL,
-    binary.results = NULL,
-    class.values = NULL, 
+    results = NULL,
+    model = NULL,
     positive.class = NULL,
-    negative.class = NULL,
-    prob.results = NULL,
-    pred.type = NULL
+    negative.class = NULL
   )
 )

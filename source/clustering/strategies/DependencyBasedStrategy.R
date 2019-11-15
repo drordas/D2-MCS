@@ -383,8 +383,8 @@ DependencyBasedStrategy <- R6Class(
       
       positive.class <- private$subset$getPositiveClass()
       class.values <- private$subset$getClassValues()
-      class <- to.dummy( class.values,
-                        positive.class )[, which(levels(class.values) == positive.class)]
+      col.index <- which(levels(class.values)==positive.class)
+      class <- varhandle::to.dummy( class.values, positive.class )[,col.index]
       class.name <- private$subset$getClassName()
       
       all.fea.dep <- unique(unlist(dep.fea.groups))

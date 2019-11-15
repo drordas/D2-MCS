@@ -12,7 +12,7 @@ TrainSet <- R6Class(
         stop("[TrainSet][ERROR] Positive Class is incorrect. Must be '",
              paste0(as.character(unique(class.values))))
       } 
-      
+
       private$clusters <- cluster.dist
       private$positive.class <- positive.class
       private$class.name <- class.name
