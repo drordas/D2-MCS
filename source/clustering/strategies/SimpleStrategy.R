@@ -145,8 +145,8 @@ SimpleStrategy <- R6Class(
       summary <- data.frame(k = private$all.distribution$k,
                             dispersion = private$all.distribution$deltha,
                             row.names = NULL)
-      plot <- BinaryPlot$new()$plot(binary.summary) + 
-                  labs(title = "Binary Data") + theme_light() + 
+      plot <- BinaryPlot$new()$plot(summary) + 
+                  labs(title = "Data") + theme_light() + 
                   theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
       if (!is.null(dir.path)) {
         if (!dir.exists(dir.path)) {

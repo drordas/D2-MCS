@@ -359,7 +359,7 @@ BinaryRealTypeStrategy <- R6Class(
           plot <- BinaryPlot$new()$plot(binary.summary) + 
                     labs(title = "Binary Data") + theme_light() + 
                     theme(axis.text.x = element_text(angle= 90, hjust= 0.5))
-        }else { plot <- BinaryPlot$new()$plot(binary.summary) + 
+        }else { plot <- GenericPlot$new()$plot(real.summary) + 
                           labs(title = "Real Data") + theme_light() + 
                           theme(axis.text.x = element_text(angle= 90, hjust= 0.5)) } 
       }
