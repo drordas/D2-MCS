@@ -4,46 +4,66 @@ ProbMajorityVoting <- R6Class(
   portable = TRUE,
   inherit = VotingScheme,
   public = list(
-    initialize = function(selected.class){ 
+    initialize = function(class.tie = "first"){ 
       super$initialize(private$voting.name)
-      
-      if( is.null(selected.class) || missing(selected.class) )
-        stop("[",super$getName(),"][ERRROR] Majority class parameter should be defined")
-      
-      private$majority.class <- selected.class
+      private$class.tie <- class.tie
+      private$final.pred <- NULL
+      private$positive.class <- NULL
+      private$class.values <- NULL
     },
-    execute = function(predictions){
-      if(!"PredictionList" %in% class(predictions))
-        stop("[",super$getName(),"][ERROR] Unsupported format. Parameter should be a PredictionList object\n")
-      
-      all.predictions <- predictions$getProbPredictions()
-
-      summary <- table(sapply(all.predictions,class))
-      
-      if( length(names(summary)) > 1 )
-        stop("[",super$getName(),"][ERROR] Different prediction values\n")
-      
-      if ( !"numeric" %in% names(summary))
-        stop("[",super$getName(),"][ERROR] Prediction values must be factor. Aborting\n")
-
-      if( !private$majority.class %in% names(all.predictions) )
-        stop("[",super$getName(),"][ERROR] Selected class not found. Aborting execution\n")
-      
-      cat("[",super$getName(),"][INFO] Voting strategy selected: '", super$getName() ,"'\n", sep="")
-      
-      voting.result <- data.frame(numeric(), stringsAsFactors = FALSE)
-      
-      prob.predictions <- all.predictions[,grepl(private$majority.class,names(all.predictions)) ]
-      
-      for(row in 1:nrow(prob.predictions)){
-        #prob.values <- unlist(prob.predictions[row, names(prob.predictions) %in% super$getPrevalenceClass(),] )
-        prob.values <- unlist(prob.predictions[row, ] )
-        prod.final <- prod(prob.values, na.rm = TRUE)
-        voting.result <- rbind(voting.result, prod.final, stringsAsFactors = FALSE )
+    execute = function(predictions, majority.class=NULL){
+      if(!inherits(predictions,"ClusterPredictions")){
+        stop("[",class(self)[1],"][ERROR] Invalid prediction type. Must be a ",
+             "ClusterPrediction object. Aborting...")
       }
-      ret <- cbind(prob.predictions,voting.result)
-      names(ret) <- c(names(prob.predictions),private$voting.name)
-      ret
+      
+      if(predictions$size()<=0){
+        stop("[",class(self)[1],"][ERROR] Cluster predictions were not computed",
+             "Aborting...")
+      }
+      
+      private$majority.class <- predictions$getPositiveClass()
+      if( is.null(majority.class) || !(majority.class %in% predictions$getClassValues()) ){
+        message("[",class(self)[1],"][WARNING] Majority class not set of invalid.",
+                " Assuming default value: ",predictions$getPositiveClass())
+      }else private$majority.class <- majority.class
+      
+      message("[",class(self)[1],"][INFO] Computing '",class(self)[1],
+              "' scheme using '",private$majority.class,"' as majority class")
+      
+      private$final.pred <- list(prob=data.frame(), raw=c(), bin=data.frame())
+      
+      private$class.values <- predictions$getClassValues()
+      private$positive.class <- predictions$getPositiveClass()
+      negative.class <- setdiff( private$class.values, 
+                                 private$positive.class )
+      
+      mean.pred <- apply(sapply(predictions$getAll(), function(x) { 
+                          x$getPrediction("prob",private$positive.class)
+                        } ), 1 , mean)
+      
+      for (row in 1:length(mean.pred)){
+        mean.value <- mean.pred[row]
+        private$final.pred$prob <- rbind(private$final.pred$prob, 
+                                         data.frame(mean.value,abs(mean.value-1)))
+        if(mean.pred == (mean.value-1) ){
+          if(private$majority.class %in% private$positive.class){
+            private$final.pred$raw <- c(private$final.pred$raw, private$positive.class) 
+          }else{ private$final.pred$raw <- c(private$final.pred$raw, negative.class)}
+        }else{
+          if(mean.pred >.5){
+            private$final.pred$raw <- c(private$final.pred$raw, private$positive.class)  
+          }else{ private$final.pred$raw <- c(private$final.pred$raw, negative.class) }
+        }
+      }
+      
+      names(private$final.pred$prob) <- c(private$positive.class,negative.class)
+      private$final.pred$raw <- factor( private$final.pred$raw,
+                                        levels= private$class.values)
+            
+      col.index <- which(levels(private$final.pred$raw)==private$positive.class)
+      private$final.pred$bin <- varhandle::to.dummy(private$final.pred$raw, 
+                                                    private$positive.class)[,col.index]
     }
   ),
   private = list(

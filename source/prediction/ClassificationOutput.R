@@ -14,7 +14,7 @@ ClassificationOutput <- R6Class(
       private$real.values <- NULL
       private$pred.values <- NULL
     },
-    computePerformance = function(test.set, measures){
+    getPerformance = function(test.set, measures){
       if(!inherits(test.set,"Subset"))
         stop("[",class(self)[1],"][ERROR] Test set invalid.",
              " Must be a Subset object. Aborting...")
