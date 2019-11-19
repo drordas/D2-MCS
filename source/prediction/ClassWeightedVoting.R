@@ -17,7 +17,7 @@ ClassWeightedVoting <- R6Class(
                      "ClusterPrediction object. Aborting...")
       }
       if(predictions$size()<=0){
-        stop("[",class(self)[1],"][ERROR] Cluster predictions were not executed.",
+        stop("[",class(self)[1],"][ERROR] Cluster predictions were not computed",
              "Aborting...")
       }
       
@@ -40,22 +40,25 @@ ClassWeightedVoting <- R6Class(
               paste0(round(private$weights, digits=4),collapse=", ~"),"' weights")
       
       private$final.pred <- list(prob=data.frame(),raw=c(),bin=data.frame())
+      private$positive.class <- predictions$getPositiveClass()
+      private$class.values <- predictions$getClassValues()
+      negative.class <- setdiff( private$class.values,
+                                 private$positive.class )
       
       for(row in 1:nrow(weighted.predictions)) { 
         row.sum <- sum(weighted.predictions[row,]/sum.weights)
         private$final.pred$prob <- rbind(private$final.pred$prob,
                                           data.frame(row.sum,abs(row.sum-1)))
-        private$final.pred$raw <- if(row.sum>.5) {
-                                          c(private$final.pred$raw,
-                                            prediction.list$class[1]) }
-                                   else { c(private$final.pred$raw,
-                                            prediction.list$class[2]) }
-        private$final.pred$bin <- if(row.sum>.5) {
-                                    rbind(private$final.pred$bin,c(1,0))} 
-                                   else { rbind(private$final.pred$bin,c(0,1)) }
+        if (row.sum>.5){
+          private$final.pred$raw <- c(private$final.pred$raw,
+                                      private$positive.class)
+          private$final.pred$bin <- rbind(private$final.pred$bin,c(1,0))
+        }else { 
+          private$final.pred$raw <- c(private$final.pred$raw,negative.class)
+          private$final.pred$bin <- rbind(private$final.pred$bin,c(0,1))
+        }
       }
-      private$positive.class <- predictions$getPositiveClass()
-      private$class.values <- predictions$getClassValues()
+      
       df.names <- c(predictions$getPositiveClass(),
                         setdiff(predictions$getClassValues(),
                                 predictions$getPositiveClass()))
