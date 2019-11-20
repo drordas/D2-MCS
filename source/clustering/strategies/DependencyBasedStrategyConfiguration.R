@@ -25,23 +25,9 @@ DependencyBasedStrategyConfiguration <- R6Class(
     getRealCutoff = function() {
       0.7
     },
-    tiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic) {
-      #Search for the cluster set with less dependence on the features
-      means.cluster <- list()
-      for (clus in clus.candidates) {
-        mean <- 0
-        pos <- 0
-        for (feature.cluster in private$getFeaturesInCluster(fea.dep.dist.clus, clus)) {
-          result.heuristic <- abs(heuristic$heuristic(corpus[, feature],
-                                                      corpus[, feature.cluster],
-                                                      column.names = c(feature,
-                                                                       feature.cluster)))
-          mean <- (mean * pos + result.heuristic) / (pos + 1)
-          pos <- pos + 1
-        }
-        means.cluster <- append(means.cluster, mean)
-      }
-      append(fea.dep.dist.clus[[feature]], clus.candidates[[which.min(means.cluster)]])
+    tiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic, class, class.name) {
+      private$lfdcTiebreak(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic)
+      # private$ltdcTiebreak(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic, class, class.name)
     },
     qualityOfCluster = function(clusters, metrics) {
       mean(metrics[["dep.tar"]])
@@ -64,6 +50,42 @@ DependencyBasedStrategyConfiguration <- R6Class(
         }
       }
       features.return
+    },
+    lfdcTiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic) {
+      #Search for the cluster set with less dependence on the features
+      means.cluster <- list()
+      for (clus in clus.candidates) {
+        mean <- 0
+        pos <- 0
+        for (feature.cluster in private$getFeaturesInCluster(fea.dep.dist.clus, clus)) {
+          result.heuristic <- abs(heuristic$heuristic(corpus[, feature],
+                                                      corpus[, feature.cluster],
+                                                      column.names = c(feature,
+                                                                       feature.cluster)))
+          mean <- (mean * pos + result.heuristic) / (pos + 1)
+          pos <- pos + 1
+        }
+        means.cluster <- append(means.cluster, mean)
+      }
+      append(fea.dep.dist.clus[[feature]], clus.candidates[[which.min(means.cluster)]])
+    },
+    ltdcTiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic, class, class.name) {
+      #Search for the cluster set with less dependence with the target
+      means.cluster <- list()
+      for (clus in clus.candidates) {
+        mean <- 0
+        pos <- 0
+        for (feature.cluster in append(private$getFeaturesInCluster(fea.dep.dist.clus, clus), feature)) {
+          result.heuristic <- abs(heuristic$heuristic(corpus[, feature.cluster],
+                                                      class,
+                                                      column.names = c(feature.cluster,
+                                                                       class.name)))
+          mean <- (mean * pos + result.heuristic) / (pos + 1)
+          pos <- pos + 1
+        }
+        means.cluster <- append(means.cluster, mean)
+      }
+      append(fea.dep.dist.clus[[feature]], clus.candidates[[which.min(means.cluster)]])
     }
   )
 )

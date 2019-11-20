@@ -67,9 +67,9 @@ DependencyBasedStrategy <- R6Class(
       
       binary.cutoff <- private$configuration$getBinaryCutoff()
       binary.heuristic <- private$heuristic[[1]]
+      binary.data <- private$getBinaryFeatures(private$subset$getFeatures())
       ##COMPUTING HEURISTIC FOR BINARY DATA
       if ( !is.null(binary.heuristic) ) {
-        binary.data <- private$getBinaryFeatures(private$subset$getFeatures())
         message("[", super$getName(), "][INFO] Using '", binary.heuristic$getName(),
                 "' heuristic to distribute binary features")
         if ( nrow(binary.data) > 0 ) {
@@ -109,7 +109,7 @@ DependencyBasedStrategy <- R6Class(
       } else {
         message("[", super$getName(), "][INFO] ", super$getName(),
                 " has not heuristic to binary features. Assuming one cluster by default")
-        private$all.distribution[[1]] <- data.frame( k = 1, homogeneity = 0,
+        private$all.distribution[[1]] <- data.frame( k = 1, deltha = 0,
                                                      dist = I(list(names(binary.data))) )
         private$best.distribution[[1]] <- data.frame( cluster = 1,
                                                       dist = I(list(names(binary.data))) )
@@ -117,9 +117,9 @@ DependencyBasedStrategy <- R6Class(
       
       real.cutoff <- private$configuration$getRealCutoff()
       real.heuristic <- private$heuristic[[2]]
+      real.data <- private$getRealFeatures( private$subset$getFeatures() ) 
       ##COMPUTING HEURISTIC FOR REAL DATA
       if ( !is.null(real.heuristic) ) {
-        real.data <- private$getRealFeatures( private$subset$getFeatures() ) 
         message("[", super$getName(), "][INFO] Using '", real.heuristic$getName(), 
                 "' heuristic to distribute real features")
         if ( nrow(real.data) > 0 ) {
@@ -161,7 +161,7 @@ DependencyBasedStrategy <- R6Class(
       } else {
         message("[", super$getName(), "][INFO] ", super$getName(),
                 " has not heuristic to real features. Assuming one cluster by default")  
-        private$all.distribution[[2]] <- data.frame( k = 1, homogeneity = 0, 
+        private$all.distribution[[2]] <- data.frame( k = 1, deltha = 0, 
                                                      dist = I(list(names(real.data))) )
         private$best.distribution[[2]] <- data.frame( cluster = 1, 
                                                       dist = I(list(names(real.data))) )
@@ -320,46 +320,55 @@ DependencyBasedStrategy <- R6Class(
       }
       
       if ( is.null(num.clusters) ) {
-        message( "[", super$getName(), "][WARNING] Number of clusters not defined.",
+        message( "[",super$getName(),"][WARNING] Number of clusters not defined.",
                  " Saving all cluster configurations" )
-        num.clusters <- c( (max(private$all.distribution[[1]]$k) - 1),
-                           (max(private$all.distribution[[2]]$k) - 1) )
-      }else{
-        if ( length(num.clusters) >= length(private$all.distribution) ) {
-          num.clusters <- num.clusters[c(1:length(private$all.distribution))]
-        }else{ num.clusters <- sapply(private$all.distribution, 
-                                      function(x) {nrow + 1 }) }
+        num.clusters <- list(list(1:max(private$all.distribution[[1]]$k)),
+                             list(1:max(private$all.distribution[[2]]$k)))
+      } else {
+        if ( !(is.list(num.clusters) && length(num.clusters) >= 0)) {
+          message( "[", super$getName(), "][WARNING] Type of num.clusters not valid (must be NULL or list )",
+                   " Saving all cluster configurations." )
+          num.clusters <- list(list(1:max(private$all.distribution[[1]]$k)),
+                               list(1:max(private$all.distribution[[2]]$k)))
+        } else {
+          if ( is.null(num.clusters[[1]]) || !is.list(num.clusters[[1]])) {
+            num.clusters[[1]] <- list(1:max(private$all.distribution[[1]]$k))
+          } 
+          if ( (length(num.clusters) >= 1 && (!is.list(num.clusters[[2]]) || is.null(num.clusters[[2]]))) ) {
+            num.clusters[[2]] <- list(1:max(private$all.distribution[[2]]$k))
+          }
+        }
       }
       
       all.binary <- private$all.distribution[[1]]
       all.real <- private$all.distribution[[2]]
       
-      if ( !(num.clusters[1] %in% c(1:nrow(all.binary)) )) {
+      if ( !all(unlist(num.clusters[[1]]) %in% all.binary$k) ) {
         message("[", super$getName(), "][WARNING] Number of clusters incorrect.",
                 " Must be between ", min(all.binary$k), " and ", max(all.binary$k),
                 ". Ignoring clustering for binary type features...")
         dist.binary <- data.frame( k = numeric(), dispersion = numeric(),
                                    feature_type = character() )
       } else { 
-        dist.binary <- data.frame(k = all.binary[c(1:(num.clusters[1] - 1) ), "k"],
-                                  dispersion = all.binary[c(1:(num.clusters[1] - 1) ), "deltha"],
-                                  feature_type = "binary", row.names = NULL) 
+        dist.binary <- data.frame( k = all.binary[c(all.binary$k %in% unlist(num.clusters[[1]])), "k"],
+                                   dispersion = all.binary[c(all.binary$k %in% unlist(num.clusters[[1]])), "deltha"],
+                                   feature_type = "binary", row.names = NULL) 
       }
       
-      if ( !(num.clusters[2] %in% c(1:nrow(all.real))) ) {
-        message("[", super$getName(), "][INFO] Number of clusters incorrect.",
+      if ( !all(unlist(num.clusters[[2]]) %in% all.real$k) ) {
+        message("[", super$getName(), "][WARNING] Number of clusters incorrect.",
                 " Must be between ", min(all.real$k), " and ", max(all.real$k),
                 ". Ignoring clustering for real type features...")
-        dist.real <- data.frame( k = numeric(),dispersion = numeric(),
+        dist.real <- data.frame( k = numeric(), dispersion = numeric(),
                                  feature_type = character() )
-      }else{
-        dist.real <- data.frame(k = all.real[c(1:(num.clusters[2] - 1) ), "k"],
-                                dispersion = all.real[c(1:(num.clusters[2] - 1) ), "deltha"],
+      } else {
+        dist.real <- data.frame(k = all.real[c(all.real$k %in% unlist(num.clusters[[2]])), "k"],
+                                dispersion = all.real[c(all.real$k %in% unlist(num.clusters[[2]])), "deltha"],
                                 feature_type = "real", row.names = NULL) 
       }
       
-      write.table( rbind(dist.binary,dist.real), 
-                   file = file.path(dir.path,paste0(name,".csv")),
+      write.table( rbind(dist.binary, dist.real), 
+                   file = file.path(dir.path, paste0(name, ".csv")),
                    row.names = FALSE, col.names = TRUE, sep = ";")
     }
   ),
@@ -394,38 +403,49 @@ DependencyBasedStrategy <- R6Class(
       message(white("[", super$getName(), "][INFO] Computing metric of dependency between independent features and the target"))
       message(white("[", super$getName(), "][INFO] Computing metric of dependency between independent features (", length(indep.fea.list), ")"))
       
-      if ( isTRUE( verbose ) ) {
-        pb <- txtProgressBar( min = 0, max = (length(indep.fea.list)), style = 3 )
-      }
-      
-      for (feature1 in 1:(length(indep.fea.list) - 1)) {
-        #Updates metric of dependecy between features and target
-        result.heuristic <- abs( heu$heuristic(corpus[, indep.fea.list[[feature1]]],
-                                               class,
-                                               column.names = c(indep.fea.list[[feature1]],
-                                                                class.name)) )
-        
-        mean.indep.tar <- c(mean.indep.tar, result.heuristic)
-        #Updates metric of dependecy between features
-        for (feature2 in (feature1 + 1):length(indep.fea.list)) {
-          result.heuristic <- abs(heu$heuristic(corpus[, indep.fea.list[[feature1]]],
-                                                corpus[, indep.fea.list[[feature2]]],
-                                                column.names = c(indep.fea.list[[feature1]],
-                                                                 indep.fea.list[[feature2]])))
-          mean.indep.fea <- c(mean.indep.fea, result.heuristic)
+      if (length(indep.fea.list) > 1) {
+        if ( isTRUE( verbose ) ) {
+          pb <- txtProgressBar( min = 0, max = (length(indep.fea.list)), style = 3 )
         }
-        if ( isTRUE( verbose ) ) { setTxtProgressBar(pb, (feature1 - 1)) }
+        
+        for (feature1 in 1:(length(indep.fea.list) - 1)) {
+          #Updates metric of dependecy between features and target
+          result.heuristic <- abs( heu$heuristic(corpus[, indep.fea.list[[feature1]]],
+                                                 class,
+                                                 column.names = c(indep.fea.list[[feature1]],
+                                                                  class.name)) )
+          
+          mean.indep.tar <- c(mean.indep.tar, result.heuristic)
+          #Updates metric of dependecy between features
+          for (feature2 in (feature1 + 1):length(indep.fea.list)) {
+            result.heuristic <- abs(heu$heuristic(corpus[, indep.fea.list[[feature1]]],
+                                                  corpus[, indep.fea.list[[feature2]]],
+                                                  column.names = c(indep.fea.list[[feature1]],
+                                                                   indep.fea.list[[feature2]])))
+            mean.indep.fea <- c(mean.indep.fea, result.heuristic)
+          }
+          if ( isTRUE( verbose ) ) { setTxtProgressBar(pb, (feature1 - 1)) }
+        }
+        
+        #Computing metric beetween class and the last independent feature
+        result.heuristic <- abs( heu$heuristic(corpus[, indep.fea.list[[length(indep.fea.list)]]],
+                                               class,
+                                               column.names = c(names(corpus)[indep.fea.list[[length(indep.fea.list)]]],
+                                                                className)) )
+        if ( isTRUE( verbose ) ) { setTxtProgressBar( pb, (length(indep.fea.list)) ) }
+        if ( isTRUE( verbose ) ) { close(pb) }
+        mean.indep.tar <- mean( c(mean.indep.tar, result.heuristic) )
+        mean.indep.fea <- mean( mean.indep.fea )
+      } else {
+        if ( length(indep.fea.list) == 1 ) {
+          mean.indep.tar <- 1
+          mean.indep.fea <- 1
+        } else {
+          mean.indep.tar <- 0
+          mean.indep.fea <- 0
+        }
       }
-      
-      #Computing metric beetween class and the last independent feature
-      result.heuristic <- abs( heu$heuristic(corpus[, indep.fea.list[[length(indep.fea.list)]]],
-                                             class,
-                                             column.names = c(names(corpus)[indep.fea.list[[length(indep.fea.list)]]],
-                                                              className)) )
-      if ( isTRUE( verbose ) ) { setTxtProgressBar( pb, (length(indep.fea.list)) ) }
-      if ( isTRUE( verbose ) ) { close(pb) }
-      mean.indep.tar <- mean( c(mean.indep.tar, result.heuristic) )
-      mean.indep.fea <- mean( mean.indep.fea )
+
       message(white("[", super$getName(), "][INFO] Metric of dependency between independent features and the target:", mean.indep.tar))
       message(white("[", super$getName(), "][INFO] Metric of dependency between independent features", mean.indep.fea))
       message("---------------------------------------------------------------")
@@ -519,7 +539,9 @@ DependencyBasedStrategy <- R6Class(
                                                                        clus.candidates,
                                                                        fea.dep.dist.clus,
                                                                        corpus,
-                                                                       heu)
+                                                                       heu, 
+                                                                       class,
+                                                                       class.name)
           }
           # message(blue("[", super$getName(), "][INFO] Element", fea, "added to cluster", paste(fea.dep.dist.clus[[fea]], collapse = ",")))
           #Computing metrics of dependent features on clusters ----
@@ -569,8 +591,9 @@ DependencyBasedStrategy <- R6Class(
         
         final.dist.actual.cluster <- vector( mode = "list", length = length(1:actual.num.cluster) )
         for (fea in names(features.dis.actual.cluster)) {
-          clus.dist <- features.dis.actual.cluster[[fea]][[1]]
-          for (clus in clus.dist) {
+          clus.dist <- features.dis.actual.cluster[[fea]]
+          
+          for (clus in unlist(clus.dist)) {
             final.dist.actual.cluster[[clus]] <- append(final.dist.actual.cluster[[clus]], fea)
           }
         }
