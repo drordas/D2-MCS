@@ -44,17 +44,14 @@ Model <- R6Class(
              FALSE,TRUE)
     },
     getDir = function(){ private$dir.path },
-    #getRDS = function(){ private$RDS.path },
     getName = function(){ private$model.info$name },
     getFamily = function(){ private$model.info$family },
     getDescription = function(){ private$model.info$description },
-    #getValidMetrics = function(){ private$train.function$getMeasures() },
-    #getMetric = function(){ private$metric  },
     train = function(train.set, fitting, trFunction, metric){
       if( is.null(private$model.train) || 
           any(sapply(private$model.train,is.null)) ) {
-        message("[",class(self)[1],"][INFO] Model '",private$model.info$name,
-                "' has not been trained. Starting training process...")
+        message("[",class(self)[1],"][INFO][",self$getName(),"] Model ",
+                "has not been trained. Starting training process...")
         
         if( !inherits(train.set,"data.frame") ){
           stop("[",class(self)[1],"][ERROR][",self$getName(),"] ",
@@ -117,7 +114,7 @@ Model <- R6Class(
         }
       }else{
         message("[",class(self)[1],"][INFO][",self$getName(),"]",
-                "Model has already been trained")
+                " Model has already been trained")
       }
     },
     getTrainedModel = function(){

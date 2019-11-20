@@ -51,10 +51,8 @@ ClassificationOutput <- R6Class(
       
       private$performance <- do.call(rbind,lapply( measures, function(entry,cf,perf){
         result <- entry$compute(cf)
-        sapply(train.perf.digits,function(x){result-x})
         if(entry$getName() %in% private$trained.models$metric){
-          df <- data.frame( entry$getName(), result)#, 
-                            #"<==>",train.perf.string)
+          df <- data.frame( entry$getName(), result)
         }else{
           df <- data.frame( entry$getName(), result)#,
                             #"    ",train.perf.string)
@@ -64,8 +62,7 @@ ClassificationOutput <- R6Class(
         df 
       }, cf= ConFMatrix$new( caret::confusionMatrix(private$pred.values,
                              private$real.values,
-                             positive=private$voting$getPositiveClass())))#,
-         #perf=train.perf.digits )
+                             positive=private$voting$getPositiveClass())))
       )
       #private$performance <- cbind(private$performance,train.performance)
       private$performance
@@ -106,7 +103,7 @@ ClassificationOutput <- R6Class(
       
       if( is.factor(private$real.values) ){
         private$pred.values <- private$voting$getPrediction("raw",private$voting$getPositiveClass())
-        if( length(levels(real.values)) != length(levels(private$pred.values)) || 
+        if( length(levels(private$real.values)) != length(levels(private$pred.values)) || 
             !(levels(private$real.values) %in% levels(private$pred.values)) ){
           stop("[",class(self)[1],"][ERROR] Class values missmatch. Aborting...")
         }

@@ -133,13 +133,10 @@ D2MCS <- R6Class(
                                           type= private$cluster.conf$socket, 
                                           outfile= private$cluster.conf$outfile, 
                                           useXDR=private$cluster.conf$xdr )
-      
-      
-      #private$executedModels <- ExecutedModelsList$new(size= length(num.clusters))
       private$metric <- metric
       available.models <- private$availableModels[(private$availableModels$name %in% usedModels), ]
       num.available <- nrow(available.models)
-      private$cluster.models <- list(models=list(), metric=metric)
+      private$cluster.models <- list(models=list(), metric=private$metric)
       
       #START TRAINING PROCESS  
       for (i in num.clusters ){
@@ -230,7 +227,7 @@ D2MCS <- R6Class(
                                                 train.set$getClassName())$createRecipe()
             model.type <- Model$new(dir= model.path, model= model)
             model.type$train(train.set= model.instances, fitting= model.recipe,
-                             trFunction= private$trainFunction, metric= metric)
+                             trFunction= private$trainFunction, metric= private$metric)
             if(model.type$isTrained()){
               message("[",class(self)[1],"][INFO] Model '",
                       model.type$getName(),"' has been succesfully trained")
@@ -312,13 +309,10 @@ D2MCS <- R6Class(
         predictions$add(pred)
       }
       
-      message("[D2MCS][INFO] Computing final prediction values using '",voting.scheme$getName())
+      message("[D2MCS][INFO] Computing final prediction values using '",
+              voting.scheme$getName())
       voting.scheme$execute(predictions)
-      # asdf <<- voting.scheme
-      # preds <<- predictions
-      # cluster.models <<- private$cluster.models
-      
-      
+
       private$classify.output <- ClassificationOutput$new(voting.scheme= voting.scheme, 
                                                           models= private$cluster.models)
       message("[D2MCS][INFO] -------------------------------------------------------")
@@ -329,33 +323,38 @@ D2MCS <- R6Class(
     },
     optimize = function(opt.set, voting.scheme, opt.algorithm, positive.class, metric=private$metric){
       if( !is.null(opt.set) && !inherits(opt.set,"Subset")  )
-        stop("[D2MCS][ERROR] Test dataset missing or incorrect. Should inherit from 'Subset class'. Aborting...\n")
+        stop("[D2MCS][ERROR] Test dataset missing or incorrect. Should inherit",
+             " from 'Subset class'. Aborting...")
 
       if ( !inherits(voting.scheme,"VotingScheme") )
-        stop("[D2MCS][ERROR] Voting Scheme missing or invalid. Aborting...\n")
+        stop("[D2MCS][ERROR] Voting Scheme missing or invalid. Aborting...")
 
       if ( !is.list(opt.algorithm) && !inherits(opt.algorithm,"WeightsOptimizer") )
-        stop("[D2MCS][ERROR] Optimization algorithm is invalid. Must inherit from 'WeightedOptimizer' Aborting...\n")
+        stop("[D2MCS][ERROR] Optimization algorithm is invalid. Must inherit",
+             " from 'WeightedOptimizer' Aborting...")
       
       if(!is.list(opt.algorithm)) opt.algorithm <- list(opt.algorithm)
       
       if( is.list(opt.algorithm) && !all(sapply(opt.algorithm,inherits,"WeightsOptimizer")) )
-        stop("[D2MCS][ERROR] Optimization algorithms is invalid. List elements must inherit from 'WeightedOptimizer' object. Aborting...\n")
+        stop("[D2MCS][ERROR] Optimization algorithms is invalid. List elements",
+             " must inherit from 'WeightedOptimizer' object. Aborting...")
 
       if ( is.null(positive.class) || !positive.class %in% levels(opt.set$getClass()) )
-        stop("[D2MCS][ERROR] Positive class missing or invalid (must be: ",paste0(levels(opt.set$getClass()),collapse=", "),"). Aborting...\n")
+        stop("[D2MCS][ERROR] Positive class missing or invalid (must be: ",
+             paste0(levels(opt.set$getClass()),collapse=", "),"). Aborting...")
 
       if( is.null(private$bestModels) || private$bestModels$size() < 1 )
-        stop("[D2MCS][ERROR] Models were not trained. Please run 'Train' method first\n")
+        stop("[D2MCS][ERROR] Models were not trained. Please run 'Train'",
+             "method first")
       
       if ( is.null(private$models.weights) || length(private$models.weights) < 1 ){
-        cat("[D2MCS][ERROR] Weigths not defined. Initializing weights values\n")
+        cat("[D2MCS][ERROR] Weigths not defined. Initializing weights values")
         private$models.weights <- rep.int(1,times = private$bestModels$size() )
       }else private$models.weights <- as.numeric(private$models.weights)
       
-      message("[D2MCS][INFO] -------------------------------------------------------\n")
-      message("[D2MCS][INFO] D2MCS Optimization stage\n")
-      message("[D2MCS][INFO] -------------------------------------------------------\n")
+      message("[D2MCS][INFO] -------------------------------------------------------")
+      message("[D2MCS][INFO] D2MCS Optimization stage")
+      message("[D2MCS][INFO] -------------------------------------------------------")
       
       if( opt.set$getClassIndex() > 0 && !is.null(opt.set$getClass()) )
         private$real.values <- opt.set$getClass()
@@ -368,42 +367,61 @@ D2MCS <- R6Class(
       prediction.cluster <- PredictionList$new( private$metric )
       
       for ( cluster in 1:private$bestModels$size() ){
-        message("[D2MCS][INFO] Computing predictions for cluster '",cluster,"' of '", private$bestModels$size(),"'\n")
-        message("[D2MCS][INFO] -------------------------------------------------------\n")
+        message("[D2MCS][INFO] Computing predictions for cluster '",cluster,
+                "' of '", private$bestModels$size(),"'")
+        message("[D2MCS][INFO] -------------------------------------------------------")
         pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject(), 
-                                class.values = levels(opt.set$getClass()), positive.class = positive.class )
+                                class.values = levels(opt.set$getClass()), 
+                                positive.class = positive.class )
         pred$execute(instances)
         prediction.cluster$addPrediction(pred)
       }
       
       compute.fitness <- function(weights,min.function) {
         pred.values <- voting.scheme$execute(prediction.cluster,weights)
-        mf <- min.function(caret::confusionMatrix(pred.values,real.values, positive="1", mode="everything" ))
+        mf <- min.function(caret::confusionMatrix(pred.values,real.values, 
+                                                  positive="1", mode="everything"))
         return(mf)
       }
       
-      message("[D2MCS][INFO] Starting optimization process: \n")
+      message("[D2MCS][INFO] Starting optimization process: ")
       freq <- table(real.values)
       
       opt.data <- sapply( opt.algorithm, function(alg, wg, freq) { 
         alg$execute(wg, compute.fitness)
-        alg$getResult(n.positive = as.numeric(freq["1"]), n.negative = as.numeric(freq["0"]) )
+        alg$getResult(n.positive = as.numeric(freq["1"]), 
+                      n.negative= as.numeric(freq["0"]) )
       }, wg = private$models.weights, freq= freq)
       
-      message("[D2MCS][INFO] Finish optimmization process!'\n")
+      message("[D2MCS][INFO] Finish optimmization process!")
       
-      return (Optimizers$new( voting.scheme = voting.scheme, cluster.models = private$bestModels, metric = private$metric, 
-                              optimizers = opt.data, positive.class = positive.class, negative.class = negative.class))
+      return (Optimizers$new( voting.scheme= voting.scheme, 
+                              cluster.models= private$bestModels, 
+                              metric= private$metric, 
+                              optimizers= opt.data, 
+                              positive.class= positive.class, 
+                              negative.class= negative.class))
     },
     getBestPerformanceByCluster = function(){
       if ( is.null(private$models.weights) || length(private$models.weights) < 1 )
-        stop("[D2MCS][ERROR] Train stage should be executed first\n")
+        stop("[D2MCS][ERROR] Train stage should be executed first")
       else as.numeric(private$models.weights)
+      
+      if ( any( is.null(private$cluster.models$models),
+                !is.list(private$cluster.models$models),
+                length(private$cluster.models$models)==0) ){
+        stop("[",class(self)[1],"][ERROR] Models were not trained. Aborting...")
+      }
+      
+      c(sapply(cluster.models$models, function(model) model$model.performance))
     },
     getTrainedModels = function(){
-      if( is.null(private$models.weights) || is.null(private$bestModels) || (private$bestModels$size() < 1) )
-        stop("[D2MCS][ERROR] Parameters not assigned. Please execute Train method first\n")
-      TrainOutput$new(models = private$bestModels, weights = private$models.weights, metric = private$metric)
+      if( is.null(private$models.weights) || is.null(private$bestModels) || 
+          (private$bestModels$size() < 1) )
+        stop("[D2MCS][ERROR] Parameters not assigned.",
+             "Please execute Train method first")
+      TrainOutput$new(models= private$bestModels, 
+                      weights= private$models.weights, metric= private$metric)
     },
     plotTrain = function(){
       if ( is.null(private$executedModels ) || private$executedModels$size() < 1 )
@@ -414,7 +432,8 @@ D2MCS <- R6Class(
         
         for ( i in 1:private$executedModels$size() ){
           models.cluster <- private$executedModels$getAt(i)
-          summary <- data.frame( model=models.cluster$getNames(), measure= as.numeric(models.cluster$getPerformances()), 
+          summary <- data.frame( model=models.cluster$getNames(), 
+                                 measure= as.numeric(models.cluster$getPerformances()), 
                                  stringsAsFactors = FALSE )
           min <- data.frame( x=summary[which.min(summary[,2]), ][, 1],y= min(summary[,2]) )
           max <- data.frame( x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]) )
@@ -474,8 +493,8 @@ D2MCS <- R6Class(
     removeAll = function(){
       if(!is.null(private$path) && dir.exists(private$path)){
         if(!unlink(private$path,recursive = TRUE,force = TRUE))
-          message("[D2MCS][INFO] Path '",private$path,"' succesfully removed\n")
-        else message("[D2MCS][ERROR] Path '",private$path,"' could not be removed\n")
+          message("[D2MCS][INFO] Path '",private$path,"' succesfully removed")
+        else message("[D2MCS][ERROR] Path '",private$path,"' could not be removed")
       }
     }
   ),
