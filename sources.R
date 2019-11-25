@@ -3,7 +3,6 @@ library("devtools")
 source("pkgChecker.R", chdir = TRUE)
 
 cat("[SOURCES][INFO] Loading required sources\n")
-source("utils.R", chdir = TRUE)
 source("source/data/Dataset.R", chdir=TRUE)
 source("source/data/Subset.R", chdir=TRUE)
 source("source/data/TrainSet.R", chdir=TRUE)

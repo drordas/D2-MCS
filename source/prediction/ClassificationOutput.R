@@ -13,6 +13,9 @@ ClassificationOutput <- R6Class(
       private$performance <- NULL
       private$real.values <- NULL
       private$pred.values <- NULL
+      private$positive.class <- voting.scheme$getPositiveClass()
+      private$negative.class <- setdiff(voting.scheme$getClassValues(),
+                                        private$positive.class)
     },
     getPerformance = function(test.set, measures){
       if(!inherits(test.set,"Subset"))
@@ -44,11 +47,6 @@ ClassificationOutput <- R6Class(
         private$uniformize(test.set)
       }
       
-      # train.perf.digits <- round( sapply(private$trained.models$models, 
-      #                                    function(model){model$model.performance}),
-      #                             digits = 4 )
-      #train.perf.string <- paste0(train.perf.digits,collapse = ", ")
-      
       private$performance <- do.call(rbind,lapply( measures, function(entry,cf,perf){
         result <- entry$compute(cf)
         if(entry$getName() %in% private$trained.models$metric){
@@ -58,13 +56,12 @@ ClassificationOutput <- R6Class(
                             #"    ",train.perf.string)
         }
         rownames(df) <- NULL
-        names(df) <- c("Measure","Value")#,"Reference","Train Performance,Gain Ratio") 
+        names(df) <- c("Measure","Value")
         df 
       }, cf= ConFMatrix$new( caret::confusionMatrix(private$pred.values,
                              private$real.values,
                              positive=private$voting$getPositiveClass())))
       )
-      #private$performance <- cbind(private$performance,train.performance)
       private$performance
     },
     plot = function(test.set=NULL, measures=NULL){
@@ -83,7 +80,9 @@ ClassificationOutput <- R6Class(
 
     },
     getWeights = function() { private$voting$getWeights() },
-    #getPredictions = function() { private$voting },
+    getPredictions = function(type=NULL, target=NULL){
+      private$voting$getPrediction(type,target)
+    },
     getMetric = function() { private$trained.models$metric },
     getPositiveClass = function() { private$positive.class },
     getNegativeClass = function() { private$negative.class },
@@ -95,6 +94,65 @@ ClassificationOutput <- R6Class(
         aux
       }))
       model.info
+    },
+    savePredictions = function(dir.path, type = NULL, target = NULL){
+      if(missing(dir.path)) 
+        stop( "[",class(self)[1],"][ERROR] Save folder not set. Aborting...")
+      
+      dir.path <- gsub("\\/$","",dir.path)
+      
+      if (!dir.exists(dir.path)) { 
+        dir.create(dir.path, recursive = TRUE) 
+        if(dir.exists(dir.path)) {
+          message("[",class(self)[1],"][INFO] Folder '",dir.path,
+                  "' has been succesfully created")
+        }else { stop("[",class(self)[1],"][ERROR] Cannot create directory '",
+                     dir.path,"'. Aborting... ") }
+      }else { message("[",class(self)[1],"][INFO] Folder already exists") }
+      
+      if(is.null(type) || (!type %in% c("prob","bin","raw")) ){
+        message("[",class(self)[1],"][INFO] Prediction type not set or invalid.")
+        if( is.null(target) || !(target %in% c( private$positive.class,
+                                                private$negative.class ) )){
+          message("[",class(self)[1],"][INFO] Target class not set or invalid. ",
+                  "Saving all predictions with all target values")
+          for (i in c("prob","raw","bin") ){
+            path <- file.path(dir.path,paste0(i,"_",private$positive.class,".csv"))
+            df <- data.frame(private$voting$getPrediction(i,private$positive.class),
+                             private$voting$getPrediction(i,private$negative.class))
+            names(df) <- c(private$positive.class,private$negative.class)
+            write.table( df, file= path, sep= ";", dec= ".", row.names = FALSE)
+          }
+        }else{
+          message("[",class(self)[1],"][INFO] Saving all predictions for target",
+                  " value '",target,"'")
+          for (i in c("prob","raw","bin") ){
+            path <- file.path(dir.path,paste0(i,"_",private$positive.class,".csv"))
+            df <- data.frame(private$voting$getPrediction(i,target))
+            names(df) <- target
+            write.table(df, file= path, sep= ";", dec= ".", row.names = FALSE)
+          }
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Prediction type set as '",type,"'.")
+        if( is.null(target) || !(target %in% c( private$positive.class,
+                                                private$negative.class ) ) ){
+          message("[",class(self)[1],"][INFO] Target class not set or invalid. ",
+                  "Saving '",type,"' predictions for all target values")
+          path <- file.path(dir.path,paste0(type,"_",private$positive.class,".csv"))
+          df <- dataframe(private$voting$getPrediction(type,private$positive.class),
+                          private$voting$getPrediction(type,private$negative.class))
+          names(df) <- c(private$positive.class,private$negative.class)
+          write.table( df, file= path, sep= ";", dec= ".", row.names = FALSE)
+        }else{
+          message("[",class(self)[1],"][INFO] Saving '",type,"' predictions ",
+                  "for '",target,"'target values")
+          path <- file.path(dir.path,paste0(type,"_",target,".csv"))
+          df <- data.frame(private$voting$getPrediction(type,target))
+          names(df) <- target
+          write.table( df, file= path, sep= ";", dec= ".", row.names = FALSE)
+        }
+      }
     }
   ),
   private = list(

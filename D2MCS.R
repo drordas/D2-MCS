@@ -80,9 +80,9 @@ D2MCS <- R6Class(
       private$cluster.models <- list(models=list(),metric=NULL)
       private$values.real <- NULL
     },
-    train = function( train.set = NULL, num.clusters = NULL, 
-                      ex.classifiers = c(), ig.classifiers=c(), 
-                      metric = NULL, saveAllModels = FALSE ) {
+    train = function(train.set= NULL, num.clusters= NULL, 
+                     ex.classifiers= c(), ig.classifiers=c(), 
+                     metric= NULL, saveAllModels= FALSE ) {
       
       #CHECK IF TRAIN.SET IS VALID
       if(!"TrainSet" %in% class(train.set) ){
@@ -242,17 +242,15 @@ D2MCS <- R6Class(
         
         private$cluster.models$models <- append( private$cluster.models$models, 
                                           list(private$executed.models$getBest()$train) )
-        
-
         message("[",class(self)[1],"][INFO] Finish!")
       }
-      
+
       if(!is.null(private$cluster.obj)) { 
         stopCluster(private$cluster.obj)
         private$cluster.obj <- NULL 
       }
     },
-    classify = function( test.set, voting.scheme, positive.class=NULL){
+    classify = function(test.set, voting.scheme, positive.class=NULL){
       if( !inherits(test.set,"Subset")  )
         stop("[",class(self)[1],"][ERROR] Test dataset missing or invalid. ",
              "Must be a Subset object\n")
@@ -321,7 +319,8 @@ D2MCS <- R6Class(
       
       private$classify.output
     },
-    optimize = function(opt.set, voting.scheme, opt.algorithm, positive.class, metric=private$metric){
+    optimize = function(opt.set, voting.scheme, opt.algorithm, 
+                        positive.class=NULL, metric=private$metric){
       if( !is.null(opt.set) && !inherits(opt.set,"Subset")  )
         stop("[D2MCS][ERROR] Test dataset missing or incorrect. Should inherit",
              " from 'Subset class'. Aborting...")
@@ -403,17 +402,13 @@ D2MCS <- R6Class(
                               negative.class= negative.class))
     },
     getBestPerformanceByCluster = function(){
-      if ( is.null(private$models.weights) || length(private$models.weights) < 1 )
-        stop("[D2MCS][ERROR] Train stage should be executed first")
-      else as.numeric(private$models.weights)
-      
       if ( any( is.null(private$cluster.models$models),
                 !is.list(private$cluster.models$models),
                 length(private$cluster.models$models)==0) ){
         stop("[",class(self)[1],"][ERROR] Models were not trained. Aborting...")
       }
       
-      c(sapply(cluster.models$models, function(model) model$model.performance))
+      c(sapply(private$cluster.models$models, function(model) model$model.performance))
     },
     getTrainedModels = function(){
       if( is.null(private$models.weights) || is.null(private$bestModels) || 
@@ -424,79 +419,96 @@ D2MCS <- R6Class(
                       weights= private$models.weights, metric= private$metric)
     },
     plotTrain = function(){
-      if ( is.null(private$executedModels ) || private$executedModels$size() < 1 )
-        stop("[D2MCS][ERROR] Models were not trained. Please run 'executeTrain' method first\n")
-      else{
-        plotPath <- paste0(private$path,"plots")
-        if (!dir.exists(plotPath)) dir.create(plotPath,recursive = TRUE)
-        
-        for ( i in 1:private$executedModels$size() ){
-          models.cluster <- private$executedModels$getAt(i)
-          summary <- data.frame( model=models.cluster$getNames(), 
-                                 measure= as.numeric(models.cluster$getPerformances()), 
-                                 stringsAsFactors = FALSE )
-          min <- data.frame( x=summary[which.min(summary[,2]), ][, 1],y= min(summary[,2]) )
-          max <- data.frame( x=summary[which.max(summary[,2]), ][, 1],y= max(summary[,2]) )
-          avg <- round(mean(summary$measure ), digits = 2)
-          measure <- private$metric
-          
-          ggplot(summary, aes(model,measure, group=1)) + geom_line() + geom_point() +
-            geom_point(aes(x,y), min, fill="transparent", color="red", shape=21, size=3,stroke=1) +
-            geom_text(aes(x,y,label=sprintf("%.3f",y)), min, hjust=-0.45, color='red' ) +
-            geom_point(aes(x,y), max, fill="transparent", color="blue", shape=21, size=3,stroke=1) +
-            geom_text(aes(x,y,label=sprintf("%.3f",y)), max, hjust=-0.45, color='blue' ) +
-            geom_hline(aes(yintercept=avg), linetype="twodash", color = "#696969", show.legend = TRUE) +
-            labs(x = "Model name", y = paste0(measure," value"),
-                 title = paste0("Performance benchmarking plot for cluster=",i)) +
-            theme (axis.text.x = element_text(angle = 75, hjust = 1),
-                   plot.title = element_text(hjust = 0.5))
-          save.path <- file.path(plotPath,paste0("TRAIN_",toupper(measure),"_C[",i,"-",private$executedModels$size(),"].pdf") )
-          message("[D2MCS][INFO] Plot saved from cluster ",i," of ",private$executedModels$size()," at: '",save.path,"'\n")
-          ggsave(filename = save.path,device="pdf")
-        }
+      if ( any( is.null(private$cluster.models$models),
+                !is.list(private$cluster.models$models),
+                length(private$cluster.models$models)==0) ){
+        stop("[",class(self)[1],"][ERROR] Models were not trained. Aborting...")
       }
+      
+      plotPath <- file.path(private$path,private$metric,"train_plots")
+      if (!dir.exists(plotPath)) dir.create(plotPath,recursive = TRUE)
+      
+      #exec.models <- length(private$cluster.models$models)
+      
+      summary <- do.call(rbind,lapply(private$cluster.models$models, function(x) { 
+        df <- data.frame(x$model.name,x$model.performance, 
+                         stringsAsFactors = FALSE) 
+      } ))
+      summary<- cbind(data.frame(sprintf("[Cluster %s]",seq(1,nrow(summ)))),
+                      summary)
+      names(summary) <- c("clusters","models","measure")
+      
+      min.pos <- which.min(summ$measure)
+      min <- data.frame( x= summ[min.pos, ]$clusters, y= min(summ[,3]) )
+      max.pos <- which.max(summ$measure)
+      max <- data.frame( x=summ[max.pos, ]$clusters, y= max(summ[,3]) )
+      avg <- round(mean(summ$measure), digits = 2)
+      measure <- private$metric
+      
+      ggplot(summary, aes(clusters,measure, group=1)) + geom_line() + geom_point() +
+        geom_point(aes(x,y), min, fill="transparent", color="red", 
+                   shape=21, size=3,stroke=1) +
+        geom_text(aes(x,y,label=sprintf("%.3f",y)), min, size=3, 
+                  hjust=-.4, vjust=1.5, color='red' ) +
+        geom_text(aes(x,y,label=sprintf("%.3f",y)), max, size=3, 
+                  hjust=-.4, vjust=1.5, color='blue' ) +
+        geom_point(aes(x,y), max, fill="transparent", color="blue", 
+                   shape=21, size=3,stroke=1) + 
+        geom_hline(aes(yintercept=avg), linetype="twodash", 
+                   color= "#696969", show.legend = TRUE) + 
+        geom_text(aes(0,avg,label="Average"), hjust=-.2, vjust=-1) +
+        geom_text(aes(label=models), hjust=-.2, vjust=0) +
+        labs(x = "Model name", y = paste0(measure," value"),
+             title = paste0("Performance benchmarking plot during training")) +
+        theme (axis.text.x = element_text(angle = 75, hjust = 1),
+               plot.title = element_text(hjust = 0.5))
+      
+      save.path <- file.path(plotPath,paste0("Performance_Train_Plot.pdf") )
+      message("[D2MCS][INFO] Plot saved has been succesfully saved at : '",
+              save.path,"'")
+      ggsave(filename = save.path,device="pdf")
     },
-    getPredictions = function(){
-      if( is.null(private$classify.output) )
-        stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
-      #private$classify.output$preds
-      private$classify.output$getPredictions()
-    },
-    comparePerformance = function(test.set, opt.alg, measures){
-      if( !inherits(test.set,"Subset") )
-        stop("[D2MCS][ERROR] Test set must be a Subset class\n")
-      
-      if ( is.null(test.set$getClass()) )
-        stop("[D2MCS][ERROR] Class values should be provided to compute performance\n")
-      
-      if( !inherits(opt.alg,"Optimizers") )
-        stop("[D2MCS][ERROR] Optimization algorithms are incorrect. Must be a Optimizers class\n")
-      
-      if ( !is.list(measures) || !all(sapply(measures, inherits,"MeasureFunction")) )
-        stop("[D2MCS][ERROR] Measures should be a list comprised of MeasureFunction objects\n")
-      
-      private$classify.output
-      
-    },
-    getAvailableModels = function(){ private$availableModels[,c(1,2)] },
-    savePredictions = function(filename){
-      if(missing(filename) || is.null(filename) )
-        stop("[D2MCS][ERROR] Store filename must be selected. Aborting...\n")
-      path <- file.path(getwd(),"results",filename)
-      
-      if( is.null(private$classify.output) )
-        stop("[D2MCS][ERROR] Classification is not executed. Execute 'classify' function first. Aborting... \n")
-      
-      write.csv(private$classify.output$preds, file=path, row.names = FALSE)
-      cat("[D2MCS][INFO] Classification results succesfully saved at: ",path,"\n")
-    },
-    removeAll = function(){
-      if(!is.null(private$path) && dir.exists(private$path)){
-        if(!unlink(private$path,recursive = TRUE,force = TRUE))
-          message("[D2MCS][INFO] Path '",private$path,"' succesfully removed")
-        else message("[D2MCS][ERROR] Path '",private$path,"' could not be removed")
-      }
-    }
+    # getPredictions = function(type=NULL, target=NULL){
+    #   if( is.null(private$classify.output) || 
+    #       is.null(private$classify.output$getPredictions(type,target) ) )
+    #     stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
+    #   private$classify.output$getPredictions(type,target)
+    # },
+    # comparePerformance = function(test.set, opt.alg, measures){
+    #   if( !inherits(test.set,"Subset") )
+    #     stop("[D2MCS][ERROR] Test set must be a Subset class\n")
+    #   
+    #   if ( is.null(test.set$getClass()) )
+    #     stop("[D2MCS][ERROR] Class values should be provided to compute performance\n")
+    #   
+    #   if( !inherits(opt.alg,"Optimizers") )
+    #     stop("[D2MCS][ERROR] Optimization algorithms are incorrect. Must be a Optimizers class\n")
+    #   
+    #   if ( !is.list(measures) || !all(sapply(measures, inherits,"MeasureFunction")) )
+    #     stop("[D2MCS][ERROR] Measures should be a list comprised of MeasureFunction objects\n")
+    #   
+    #   private$classify.output
+    #   
+    # },
+    getAvailableModels = function(){ private$availableModels[,c(1,2)] }#,
+    # savePredictions = function(dir.path, target){
+    #   if(missing(filename) || is.null(filename) )
+    #     stop("[D2MCS][ERROR] Store filename must be selected. Aborting...\n")
+    #   path <- file.path(getwd(),"results",filename)
+    #   
+    #   if( is.null(private$classify.output) )
+    #     stop("[D2MCS][ERROR] Classification is not executed. Execute 'classify' function first. Aborting... \n")
+    #   
+    #   write.csv(private$classify.output$preds, file=path, row.names = FALSE)
+    #   cat("[D2MCS][INFO] Classification results succesfully saved at: ",path,"\n")
+    # },
+    # removeAll = function(){
+    #   if(!is.null(private$path) && dir.exists(private$path)){
+    #     if(!unlink(private$path,recursive = TRUE,force = TRUE))
+    #       message("[D2MCS][INFO] Path '",private$path,"' succesfully removed")
+    #     else message("[D2MCS][ERROR] Path '",private$path,"' could not be removed")
+    #   }
+    # }
   ),
   private = list(
     loadAvailableModels = function(){

@@ -76,9 +76,9 @@ ClassMajorityVoting <- R6Class(
       private$final.pred$raw <- factor(private$final.pred$raw, 
                                        levels= predictions$getClassValues())
       
-      col.index <- which(levels(private$final.pred$raw)==private$positive.class)
-      private$final.pred$bin <- varhandle::to.dummy(private$final.pred$raw, 
-                                                    private$positive.class)[,col.index]
+      private$final.pred$bin <- data.frame(varhandle::to.dummy(private$final.pred$raw, 
+                                                    private$positive.class) )
+      names(private$final.pred$bin) <- c(private$positive.class,negative.class)
     },
     getPrediction = function(type=NULL, target=NULL){
       if(is.null(private$final.pred) || is.null(private$positive.class)){
@@ -92,6 +92,7 @@ ClassMajorityVoting <- R6Class(
                               "or 'bin'. Assuming 'prob' by default")))
         type <- "prob"
       }
+
       switch (type,
               "prob"= {
                 if(is.null(target) || !(target %in% names(private$final.pred$prob) ) ){
