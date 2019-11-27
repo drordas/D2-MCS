@@ -87,7 +87,7 @@ ClassificationOutput <- R6Class(
     getPositiveClass = function() { private$positive.class },
     getNegativeClass = function() { private$negative.class },
     getModelInfo = function() { 
-      model.info <- do.call(rbind,lapply(private$model, function(model){ 
+      model.info <- do.call(rbind,lapply(private$trained.models$model, function(model){ 
         aux <- data.frame(model$model.name,model$model.performance)
         rownames(aux) <- NULL
         names(aux) <- c("Model Name","Performance") 

@@ -3,8 +3,11 @@ NSGAII <- R6Class(
   portable = TRUE,
   inherit = WeightsOptimizer,
   public = list(
-    initialize = function (cpus = 1L, min.function, init.population = NULL, n.generations=20, n.iteractions=1, popSize=100){
-      super$initialize(name= "NSGAII", dependences=c("ecr"), min.function =  min.function)
+    initialize = function (cpus = 1L, min.function, init.population = NULL, 
+                           n.generations=20, n.iteractions=1, popSize=100)
+    {
+      super$initialize(name= class(self)[1], dependences=c("ecr"), 
+                       min.function =  min.function)
       private$init.weights <- init.population
       private$n.iteractions <- n.iteractions
       private$generations <- n.generations
@@ -14,56 +17,70 @@ NSGAII <- R6Class(
     },
     execute = function(init.weights=NULL, fitness){
       if ( missing(fitness) || !is.function(fitness))
-        stop("[",super$getName(),"][ERROR] Fitness function should be provided to perform optimization process\n")
+        stop("[",super$getName(),"][ERROR] Fitness function should be provided",
+             " to perform optimization process\n")
       
       if( is.null(init.weights) && is.null(private$init.weights) )
-        stop("[",super$getName(),"][ERROR] Initial weights should be previously defined\n\n")
+        stop("[",super$getName(),"][ERROR] Initial weights should be",
+             "previously defined\n")
       
       if(!is.null(init.weights)) private$init.weights <- init.weights
 
       private$init.weights <- private$parse.population(init.weights)
 
-      cat("[",super$getName(),"][INFO] Executing NSGAII Algorithm with ",private$generations,
-          " generation/s comprising ",private$popSize," individuals\n",sep="")
+      message("[",super$getName(),"][INFO] Executing Optimization Algorithm with ",
+              private$generations," generation/s comprising ",
+              private$popSize," individuals")
       
       lower <- rep( 0, length(private$init.weights) )
       upper <- rep( as.double(length(private$init.weights)), length(private$init.weights) )
       
       private$optimize <- sapply( 1:private$n.iteractions, function(x) {
-                                 cat("[",super$getName(),"][INFO] Executing iteration ",x," of ",private$n.iteractions,"\n", sep="")
-                                 list(ecr::ecr( fitness.fun = fitness, minimize=TRUE, n.objectives = private$min.function$getNumOjectives(),
-                                 n.dim = length(private$init.weights), lower = lower, upper = upper,
-                                 mu = 100L, lambda = 100L, representation = "float", survival.strategy = "plus",
-                                 parent.selector = ecr::selSimple,
-                                 mutator = setup(ecr::mutPolynomial, eta = 25, p = 0.2, lower = lower, upper = upper),
-                                 recombinator = setup(ecr::recSBX, eta = 15, p = 0.7, lower = lower, upper = upper), log.pop = TRUE,
-                                 initial.solutions = list(as.double(names(table(private$init.weights)))),
-                                 survival.selector = ecr::selNondom,
-                                 terminators = list(stopOnIters( private$generations )),
-                                 min.function = private$min.function$computeMeasure ))
+            message("[",super$getName(),"][INFO] Executing iteration ",x,
+                    " of ",private$n.iteractions)
+            list(ecr::ecr( fitness.fun = fitness, minimize=TRUE, 
+                           n.objectives = private$min.function$getNumOjectives(),
+                           n.dim = length(private$init.weights), 
+                           lower= lower, upper= upper, mu = 100L, lambda = 100L, 
+                           representation = "float", survival.strategy = "plus",
+                           parent.selector = ecr::selSimple,
+                           mutator= setup(ecr::mutPolynomial, eta= 25, p= 0.2, 
+                                          lower= lower, upper= upper),
+                           recombinator= setup(ecr::recSBX, eta = 15, p = 0.7, 
+                                               lower = lower, upper = upper), 
+                           log.pop = TRUE, 
+                           initial.solutions= list(as.double(names(table(private$init.weights)))),
+                           survival.selector= ecr::selNondom,
+                           terminators= list(stopOnIters( private$generations )),
+                           min.function= private$min.function$computeMeasure ))
       })
       
-      cat("[",super$getName(),"][INFO] Finish execution of NSGAII Algorithm with ",private$generations,
-          " generation/s comprising ",private$popSize," individuals\n",sep="")
+      message( "[",super$getName(),"][INFO] Execution finished with ",
+               private$generations," generation/s comprising ",private$popSize,
+               " individuals")
     },
     getResult = function(n.positive, n.negative){
       pareto.front <- private$getParetoValues()
       population <- private$getLastPopulation()
-      private$min.function$pack(super$getName(),pareto.front,population,n.positive,n.negative)
+      private$min.function$pack(super$getName(),pareto.front,population,
+                                n.positive,n.negative)
     }
   ),
   private = list(
     parse.population = function(init.population){
       if( !"matrix" %in% class(init.population) ){
         if(is.vector(init.population)) 
-          init.population <- matrix( as.numeric(init.population), nrow = 1, ncol= length(init.population) )
-        else init.population <- matrix( as.numeric(init.population), nrow = nrow(init.population), ncol= ncol(init.population) )
+          init.population <- matrix(as.numeric(init.population), nrow = 1, 
+                                    ncol= length(init.population) )
+        else init.population <- matrix(as.numeric(init.population), 
+                                       nrow = nrow(init.population), 
+                                       ncol= ncol(init.population) )
       }
       init.population
     },
     getParetoValues = function(){
       if( is.null(private$optimize) || length(private$optimize) == 0 )
-        stop("[",super$getName(),"][ERROR] Multi-Objective Algorithm not executed or failed\n")
+        stop("[",super$getName(),"][ERROR] Optimization Algorithm not executed or failed")
       else{
         as.data.frame(do.call(rbind,lapply(1:length(private$optimize), function(x) {
           df <- data.frame(private$optimize[[x]]$pareto.front,x)
@@ -74,7 +91,7 @@ NSGAII <- R6Class(
     },
     getLastPopulation = function(){
       if( is.null(private$optimize) || length(private$optimize) == 0 )
-        stop("[",super$getName(),"][ERROR] Multi-Objective Algorithm not executed or failed\n")
+        stop("[",super$getName(),"][ERROR] Optimization Algorithm not executed or failed")
       else{
         out <- do.call(c, lapply(private$optimize, function(iteration) {
           l <- do.call(rbind,lapply(iteration$last.population, function(pop){
@@ -87,7 +104,6 @@ NSGAII <- R6Class(
           list(l)
           }
         ))
-        x <<- out
         return(out)
       }
     },

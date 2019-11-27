@@ -2,54 +2,72 @@ PerformanceComparator <- R6Class(
   classname = "PerformanceComparator",
   portable = TRUE,
   public = list(
-    initialize = function (test.set, d2mcs.models, op.results, pareto.optimal = NULL, voting.scheme = NULL, measures){
-      cat("[PerformanceComparator][INFO] -------------------------------------------------------\n",sep="")
-      cat("[PerformanceComparator][INFO] Performance comparator started! \n")
-      cat("[PerformanceComparator][INFO] -------------------------------------------------------\n",sep="")
+    initialize = function (test.set, op.results, pareto.optimal = NULL, 
+                           voting.scheme = NULL, measures){
+      message("[",class(self)[1],"][INFO] ----------------------------------",
+              "---------------------")
+      message("[",class(self)[1],"][INFO] Performance comparator started!")
+      message("[",class(self)[1],"][INFO] ----------------------------------",
+              "---------------------")
       if( !is.null(test.set) && !inherits(test.set,"Subset")  )
-        stop("[PerformanceComparator][ERROR] Test dataset missing or incorrect. Should inherit from 'Subset class'. Aborting...\n")
+        stop("[",class(self)[1],"][ERROR] Test dataset missing or incorrect.",
+             " Should inherit from 'Subset class'. Aborting...")
       
       if( is.null(test.set$getClass()) )
-        stop("[PerformanceComparator][ERROR] Undefined class in dataset. Aborting...\n")
+        stop("[",class(self)[1],"][ERROR] Undefined class in dataset. Aborting...")
 
       if ( !inherits(d2mcs.models,"TrainOutput" ) )
-        stop("[PerformanceComparator][ERROR] D2MCS models are not correct. Must be a 'TrainOutput' class. Aborting...\n")
+        stop("[",class(self)[1],"][ERROR] D2MCS models are not correct. ",
+             "Must be a 'TrainOutput' class. Aborting...")
 
       if ( !inherits(op.results,"Optimizers") )
-        stop("[PerformanceComparator][ERROR] Optimizers must inherit from 'Optimizers' class. Aborting...\n")
+        stop("[",class(self)[1],"][ERROR] Optimizers must inherit from ",
+             " 'Optimizers' class. Aborting...")
 
-      if ( is.null(measures) || !is.list(measures) || !all(sapply(measures, inherits,"MeasureFunction")) )
-        stop("[PerformanceComparator][ERROR] Measures should be a list comprised of MeasureFunction objects\n")
+      if ( is.null(measures) || !is.list(measures) || 
+           !all(sapply(measures, inherits,"MeasureFunction")) )
+        stop("[",class(self)[1],"][ERROR] Measures should be a list ",
+             "comprised of 'MeasureFunction' objects\n")
       
       if ( !inherits(voting.scheme,"VotingScheme") ){
-        cat("[PerformanceComparator][INFO] VotingScheme invalid or unasigned. Using '",op.results$getVotingMethod()$getName(),"'\n", sep="") 
+        message("[",class(self)[1],"][INFO] VotingScheme invalid or ",
+                "unasigned. Using '",op.results$getVotingMethod()$getName())
         voting <- op.results$getVotingMethod()
       }else voting <- voting.scheme
       
       if(!is.null(pareto.optimal) && !inherits(pareto.optimal,"ParetoDistance")){
-        cat("[PerformanceComparator][ERROR] Pareto distance function should inherit from 'ParetoDistance class'. Assuming default method\n")
+        message("[",class(self)[1],"][ERROR] Pareto distance function should ",
+            "inherit from 'ParetoDistance class'. Assuming default method")
         private$distance <- EuclideanDistance$new()
       }else private$distance <- pareto.optimal
 
       ## COMPUTING PREDICTIONS
-      cat("[PerformanceComparator][INFO] -------------------------------------------------------\n",sep="")
+      message("[",class(self)[1],"][INFO] ----------------------------------",
+              "---------------------")
       prediction.cluster <- PredictionList$new( d2mcs.models$getMetric() )
-      invisible(sapply ( 1:op.results$getModels()$size(), function(pos, models, pred.cluster, set, instances){
-        cat("[PerformanceComparator][INFO] Computing predictions for cluster '",pos,"' of '",models$size(),"'\n",sep="")
-        cat("[PerformanceComparator][INFO] -------------------------------------------------------\n",sep="")
-        pred <- Prediction$new( model = models$getAt(pos)$getObject(), class.values = levels(set$getClass()), 
-                                positive.class = op.results$getPositiveClass() )
-        pred$execute(instances)
-        pred.cluster$addPrediction(pred)
-      }, models= op.results$getModels(), pred.cluster = prediction.cluster, set = test.set, 
-         instances = test.set$getInstances(ignore.class = TRUE) ) )
+      invisible(sapply ( 1:op.results$getModels()$size(), 
+        function(pos, models, pred.cluster, set, instances){
+          message("[",class(self)[1],"][INFO] Computing predictions for cluster",
+                  " '",pos,"' of '",models$size(),"'\n",sep="")
+          message("[",class(self)[1],"][INFO] ------------------------------",
+                  "-------------------------\n",sep="")
+          pred <- Prediction$new( model = models$getAt(pos)$getObject(), 
+                                  class.values = levels(set$getClass()), 
+                                  positive.class = op.results$getPositiveClass() )
+          pred$execute(instances)
+          pred.cluster$addPrediction(pred)
+        }, models= op.results$getModels(), pred.cluster= prediction.cluster, set= test.set, 
+        instances = test.set$getInstances(ignore.class = TRUE) ) )
       
       real.class <- test.set$getClass()
       negative.class <- levels(real.class)[ which(levels(real.class) != op.results$getPositiveClass()) ]
 
-      opt.models <- do.call(c,lapply(op.results$getOptimizers(), function(opt, predictions, pareto.distance, real, pos.class, neg.class){
-        ifelse( inherits(opt,"MOOData"), weights <- as.numeric(opt$getValues(pareto.distance)[1,]), weights <- as.numeric(opt$getValues()) )
-        preds <- voting$execute( predictions, weights )
+      opt.models <- do.call(c,lapply(op.results$getOptimizers(), 
+        function(opt, predictions, pareto.distance, real, pos.class, neg.class){
+          ifelse( inherits(opt,"MOOData"), 
+                  weights <- as.numeric(opt$getValues(pareto.distance)[1,]), 
+                  weights <- as.numeric(opt$getValues()) )
+          preds <- voting$execute( predictions, weights )
         ModelPerformance$new( model.name = opt$getName(), 
                               ConFMatrix$new( caret::confusionMatrix( factor(preds,levels=c(0,1), 
                                                                              labels=c(neg.class,pos.class)), 

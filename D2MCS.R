@@ -1,5 +1,3 @@
-library("R6")
-
 D2MCS <- R6Class(
   classname = "D2MCS",
   portable = TRUE,                   
@@ -75,7 +73,7 @@ D2MCS <- R6Class(
       private$cluster.conf <- list( cores=cores, socket=socket, 
                                     outfile=outfile, xdr=xdr )
       private$cluster.obj <- NULL
-      private$executed.models <- NULL
+      #private$executed.models <- NULL
       private$classify.output <- NULL
       private$cluster.models <- list(models=list(),metric=NULL)
       private$values.real <- NULL
@@ -147,10 +145,10 @@ D2MCS <- R6Class(
         model.path <- file.path( private$path,private$metric,
                                  paste0("C[",i,"-",train.set$getNumClusters(),"]") )
         
-        private$executed.models <- ExecutedModels$new(model.path)
+        executed.models <- ExecutedModels$new(model.path)
         
         message("[",class(self)[1],"][INFO] Total '",
-                private$executed.models$size(),"' models were previously executed")
+                executed.models$size(),"' models were previously executed")
         
         #DELETE IMCOMPATIBLE MODELS
         if (abs(mean(cor(train.set$getFeatureValues(i), 
@@ -171,9 +169,9 @@ D2MCS <- R6Class(
         
         #UPDATE MODELS
         pending.models <- pending.models[!(pending.models$name %in% 
-                                          private$executed.models$getNames()), ]
+                                          executed.models$getNames()), ]
         num.pending <- nrow(pending.models)
-        num.executed <- private$executed.models$size()
+        num.executed <- executed.models$size()
         
         #COMPUTE IF ML MODELS HAVE NOT BEEN EXECUTED
         if(num.pending == 0){
@@ -183,7 +181,7 @@ D2MCS <- R6Class(
           }
 
           private$cluster.models$models <- append( private$cluster.models$models,
-                                            list(private$executed.models$getBest()$train) )
+                                            list(executed.models$getBest()$train) )
           if(i < max(num.clusters))
             message( "[",class(self)[1],"][INFO] Remaining ",num.pending,
                      " M.L. models has been already executed for cluster ",
@@ -238,10 +236,10 @@ D2MCS <- R6Class(
                       model$name,"'. Skipping...")
             }
           }
-        }, executedModel = private$executed.models )
+        }, executedModel= executed.models )
         
         private$cluster.models$models <- append( private$cluster.models$models, 
-                                          list(private$executed.models$getBest()$train) )
+                                          list( executed.models$getBest()$train) )
         message("[",class(self)[1],"][INFO] Finish!")
       }
 
@@ -286,9 +284,11 @@ D2MCS <- R6Class(
 
       private$values.real <- test.set$getClassValues()
 
-      message("[",class(self)[1],"][INFO] ----------------------------------------")
+      message("[",class(self)[1],"][INFO] ------------------------------------",
+              "-------------------")
       message("[",class(self)[1],"][INFO] Starting classification operation")
-      message("[",class(self)[1],"][INFO] ----------------------------------------")
+      message("[",class(self)[1],"][INFO] ------------------------------------",
+              "-------------------")
       
       instances <- test.set$getFeatures()
       predictions <- ClusterPredictions$new(class.values= class.values, 
@@ -298,17 +298,17 @@ D2MCS <- R6Class(
       for ( cluster in 1:num.clusters ){
         message("[",class(self)[1],"][INFO] Computing predictions for cluster '",
                 cluster,"' of '",num.clusters,"'")
-        message("[",class(self)[1],"][INFO] ---------------------------------------")
+        message("[",class(self)[1],"][INFO] ----------------------------------",
+                "---------------------")
         pred <- Prediction$new( model= private$cluster.models$models[[cluster]], 
                                 class.values= class.values, 
                                 positive.class= positive.class )
         pred$execute(instances)
-        #prediction.cluster$pred <- append(prediction.cluster$pred,pred)
         predictions$add(pred)
       }
       
       message("[D2MCS][INFO] Computing final prediction values using '",
-              voting.scheme$getName())
+              voting.scheme$getName(),"'")
       voting.scheme$execute(predictions)
 
       private$classify.output <- ClassificationOutput$new(voting.scheme= voting.scheme, 
@@ -319,8 +319,7 @@ D2MCS <- R6Class(
       
       private$classify.output
     },
-    optimize = function(opt.set, voting.scheme, opt.algorithm, 
-                        positive.class=NULL, metric=private$metric){
+    optimize = function(opt.set, voting.scheme, opt.algorithm, weights=NULL, positive.class=NULL){
       if( !is.null(opt.set) && !inherits(opt.set,"Subset")  )
         stop("[D2MCS][ERROR] Test dataset missing or incorrect. Should inherit",
              " from 'Subset class'. Aborting...")
@@ -338,64 +337,98 @@ D2MCS <- R6Class(
         stop("[D2MCS][ERROR] Optimization algorithms is invalid. List elements",
              " must inherit from 'WeightedOptimizer' object. Aborting...")
 
-      if ( is.null(positive.class) || !positive.class %in% levels(opt.set$getClass()) )
-        stop("[D2MCS][ERROR] Positive class missing or invalid (must be: ",
-             paste0(levels(opt.set$getClass()),collapse=", "),"). Aborting...")
+      if( is.factor(opt.set$getClassValues()))
+        class.values <- levels(unique(opt.set$getClassValues()))
+      else class.values <- unique(opt.set$getClassValues())
+      
+      if ( is.null(positive.class) )
+        positive.class <- opt.set$getPositiveClass()
+      else{
+        if( !positive.class %in% class.values ){
+          message("[D2MCS][WARNING] Positive class missing or invalid. ",
+                "Must be: [",paste0(class.values,collapse=", "),"]. ",
+                "Assuming default positive class: ",opt.set$getPositiveClass())
+          positive.class <- opt.set$getPositiveClass()
+        }
+      }
+      
+      if ( any( is.null(private$cluster.models$models),
+                !is.list(private$cluster.models$models),
+                length(private$cluster.models$models)==0) ){
+        stop("[",class(self)[1],"][ERROR] Models were not trained. Aborting...")
+      }
+      
+      if( any(is.null(weights),length(weights) < 
+              length(private$cluster.models$models),!is.numeric(weights))){
+        message("[",class(self)[1],"][WARNING] Weights not defined.",
+                "Assuming default weigths: [",paste0(round(self$getBestPerformanceByCluster(),
+                                                           digits = 3),
+                                                     collapse= ", "),"].")
+        weights <- self$getBestPerformanceByCluster()
+      }
+      
+      weights <- weights[1:length(private$cluster.models$models)]
+      
+      if( any(is.null(opt.set$getClassValues()),
+              length(opt.set$getClassValues())!=nrow(opt.set$getFeatures() )) ){
+        stop("[",class(self)[1],"][ERROR] Number of target values and instances",
+             " missmatch. Aborting...")
+      }
+      
+      real.values <- opt.set$getClassValues()
 
-      if( is.null(private$bestModels) || private$bestModels$size() < 1 )
-        stop("[D2MCS][ERROR] Models were not trained. Please run 'Train'",
-             "method first")
-      
-      if ( is.null(private$models.weights) || length(private$models.weights) < 1 ){
-        cat("[D2MCS][ERROR] Weigths not defined. Initializing weights values")
-        private$models.weights <- rep.int(1,times = private$bestModels$size() )
-      }else private$models.weights <- as.numeric(private$models.weights)
-      
       message("[D2MCS][INFO] -------------------------------------------------------")
       message("[D2MCS][INFO] D2MCS Optimization stage")
       message("[D2MCS][INFO] -------------------------------------------------------")
+
+      instances <- opt.set$getFeatures()
+      negative.class <- setdiff(class.values,opt.set$getPositiveClass())
       
-      if( opt.set$getClassIndex() > 0 && !is.null(opt.set$getClass()) )
-        private$real.values <- opt.set$getClass()
+      predictions <- ClusterPredictions$new(class.values= class.values, 
+                                            positive.class= positive.class)
       
-      instances <- opt.set$getInstances(ignore.class = TRUE)
-      negative.class <- levels(opt.set$getClass())[which(levels(opt.set$getClass())!=positive.class)]
+      num.clusters <- length(private$cluster.models$models)
       
-      real.values <- factor( opt.set$getClass(), levels= c(negative.class, positive.class),  labels = c(0, 1) )
-      
-      prediction.cluster <- PredictionList$new( private$metric )
-      
-      for ( cluster in 1:private$bestModels$size() ){
-        message("[D2MCS][INFO] Computing predictions for cluster '",cluster,
-                "' of '", private$bestModels$size(),"'")
-        message("[D2MCS][INFO] -------------------------------------------------------")
-        pred <- Prediction$new( model = private$bestModels$getAt(cluster)$getObject(), 
-                                class.values = levels(opt.set$getClass()), 
-                                positive.class = positive.class )
+      for ( cluster in 1:num.clusters ){
+        message("[",class(self)[1],"][INFO] Computing predictions for cluster '",
+                cluster,"' of '",num.clusters,"'")
+        message("[",class(self)[1],"][INFO] ----------------------------------",
+                "---------------------")
+        pred <- Prediction$new( model= private$cluster.models$models[[cluster]], 
+                                class.values= class.values, 
+                                positive.class= positive.class )
         pred$execute(instances)
-        prediction.cluster$addPrediction(pred)
+        predictions$add(pred)
       }
+      
+      message("[D2MCS][INFO] Computing prediction values using '",
+              voting.scheme$getName(), "voting scheme")
+
       
       compute.fitness <- function(weights,min.function) {
-        pred.values <- voting.scheme$execute(prediction.cluster,weights)
+        voting.scheme$execute(predictions=predictions,weights=weights)
+        pred.values <- voting.scheme$getPrediction("raw",positive.class)
         mf <- min.function(caret::confusionMatrix(pred.values,real.values, 
-                                                  positive="1", mode="everything"))
+                                                  positive=positive.class, 
+                                                  mode="everything"))
         return(mf)
       }
+
       
-      message("[D2MCS][INFO] Starting optimization process: ")
+      message("[D2MCS][INFO] Starting optimization process using ",
+              paste0(sapply(opt.algorithm, function(x) x$getName() ),
+                     collapse = ", ")," Optimization Algorithm(s)")
+      
       freq <- table(real.values)
-      
+
       opt.data <- sapply( opt.algorithm, function(alg, wg, freq) { 
         alg$execute(wg, compute.fitness)
-        alg$getResult(n.positive = as.numeric(freq["1"]), 
-                      n.negative= as.numeric(freq["0"]) )
-      }, wg = private$models.weights, freq= freq)
-      
-      message("[D2MCS][INFO] Finish optimmization process!")
+        alg$getResult(n.positive = as.numeric(freq[positive.class]), 
+                      n.negative= as.numeric(freq[negative.class]) )
+      }, wg = weights, freq= freq)
       
       return (Optimizers$new( voting.scheme= voting.scheme, 
-                              cluster.models= private$bestModels, 
+                              cluster.models= private$cluster.models$models, 
                               metric= private$metric, 
                               optimizers= opt.data, 
                               positive.class= positive.class, 

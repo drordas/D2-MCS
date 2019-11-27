@@ -4,15 +4,22 @@ ClassMajorityVoting <- R6Class(
   portable = TRUE,
   inherit = VotingScheme,
   public = list(
-    initialize = function(class.tie = "first"){ 
-
+    initialize = function(class.tie = "first", cutoff=.5){ 
       super$initialize(private$voting.name) 
       private$class.tie <- class.tie
       private$final.pred <- NULL
       private$positive.class <- NULL
       private$class.values <- NULL
+      
+      if( is.null(cutoff) || !dplyr::between(cutoff,0,1) ){
+        if (!dplyr::between(cutoff,0,1) )
+          message("[",class(self)[1],"][WARNING] Cutoff value is not valid.",
+                  "Must be a not-null in the interval between 0 and 1")
+        private$cutoff <- .5
+      }else{ private$cutoff <- cutoff }
+        
     },
-    execute = function(predictions, majority.class=NULL){
+    execute = function(predictions, majority.class=NULL, cutoff=.5, verbose=FALSE){
       if(!inherits(predictions,"ClusterPredictions")){
         stop("[",class(self)[1],"][ERROR] Invalid prediction type. Must be a ",
              "ClusterPrediction object. Aborting...")
@@ -25,21 +32,30 @@ ClassMajorityVoting <- R6Class(
       
       private$majority.class <- predictions$getPositiveClass()
       if( is.null(majority.class) || !(majority.class %in% predictions$getClassValues()) ){
-        message("[",class(self)[1],"][WARNING] Majority class not set of invalid.",
-                " Assuming default value: ",predictions$getPositiveClass())
+        if(isTRUE(verbose)){
+          message("[",class(self)[1],"][WARNING] Majority class not set of invalid.",
+                  " Assuming default value: ",predictions$getPositiveClass())
+        }
       }else private$majority.class <- majority.class
       
-      message("[",class(self)[1],"][INFO] Computing '",class(self)[1],
-              "' scheme using '",private$majority.class,"' as majority class")
+      if( is.null(cutoff) || !between(cutoff,0,1) ){
+        message("[",class(self)[1],"][WARNING] Cutoff value is not valid.",
+             "Must be a not-null in the interval between 0 and 1")
+      }else { private$cutoff <- cutoff }
+      
+      if(isTRUE(verbose)){
+        message("[",class(self)[1],"][INFO] Performing voting using '",
+                private$majority.class,"' as majority class")
+      }
       
       private$final.pred <- list(prob=data.frame(),raw=c(),bin=data.frame())
       
       raw.pred <- sapply(predictions$getAll(),function(x) { 
-                            x$getPrediction("raw",predictions$getPositiveClass()) 
-                     })
+                         x$getPrediction("raw",predictions$getPositiveClass()) 
+                  })
       prob.pred <- sapply(predictions$getAll(),function(x) { 
-                            x$getPrediction("prob",predictions$getPositiveClass()) 
-                     })
+                          x$getPrediction("prob",predictions$getPositiveClass()) 
+                   })
       private$class.values <- predictions$getClassValues()
       private$positive.class <- predictions$getPositiveClass()
       negative.class <- setdiff( private$class.values, private$positive.class )
@@ -66,7 +82,7 @@ ClassMajorityVoting <- R6Class(
         
         prob.row <- prob.pred[row, ]
         if( entry %in% predictions$getPositiveClass() ){
-          values <- prob.row[prob.row>.5]
+          values <- prob.row[prob.row>private$cutoff]
           result <- sum(values)/length(values)
           private$final.pred$prob <- rbind(private$final.pred$prob, c(result,abs(result-1)))
         }else{ private$final.pred$prob <- rbind(private$final.pred$prob,c(0,1)) }
@@ -118,7 +134,8 @@ ClassMajorityVoting <- R6Class(
       )
     },
     getPositiveClass = function(){ private$positive.class },
-    getClassValues = function() { private$class.values }
+    getClassValues = function() { private$class.values },
+    getCutoff = function() {private$cutoff}
   ),
   private = list(
     voting.name = "ClassMajorityVoting",
@@ -127,6 +144,7 @@ ClassMajorityVoting <- R6Class(
     final.pred = NULL,
     class.tie = "first",
     majority.class = NULL,
-    weights = NULL
+    weights = NULL,
+    cutoff = NULL
   )
 )

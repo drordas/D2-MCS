@@ -80,7 +80,12 @@ optimization <- Benchmarking$optimize( opt.set = test.subset,
 ## Citation
 
 To cite **D2-MCS** please use:
-> Ruano-Ordás, D; Yevseyeva, I, Basto-Fernandes,V; Méndez, José R; Emmerichc, Michael T.M. (2018). 
+> Ruano-Ordás, D.; Yevseyeva, I.; Basto-Fernandes, V.; Méndez, José R.; Emmerich, Michael T.M. (2018). 
 > Improving the drug discovery process by using multiple classifier systems
 > Expert Systems with Applications. Volume 121, pp. 292-303.
 > Elsevier. https://doi.org/10.1016/j.eswa.2018.12.032
+
+> Ruano-Ordás, D.; Burggraaff, L.; Liu, R.; van der Horst, C; Heitman, L.H.; Emmerich, Michael T.M.; Mendez, José R.; Yevseyeva, I; Van Westen,G. (2019) 
+> A Multiple Classifier System Identifies Novel Cannabinoid CB2 Receptor Ligands.
+> Journal of Cheminformatics. Volume 11, Article 66.
+> Biomedcentral. https://doi.org/10.1186/s13321-019-0389-9

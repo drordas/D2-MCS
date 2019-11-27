@@ -81,6 +81,7 @@ source("source/optimization/MOOData.R", chdir = TRUE)
 source("source/optimization/FPFNdata.R", chdir=TRUE)
 source("source/optimization/SOO.R", chdir=TRUE)
 source("source/optimization/SOOData.R", chdir=TRUE)
+source("source/optimization/Optimizers.R", chdir= TRUE)
 
 #LOAD MEASURES ALGORITHMS
 cat("[SOURCES][INFO] Loading measure techniques\n")

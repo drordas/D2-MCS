@@ -4,7 +4,8 @@ FPFNdata <- R6Class(
   inherit = MOOData,
   public = list(
     initialize = function (alg.name, pareto.front, population, n.positive, n.negative){
-      super$initialize(paste0(alg.name," - FPFN"), pareto.front, population, n.positive, n.negative)
+      super$initialize(paste0(alg.name," - FPFN"), pareto.front, population, 
+                       n.positive, n.negative)
       private$conf.matrix <- NULL
     },
     getConfusionMatrix = function( pareto.distance = NULL) { 

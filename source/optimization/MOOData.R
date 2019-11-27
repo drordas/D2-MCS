@@ -3,12 +3,14 @@ MOOData <- R6Class(
   inherit = MinResult,
   portable = TRUE,
   public = list(
-    initialize = function (name, pareto.front, population, n.positive, n.negative){
+    initialize = function (name, pareto.front, population, 
+                           n.positive, n.negative)
+    {
       if (!inherits(pareto.front,"data.frame"))
-        stop("[MOOData][ERROR] Pareto front must be a data.frame\n")
+        stop("[",class(self)[1],"][ERROR] Pareto front must be a data.frame")
 
       if (!inherits(population,"list"))
-        stop("[MOOData][ERROR] Population must be a list\n")
+        stop("[",class(self)[1],"][ERROR] Population must be a list")
       
       super$initialize(name,n.positive, n.negative)
       private$pareto.front <- pareto.front
@@ -18,20 +20,24 @@ MOOData <- R6Class(
     plotPareto = function(){
       if( ( ncol(private$pareto.front) - 1  ) == 2 ){
         colnames <-  names(private$pareto.front)
-        ggplot(private$pareto.front, aes_string(x=colnames[1], y=colnames[2] ) ) + labs(color = "Pareto Nº") + 
+        ggplot(private$pareto.front,aes_string(x=colnames[1], y=colnames[2])) + 
+          labs(color = "Pareto Nº") + 
           geom_point(aes_string(color=as.factor(private$pareto.front[,3]))) +
-          stat_smooth(aes_string( x=colnames[1], y=colnames[2], color=as.factor(private$pareto.front[,3]) ), method="lm", se=FALSE ) 
-      }else cat("[MOOData][ERROR] 3D plot not implemented yet\n")
+          stat_smooth(aes_string( x=colnames[1], y=colnames[2], 
+                                  color=as.factor(private$pareto.front[,3]) ), 
+                      method="lm", se=FALSE ) 
+      }else message("[",class(self)[1],"][ERROR] 3D plot not implemented yet")
     },
     getBestSolution = function(pareto.distance = NULL){
       if( !is.null(pareto.distance) ){
         if( !inherits(pareto.distance,"ParetoDistance") ){
-          cat("[MOOData][WARNING] Input parameter must inherit from ParetoDistance class. Using default method\n")
+          message("[",class(self)[1],"][WARNING] Input parameter must inherit",
+                  "from 'ParetoDistance' class. Using default method")
           method <- EuclideanDistance$new()   
         }else method <- pareto.distance
       }else method <- EuclideanDistance$new()
       
-      cat("[MOOData][INFO] Executing method '",method$getName(),"'\n", sep="")
+      message("[",class(self)[1],"][INFO] Executing method '",method$getName(),"'")
       method$compute(private$pareto.front[,-which(colnames(private$pareto.front)=="p.front")])
       method$solve.ties()
     },
@@ -39,22 +45,27 @@ MOOData <- R6Class(
     getNumPositives = function(){ private$n.positive },
     getNumNegatives = function(){ private$n.negative },
     getConfusionMatrix = function( pareto.distance = NULL) { 
-      stop("[",private$name,"][ERROR] Method 'getConfusionMatrix' is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][ERROR] Method 'getConfusionMatrix' is abstract.",
+           "Must be implemented in inherited class")
     },
     getFP = function(){
-      if (is.null(private$conf.matrix)) self$getConfusionMatrix(private$pareto.distance)
+      if (is.null(private$conf.matrix)) 
+        self$getConfusionMatrix(private$pareto.distance)
       private$conf.matrix$table[2,1]
     },
     getFN = function(){
-      if (is.null(private$conf.matrix)) self$getConfusionMatrix(private$pareto.distance)
+      if (is.null(private$conf.matrix)) 
+        self$getConfusionMatrix(private$pareto.distance)
       private$conf.matrix$table[1,2]
     },
     getTP = function(){
-      if (is.null(private$conf.matrix)) self$getConfusionMatrix(private$pareto.distance)
+      if (is.null(private$conf.matrix)) 
+        self$getConfusionMatrix(private$pareto.distance)
       private$conf.matrix$table[2,2]
     },
     getTN = function(){
-      if (is.null(private$conf.matrix)) self$getConfusionMatrix(private$pareto.distance)
+      if (is.null(private$conf.matrix)) 
+        self$getConfusionMatrix(private$pareto.distance)
       private$conf.matrix$table[1,1]
     }
   ),

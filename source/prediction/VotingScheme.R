@@ -33,6 +33,10 @@ VotingScheme <- R6Class(
     getClassValues = function(){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
            " Method should be defined in inherited class. Aborting...") 
+    },
+    getCutoff = function(){
+      stop("[",class(self)[1],"][ERROR] Class is abstract.",
+           " Method should be defined in inherited class. Aborting...") 
     }
   ),
   private = list( name = NULL )

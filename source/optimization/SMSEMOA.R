@@ -29,28 +29,36 @@ SMSEMOA <- R6Class(
       
       private$init.weights <- private$parse.population(init.weights)
       
-      cat("[",private$name,"][INFO] Executing ",private$name," Algorithm with ",private$generations,
-          " generation/s comprising ",private$popSize," individuals\n",sep="")
+      message("[",private$name,"][INFO] Executing ",private$name,
+              " Algorithm with ",private$generations," generation/s comprising ",
+              private$popSize," individuals")
       
       lower <- rep( 0, length(private$init.weights) )
       upper <- rep( as.double(length(private$init.weights)), length(private$init.weights) )
       
       private$optimize <- sapply( 1:private$n.iteractions, function(x) {
-                      cat("[",private$name,"][INFO] Executing iteration ",x," of ",private$n.iteractions,"\n", sep="")
-                      list(ecr::ecr( fitness.fun = fitness, minimize=TRUE, n.objectives = private$min.function$getNumOjectives(),
-                                     n.dim = length(private$init.weights), lower = lower, upper = upper,
-                                     mu = 100L, lambda = 1L, representation = "float", survival.strategy = "plus",
-                                     parent.selector = ecr::selSimple,
-                                     mutator = setup(ecr::mutPolynomial, eta = 25, p = 0.2, lower = lower, upper = upper),
-                                     recombinator = setup(ecr::recSBX, eta = 15, p = 0.7, lower = lower, upper = upper), log.pop = TRUE,
-                                     initial.solutions = list(as.double(names(table(private$init.weights)))),
-                                     survival.selector = setup(ecr::selDomHV, ref.point = private$ref.point),
-                                     terminators = list(stopOnIters( private$generations )),
-                                     min.function = private$min.function$computeMeasure ))
+              message("[",private$name,"][INFO] Executing iteration ",x," of ",
+                      private$n.iteractions)
+              list(ecr::ecr( fitness.fun = fitness, minimize=TRUE, 
+                             n.objectives= private$min.function$getNumOjectives(),
+                             n.dim = length(private$init.weights), 
+                             lower= lower, upper = upper,
+                             mu = 100L, lambda = 1L, representation= "float", 
+                             survival.strategy = "plus",
+                             parent.selector = ecr::selSimple,
+                             mutator = setup(ecr::mutPolynomial,eta = 25,p = 0.2, 
+                                             lower = lower, upper = upper),
+                             recombinator = setup(ecr::recSBX, eta = 15, p = 0.7, 
+                                                  lower = lower, upper = upper), log.pop = TRUE,
+                             initial.solutions = list(as.double(names(table(private$init.weights)))),
+                             survival.selector = setup(ecr::selDomHV, ref.point= private$ref.point),
+                             terminators = list(stopOnIters( private$generations )),
+                             min.function = private$min.function$computeMeasure ))
       })
       
-      cat("[",private$name,"][INFO] Finish execution of ",private$name," Algorithm with ",private$generations,
-          " generation/s comprising ",private$popSize," individuals\n",sep="")
+      message("[",private$name,"][INFO] Finish execution of ",private$name,
+              " Algorithm with ",private$generations," generation/s comprising ",
+              private$popSize," individuals")
     },
     getResult = function(n.positive, n.negative){
       pareto.front <- private$getParetoValues()
