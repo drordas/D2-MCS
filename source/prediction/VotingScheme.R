@@ -1,13 +1,9 @@
-library("R6")
-VotingScheme <- R6Class(
+VotingScheme <- R6::R6Class(
   classname = "VotingScheme",
-  portable = TRUE,                   
+  portable = TRUE,
   public = list(
-    initialize = function(name){
-      if( missing(name) )
-        stop("[",class(self)[1],"][ERROR] VotingScheme name should be defined.",
-             " Aborting...")
-      private$name <- name
+    initialize = function(){
+      private$name <- class(self)[1]
     },
     execute = function(predictions){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
@@ -22,21 +18,21 @@ VotingScheme <- R6Class(
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
            " Method should be defined in inherited class. Aborting...")
     },
-    getWeights = function(){ 
+    getWeights = function(){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
-            " Method should be defined in inherited class. Aborting...") 
+            " Method should be defined in inherited class. Aborting...")
     },
     getPositiveClass = function(){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
-           " Method should be defined in inherited class. Aborting...") 
+           " Method should be defined in inherited class. Aborting...")
     },
     getClassValues = function(){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
-           " Method should be defined in inherited class. Aborting...") 
+           " Method should be defined in inherited class. Aborting...")
     },
     getCutoff = function(){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
-           " Method should be defined in inherited class. Aborting...") 
+           " Method should be defined in inherited class. Aborting...")
     }
   ),
   private = list( name = NULL )

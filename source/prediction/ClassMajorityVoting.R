@@ -1,35 +1,34 @@
-library("R6")
-ClassMajorityVoting <- R6Class(
+ClassMajorityVoting <- R6::R6Class(
   classname = "ClassMajorityVoting",
   portable = TRUE,
   inherit = VotingScheme,
   public = list(
-    initialize = function(class.tie = "first", cutoff=.5){ 
-      super$initialize(private$voting.name) 
+    initialize = function(class.tie = "first", cutoff=.5){
+      super$initialize()
       private$class.tie <- class.tie
       private$final.pred <- NULL
       private$positive.class <- NULL
       private$class.values <- NULL
-      
+
       if( is.null(cutoff) || !dplyr::between(cutoff,0,1) ){
         if (!dplyr::between(cutoff,0,1) )
           message("[",class(self)[1],"][WARNING] Cutoff value is not valid.",
                   "Must be a not-null in the interval between 0 and 1")
         private$cutoff <- .5
       }else{ private$cutoff <- cutoff }
-        
+
     },
     execute = function(predictions, majority.class=NULL, cutoff=.5, verbose=FALSE){
       if(!inherits(predictions,"ClusterPredictions")){
         stop("[",class(self)[1],"][ERROR] Invalid prediction type. Must be a ",
              "ClusterPrediction object. Aborting...")
       }
-      
+
       if(predictions$size()<=0){
         stop("[",class(self)[1],"][ERROR] Cluster predictions were not computed",
              "Aborting...")
       }
-      
+
       private$majority.class <- predictions$getPositiveClass()
       if( is.null(majority.class) || !(majority.class %in% predictions$getClassValues()) ){
         if(isTRUE(verbose)){
@@ -37,29 +36,29 @@ ClassMajorityVoting <- R6Class(
                   " Assuming default value: ",predictions$getPositiveClass())
         }
       }else private$majority.class <- majority.class
-      
+
       if( is.null(cutoff) || !between(cutoff,0,1) ){
         message("[",class(self)[1],"][WARNING] Cutoff value is not valid.",
              "Must be a not-null in the interval between 0 and 1")
       }else { private$cutoff <- cutoff }
-      
+
       if(isTRUE(verbose)){
         message("[",class(self)[1],"][INFO] Performing voting using '",
                 private$majority.class,"' as majority class")
       }
-      
-      private$final.pred <- list(prob=data.frame(),raw=c(),bin=data.frame())
-      
-      raw.pred <- sapply(predictions$getAll(),function(x) { 
-                         x$getPrediction("raw",predictions$getPositiveClass()) 
+
+      private$final.pred <- list(prob=data.frame(),raw=c())
+
+      raw.pred <- sapply(predictions$getAll(),function(x) {
+                         x$getPrediction("raw",predictions$getPositiveClass())
                   })
-      prob.pred <- sapply(predictions$getAll(),function(x) { 
-                          x$getPrediction("prob",predictions$getPositiveClass()) 
+      prob.pred <- sapply(predictions$getAll(),function(x) {
+                          x$getPrediction("prob",predictions$getPositiveClass())
                    })
       private$class.values <- predictions$getClassValues()
       private$positive.class <- predictions$getPositiveClass()
       negative.class <- setdiff( private$class.values, private$positive.class )
-      
+
       for (row in 1:nrow(raw.pred)) {
         row.summary <- table(raw.pred[row, ])
         max.values <- names(which(row.summary == max(row.summary)))
@@ -75,11 +74,11 @@ ClassMajorityVoting <- R6Class(
             entry <- which.max(rank(x=row.summary, ties.method=private$class.tie))
             private$final.pred$raw <- c(private$final.pred$raw, entry)
           }
-        }else{ 
+        }else{
           entry <- max.values
-          private$final.pred$raw <- c(private$final.pred$raw,entry) 
+          private$final.pred$raw <- c(private$final.pred$raw,entry)
         }
-        
+
         prob.row <- prob.pred[row, ]
         if( entry %in% predictions$getPositiveClass() ){
           values <- prob.row[prob.row>private$cutoff]
@@ -87,49 +86,33 @@ ClassMajorityVoting <- R6Class(
           private$final.pred$prob <- rbind(private$final.pred$prob, c(result,abs(result-1)))
         }else{ private$final.pred$prob <- rbind(private$final.pred$prob,c(0,1)) }
       }
-      
+
       names(private$final.pred$prob) <- c(private$positive.class,negative.class)
-      private$final.pred$raw <- factor(private$final.pred$raw, 
+      private$final.pred$raw <- factor(private$final.pred$raw,
                                        levels= predictions$getClassValues())
-      
-      private$final.pred$bin <- data.frame(varhandle::to.dummy(private$final.pred$raw, 
-                                                    private$positive.class) )
-      names(private$final.pred$bin) <- c(private$positive.class,negative.class)
     },
     getPrediction = function(type=NULL, target=NULL){
       if(is.null(private$final.pred) || is.null(private$positive.class)){
         stop("[",class(self)[1],"][ERROR] Predictions not found.",
              "Voting method has not been executed. Aborting...")
       }
-      
-      if( is.null(type) || !type %in% c("raw","prob","bin") ){
+
+      if( is.null(type) || !type %in% c("raw","prob") ){
         message(yellow(paste0("[",class(self)[1],"][WARNING] Probability type ",
-                              "missing or incorrect. Should be 'raw', 'prob' ",
-                              "or 'bin'. Assuming 'prob' by default")))
+                              "missing or incorrect. Should be 'raw' or 'prob'.",
+                              " Assuming 'prob' by default")))
         type <- "prob"
       }
 
       switch (type,
               "prob"= {
                 if(is.null(target) || !(target %in% names(private$final.pred$prob) ) ){
-                  message(yellow(paste0("[",class(self)[1],"][WARNING] Target not ",
-                                        "specified or invalid. Using '",
-                                        names(private$final.pred$prob)[1],
-                                        "' as default")))
+                  message("[",class(self)[1],"][WARNING] Target not specified ",
+                          "or invalid. Using '",names(private$final.pred$prob)[1],
+                          "' as default")
                   target <- names(private$final.pred$prob)[1]
                 }
                 private$final.pred$prob[,target]},
-              "bin" = {
-                if( is.null(target) || !(target %in% names(private$final.pred$bin) ) )
-                {
-                  message(yellow(paste0("[",class(self)[1],"][WARNING] Target not ",
-                                        "specified or invalid. Using '",
-                                        names(private$final.pred$bin)[1],
-                                        "' as default value")))
-                  target <- names(private$final.pred$bin)[1]
-                }
-                private$final.pred$bin[,target]
-              },
               "raw" = {private$final.pred$raw}
       )
     },
@@ -138,7 +121,6 @@ ClassMajorityVoting <- R6Class(
     getCutoff = function() {private$cutoff}
   ),
   private = list(
-    voting.name = "ClassMajorityVoting",
     positive.class = NULL,
     class.values = NULL,
     final.pred = NULL,
