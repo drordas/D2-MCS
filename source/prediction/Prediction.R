@@ -15,7 +15,7 @@ Prediction <- R6Class(
       if( !missing(pred.values) && !is.null(pred.values) &&
           inherits(pred.values,"data.frame") )
       {
-        loadPackages(private$model$model.libs)
+        private$loadPackages(private$model$model.libs)
         private$results$raw <- predict(object = private$model$model.data,
                                        newdata=pred.values, type="raw" )
         private$results$prob <- predict(object = private$model$model.data,
@@ -53,6 +53,27 @@ Prediction <- R6Class(
   ),
   private = list(
     results = NULL,
-    model = NULL
+    model = NULL,
+    loadPackages = function(pkgName){
+
+      if (is.list(pkgName)) {
+        pkgName <- unlist(pkgName)
+      }
+
+      new.packages <- pkgName[!(pkgName %in% installed.packages()[,"Package"])]
+      if ( length(new.packages) ) {
+        message("[", class(self)[1], "][INFO][", private$model$model.name, "]", length(new.packages),
+                "packages needed to execute aplication\n Installing packages ...")
+        suppressMessages(install.packages( new.packages,
+                                           repos ="https://ftp.cixug.es/CRAN/",
+                                           dependencies = TRUE,
+                                           quiet = TRUE, verbose = FALSE))
+      }
+      lapply(pkgName, function(pkg) {
+        if ( !pkg %in% loaded_packages() ) {
+          library(pkg, character.only = TRUE, warn.conflicts = FALSE, quietly = TRUE, attach.required = T)
+        }
+      })
+    }
   )
 )
