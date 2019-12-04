@@ -18,7 +18,7 @@ ClassWeightedVoting <- R6Class(
         private$cutoff <- .5
       }else{ private$cutoff <- cutoff }
     },
-    execute = function(predictions, weights = NULL, cutoff=.5, verbose=FALSE){
+    execute = function(predictions, weights = NULL, cutoff = NULL, verbose = FALSE){
       if(!inherits(predictions,"ClusterPredictions")){
         stop("[",class(self)[1],"][ERROR] Invalid prediction type. Must be a ",
                      "ClusterPrediction object. Aborting...")
@@ -30,8 +30,9 @@ ClassWeightedVoting <- R6Class(
       }
 
       if( is.null(cutoff) || !dplyr::between(cutoff,0,1) ){
-        message("[",class(self)[1],"][INFO] Cutoff value is not valid.",
-             "Must be a not-null in the interval between 0 and 1")
+        message("[",class(self)[1],"][WARNING] Cutoff value is not valid.",
+             " Must be a not-null in the interval between 0 and 1.",
+             " Using cutoff: ", private$cutoff)
       }else { private$cutoff <- cutoff }
 
       class.values <- ifelse(is.factor(predictions$getClassValues()),
