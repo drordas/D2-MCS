@@ -6,6 +6,11 @@ cat("[SOURCES][INFO] Loading required sources\n")
 source("source/data/Dataset.R", chdir=TRUE)
 source("source/data/Subset.R", chdir=TRUE)
 source("source/data/TrainSet.R", chdir=TRUE)
+source("source/data/HDDataset.R", chdir=TRUE)
+source("source/data/FIterator.R", chdir=TRUE)
+source("source/data/DIterator.R", chdir=TRUE)
+source("source/data/HDSubset.R", chdir=TRUE)
+source("source/data/DatasetLoader.R", chdir=TRUE)
 
 cat("[SOURCES][INFO] Loading clustering algorithms\n")
 #LOAD CLUSTERING ALGORITHMS CLASSES

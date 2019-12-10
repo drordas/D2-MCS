@@ -2,48 +2,37 @@ PerformanceComparator <- R6Class(
   classname = "PerformanceComparator",
   portable = TRUE,
   public = list(
-    initialize = function (test.set, op.results, pareto.optimal = NULL, 
-                           voting.scheme = NULL, measures){
-      message("[",class(self)[1],"][INFO] ----------------------------------",
-              "---------------------")
-      message("[",class(self)[1],"][INFO] Performance comparator started!")
-      message("[",class(self)[1],"][INFO] ----------------------------------",
-              "---------------------")
-      if( !is.null(test.set) && !inherits(test.set,"Subset")  )
+    initialize = function (test.set, op.results, pareto.optimal= NULL, measures){
+      
+      if ( !is.list(op.results) ) op.results <- list(op.results)
+      if ( !is.list(measures) ) measures <- list(measures)
+      
+      if ( !inherits(test.set,"Subset")  )
         stop("[",class(self)[1],"][ERROR] Test dataset missing or incorrect.",
-             " Should inherit from 'Subset class'. Aborting...")
-      
-      if( is.null(test.set$getClass()) )
-        stop("[",class(self)[1],"][ERROR] Undefined class in dataset. Aborting...")
+             " Should inherit from 'Subset' class. Aborting...")
 
-      if ( !inherits(d2mcs.models,"TrainOutput" ) )
-        stop("[",class(self)[1],"][ERROR] D2MCS models are not correct. ",
-             "Must be a 'TrainOutput' class. Aborting...")
-
-      if ( !inherits(op.results,"Optimizers") )
+      if ( !all(sapply(op.results, inherits,"Optimizers")) )
         stop("[",class(self)[1],"][ERROR] Optimizers must inherit from ",
-             " 'Optimizers' class. Aborting...")
-
-      if ( is.null(measures) || !is.list(measures) || 
-           !all(sapply(measures, inherits,"MeasureFunction")) )
-        stop("[",class(self)[1],"][ERROR] Measures should be a list ",
-             "comprised of 'MeasureFunction' objects\n")
+             "'Optimizers' class. Aborting...")
       
-      if ( !inherits(voting.scheme,"VotingScheme") ){
-        message("[",class(self)[1],"][INFO] VotingScheme invalid or ",
-                "unasigned. Using '",op.results$getVotingMethod()$getName())
-        voting <- op.results$getVotingMethod()
-      }else voting <- voting.scheme
+      if ( !all(sapply(measures, inherits,"MeasureFunction")) )
+        stop("[",class(self)[1],"][ERROR] Measures should be a list comprised ",
+             "of 'MeasureFunction' objects. Aborting...")
       
-      if(!is.null(pareto.optimal) && !inherits(pareto.optimal,"ParetoDistance")){
-        message("[",class(self)[1],"][ERROR] Pareto distance function should ",
-            "inherit from 'ParetoDistance class'. Assuming default method")
+      if ( !inherits(pareto.optimal,"ParetoDistance") ){
         private$distance <- EuclideanDistance$new()
+        message("[",class(self)[1],"][WARNING] Pareto distance function should ",
+            "inherit from 'ParetoDistance' class. Assuming '",
+            private$distance$getName(),"' method")
       }else private$distance <- pareto.optimal
 
       ## COMPUTING PREDICTIONS
       message("[",class(self)[1],"][INFO] ----------------------------------",
               "---------------------")
+      message("[",class(self)[1],"][INFO] Computing predictions")
+      message("[",class(self)[1],"][INFO] ----------------------------------",
+              "---------------------")
+      
       prediction.cluster <- PredictionList$new( d2mcs.models$getMetric() )
       invisible(sapply ( 1:op.results$getModels()$size(), 
         function(pos, models, pred.cluster, set, instances){

@@ -7,14 +7,13 @@ ClassWeightedVoting <- R6Class(
       super$initialize()
       private$class.tie <- class.tie
       private$weights <- weights
-      private$final.pred <- NULL
       private$positive.class <- NULL
       private$class.values <- NULL
-
+      private$final.pred <- list(prob=data.frame(),raw=c())#,bin=data.frame())
       if( is.null(cutoff) || !dplyr::between(cutoff,0,1) ){
         if (!dplyr::between(cutoff,0,1) )
-          message("[",class(self)[1],"][WARNING] Cutoff value is not valid.",
-                  "Must be a not-null in the interval between 0 and 1")
+          message("[",class(self)[1],"][WARNING] Cutoff value should be in ",
+                  "the interval between 0 and 1")
         private$cutoff <- .5
       }else{ private$cutoff <- cutoff }
     },
@@ -30,9 +29,8 @@ ClassWeightedVoting <- R6Class(
       }
 
       if( is.null(cutoff) || !dplyr::between(cutoff,0,1) ){
-        message("[",class(self)[1],"][WARNING] Cutoff value is not valid.",
-             " Must be a not-null in the interval between 0 and 1.",
-             " Using cutoff: ", private$cutoff)
+        message("[",class(self)[1],"][WARNING] Cutoff value should be in ",
+                "the interval between 0 and 1")
       }else { private$cutoff <- cutoff }
 
       class.values <- ifelse(is.factor(predictions$getClassValues()),
@@ -40,10 +38,13 @@ ClassWeightedVoting <- R6Class(
                              predictions$getClassValues())
       col.index <- which( class.values== predictions$getPositiveClass() )
 
-      binary.pred <- sapply(predictions$getAll(),function(x) {
-        varhandle::to.dummy(x$getPrediction("raw"),
-                            predictions$getPositiveClass())[,col.index]
-      })
+      binary.pred <- do.call(cbind,lapply(predictions$getAll(),function(x) {
+        pred <- x$getPrediction("raw",predictions$getPositiveClass())
+        data.frame(varhandle::to.dummy(pred,predictions$getPositiveClass())[,col.index],
+                   row.names= row.names(pred))
+      }))
+
+      #colnames(binary.pred) <- sprintf("[C.%d]",seq(1,ncol(binary.pred)))
 
       if ( is.null(private$weights) || length(private$weights)!=ncol(binary.pred) ){
         if(isTRUE(verbose)){
@@ -56,7 +57,8 @@ ClassWeightedVoting <- R6Class(
       }else{ private$weights <- weights }
 
       sum.weights <- sum(private$weights)
-      weighted.predictions <- as.data.frame(binary.pred %*% diag(private$weights))
+      weighted.predictions <- as.data.frame(as.matrix(binary.pred) %*% diag(private$weights))
+      colnames(weighted.predictions) <- sprintf("[C.%d]",seq(1,ncol(weighted.predictions)))
 
       if(isTRUE(verbose)){
         message("[",class(self)[1],"][INFO] Performing voting with '~",
@@ -64,7 +66,7 @@ ClassWeightedVoting <- R6Class(
                 "' weights and cutoff of ",private$cutoff)
       }
 
-      private$final.pred <- list(prob=data.frame(),raw=c(),bin=data.frame())
+      #private$final.pred <- list(prob=data.frame(),raw=c(),bin=data.frame())
       private$positive.class <- predictions$getPositiveClass()
       private$class.values <- predictions$getClassValues()
       negative.class <- setdiff(private$class.values,private$positive.class)
@@ -76,10 +78,10 @@ ClassWeightedVoting <- R6Class(
         if (row.sum>private$cutoff){
           private$final.pred$raw <- c(private$final.pred$raw,
                                       private$positive.class)
-          private$final.pred$bin <- rbind(private$final.pred$bin,c(1,0))
+          #private$final.pred$bin <- rbind(private$final.pred$bin,c(1,0))
         }else {
           private$final.pred$raw <- c(private$final.pred$raw,negative.class)
-          private$final.pred$bin <- rbind(private$final.pred$bin,c(0,1))
+          #private$final.pred$bin <- rbind(private$final.pred$bin,c(0,1))
         }
       }
 
@@ -87,9 +89,15 @@ ClassWeightedVoting <- R6Class(
                         setdiff(predictions$getClassValues(),
                                 predictions$getPositiveClass()))
       names(private$final.pred$prob) <- df.names
-      names(private$final.pred$bin) <- df.names
+      #names(private$final.pred$bin) <- df.names
       private$final.pred$raw <- factor(private$final.pred$raw,
                                        levels= predictions$getClassValues())
+      relevel(private$final.pred$raw,ref = predictions$getPositiveClass())
+      private$final.pred$prob <- as.data.frame(private$final.pred$prob,
+                                               row.names=row.names(weighted.predictions))
+      private$final.pred$raw <- as.data.frame(private$final.pred$raw,
+                                              row.names=row.names(weighted.predictions))
+      colnames(private$final.pred$raw) <- c("Target Value")
     },
     setWeights = function(weights){
       if(missing(weights) || is.null(weights))
@@ -120,16 +128,16 @@ ClassWeightedVoting <- R6Class(
                               ". Assuming 'prob' by default")))
         type <- "prob"
       }
-
       switch (type,
         "prob"= {
           if(is.null(target) || !(target %in% names(private$final.pred$prob) ) ){
-            message("[",class(self)[1],"][WARNING] Target not specified or ",
-                    "invalid. Using '",names(private$final.pred$prob)[1],"'",
-                    " as default")
+            message(yellow(paste0("[",class(self)[1],"][WARNING] Target not ",
+                                  "specified or invalid. Using '",
+                                  names(private$final.pred$prob)[1],"' as default value")))
             target <- names(private$final.pred$prob)[1]
           }
-          private$final.pred$prob[,target]},
+          private$final.pred$prob[,target, drop=FALSE]
+        },
         "raw" = {private$final.pred$raw}
       )
     },

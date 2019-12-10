@@ -135,18 +135,20 @@ D2MCS <- R6Class(
       #START TRAINING PROCESS
       for (row in 1:nrow(available.models)) {
         current.model <- available.models[row,]
-        message("[",class(self)[1],"][INFO][", current.model$name, "] ***********************************************************************")
+        message("[",class(self)[1],"][INFO][", current.model$name, "]",
+                " ***********************************************************************")
         message("[",class(self)[1],"][INFO][", current.model$name, "] ",
                 "'Model[", row, "-", nrow(available.models), "]': Start training")
-        message("[", class(self)[1], "][INFO][", current.model$name, "] ***********************************************************************")
+        message("[", class(self)[1], "][INFO][", current.model$name, "]",
+                " ***********************************************************************")
         loaded.packages <- FALSE
 
         for (current.metric in metrics) {
-          message("[",class(self)[1],"][INFO][", current.model$name, "] ----------------------------------------------------------------------")
+          message("[",class(self)[1],"][INFO][", current.model$name, "]",
+                  "----------------------------------------------------------------------")
           message("[",class(self)[1],"][INFO][", current.model$name, "] ",
-                  "'Metric[", which(current.metric == metrics), "-", length(metrics), "]': ",
+                  "'Metric [", which(current.metric == metrics), "-", length(metrics), "]': ",
                   "Training model for metric '", current.metric, "'")
-          message("[",class(self)[1],"][INFO][", current.model$name, "] ----------------------------------------------------------------------")
 
           for ( current.cluster in 1:train.set$getNumClusters() ) {
             #DELETE IMCOMPATIBLE MODELS
@@ -162,15 +164,18 @@ D2MCS <- R6Class(
             }
 
             model.path <- file.path( private$path, current.metric,
-                                     paste0("C[", current.cluster, "-", train.set$getNumClusters(), "]") )
+                                     paste0("C[", current.cluster, "-",
+                                            train.set$getNumClusters(), "]") )
             executed.models <- ExecutedModels$new(model.path)
 
             if ( !executed.models$exist(current.model$name) ) {
 
-              message("[",class(self)[1],"][INFO][", current.model$name, "] ----------------------------------------------------------------------")
               message("[",class(self)[1],"][INFO][", current.model$name, "]",
-                      "Training on cluster 'C[", current.cluster, "-", train.set$getNumClusters(), "]'")
-              message("[", class(self)[1],"][INFO][", current.model$name, "] ----------------------------------------------------------------------")
+                      " ----------------------------------------------------------------------")
+              message("[",class(self)[1],"][INFO][", current.model$name, "]",
+                      " Training on cluster 'C[", current.cluster, "-", train.set$getNumClusters(), "]'")
+              message("[", class(self)[1],"][INFO][", current.model$name, "]",
+                      " ----------------------------------------------------------------------")
               #LOAD REQUIRED PACKAGES
               if ( !loaded.packages ) {
                 if ( !is.null(current.model$model.libs) &&
@@ -238,15 +243,16 @@ D2MCS <- R6Class(
                       class.values = train.set$getClassValues(),
                       positive.class = train.set$getPositiveClass())
     },
-    classify = function(train.output, test.set, voting.scheme, metric, positive.class = NULL){
+    classify = function(train.output, subset, voting.scheme, metric,
+                        positive.class = NULL) {
 
       if ( !inherits(train.output, "TrainOutput") )
         stop("[", class(self)[1], "][ERROR] Train output missing or invalid. ",
              "Must be a TrainOutput object")
 
-      if ( !inherits(test.set, "Subset") )
+      if ( !inherits(subset, c("Subset","HDSubset")) )
         stop("[", class(self)[1], "][ERROR] Test dataset missing or invalid. ",
-             "Must be a Subset object")
+             "Must inherit from 'Subset' or 'HDSubset' class")
 
       if ( missing(voting.scheme) || !inherits(voting.scheme,"VotingScheme") )
         stop("[", class(self)[1], "][ERROR] Voting Scheme missing or invalid. ",
@@ -261,28 +267,30 @@ D2MCS <- R6Class(
       class.values <- unique(train.output$getClassValues())
       if ( is.factor(class.values) ) class.values <- levels(class.values)
 
-      ##IF IS BLINDED
-      if ( is.null(test.set$getPositiveClass()) ) {
+      if(subset$isBlinded()){
         if ( is.null(positive.class) ) {
-          message("[", class(self)[1], "][WARNING] Positive class is NULL. ",
-               "Asuming positive class value of train.output", train.output$getPositiveClass())
+          message("[", class(self)[1], "][WARNING] Positive class is not set ",
+                  "Asuming positive class value used during training stage '",
+                  train.output$getPositiveClass(),"'")
           positive.class <- train.output$getPositiveClass()
         } else {
           if (!(positive.class %in% class.values)) {
-            stop("[", class(self)[1], "][ERROR] Positive class not used during ",
-                 "training stage")
+            stop("[", class(self)[1], "][ERROR] Positive class has ",
+                 "not being defined during training stage. Aborting...")
           }
         }
-      } else { ##IF IS NOT BLINDED
+      }else{
         if ( is.null(positive.class) ) {
-          message("[", class(self)[1] ,"][WARNING] Positive class is NULL. ",
-                  "Asuming positive class value of train.output", train.output$getPositiveClass())
+          message("[",class(self)[1],"][WARNING] Positive class not set. ",
+                  "Asuming positive class value used during training stage '",
+                  train.output$getPositiveClass(),"'")
           positive.class <- train.output$getPositiveClass()
         } else {
           if ( !(positive.class %in% class.values) ) {
-            message("[", class(self)[1], "][WARNING] Positive class value is ",
+            message("[",class(self)[1],"][WARNING] Positive class value is ",
                     "invalid. Must be [", paste0(class.values, collapse = ", "), "].",
-                     "Assuming default value (", train.output$getPositiveClass(), ")")
+                    " Assuming positive class used during training stage (",
+                    train.output$getPositiveClass(), ")")
             positive.class <- train.output$getPositiveClass()
           }
         }
@@ -291,45 +299,105 @@ D2MCS <- R6Class(
       if ( any( is.null(train.output$getModels(metric)),
                 !is.list(train.output$getModels(metric)),
                 length(train.output$getModels(metric)) == 0) ) {
-        stop("[", class(self)[1], "][ERROR] Models were not trained for '", metric, "' metric. Aborting...")
+        stop("[",class(self)[1],"][ERROR] Models were not trained for '",
+             metric, "' metric. Aborting...")
       }
 
-      message("[", class(self)[1], "][INFO] -------------------------------------------------------")
-      message("[", class(self)[1], "][INFO] Starting classification operation")
-      message("[", class(self)[1], "][INFO] -------------------------------------------------------")
+      message("[",class(self)[1],"][INFO] ----------------------------------",
+              "---------------------")
+      message("[",class(self)[1],"][INFO] Starting classification operation ",
+              "using '",metric,"' metric ...")
 
-      instances <- test.set$getFeatures()
       predictions <- ClusterPredictions$new( class.values = class.values,
                                              positive.class = positive.class )
       num.clusters <- length(train.output$getModels(metric))
 
-      for ( cluster in 1:num.clusters ){
+      for(cluster in 1:num.clusters){
+        message("[", class(self)[1], "][INFO] ------------------------------",
+                "-------------------------")
         message("[", class(self)[1], "][INFO] Computing predictions for cluster '",
                 cluster, "' of '", num.clusters, "'")
-        message("[", class(self)[1], "][INFO] ----------------------------------",
-                "---------------------")
-        pred <- Prediction$new( model = train.output$getModels(metric)[[cluster]] )
-        pred$execute(instances)
+        message("[", class(self)[1], "][INFO] ------------------------------",
+                "-------------------------")
+        pred <- Prediction$new(model= train.output$getModels(metric)[[cluster]],
+                               feature.id = subset$getID() )
+        count <- 0 #REMOVE LATER
+        iterator <- subset$getIterator(chunk.size=10, verbose=TRUE) #REMOVE VERBOSE LATER
+        while(!iterator$isLast()){
+          instances <- iterator$getNext()
+          pred$execute(instances, class.values, positive.class)
+          count <- count + 1 #REMOVE LATER
+          if(count == 4) break; #REMOVE LATER
+        }
+        iterator$finalize()
+        rm(iterator)
         predictions$add(pred)
       }
+
+      # if( inherits(subset,"Subset") ){
+      #   instances <- subset$getFeatures()
+      #   predictions <- ClusterPredictions$new( class.values = class.values,
+      #                                          positive.class = positive.class )
+      #   num.clusters <- length(train.output$getModels(metric))
+      #
+      #   for ( cluster in 1:num.clusters ){
+      #     message("[",class(self)[1],"][INFO] ------------------------------",
+      #             "-------------------------")
+      #     message("[",class(self)[1],"][INFO] Computing predictions for cluster '",
+      #             cluster, "' of '", num.clusters, "'")
+      #     message("[",class(self)[1],"][INFO] ------------------------------",
+      #             "-------------------------")
+      #     pred <- Prediction$new( model = train.output$getModels(metric)[[cluster]] )
+      #     pred$execute(instances, class.values, positive.class)
+      #     predictions$add(pred)
+      #   }
+      # }else{
+      #   predictions <- ClusterPredictions$new( class.values = class.values,
+      #                                          positive.class = positive.class )
+      #   num.clusters <- length(train.output$getModels(metric))
+      #
+      #   for(cluster in 1:num.clusters){
+      #     message("[", class(self)[1], "][INFO] ------------------------------",
+      #             "-------------------------")
+      #     message("[", class(self)[1], "][INFO] Computing predictions for cluster '",
+      #             cluster, "' of '", num.clusters, "'")
+      #     message("[", class(self)[1], "][INFO] ------------------------------",
+      #            "-------------------------")
+      #     pred <- Prediction$new(model= train.output$getModels(metric)[[cluster]],
+      #                            feature.id = subset$getID() )
+      #     count <- 0 #REMOVE LATER
+      #     iterator <- subset$getIterator(chunk.size=10, verbose=TRUE) #REMOVE VERBOSE LATER
+      #     while(!iterator$isLast()){
+      #       instances <- iterator$getNext()
+      #       pred$execute(instances, class.values, positive.class)
+      #       count <- count + 1 #REMOVE LATER
+      #       if(count == 4) break; #REMOVE LATER
+      #     }
+      #     iterator$finalize()
+      #     rm(iterator)
+      #     predictions$add(pred)
+      #   }
+      # }
 
       message("[D2MCS][INFO] Computing final prediction values using '",
               voting.scheme$getName(), "'")
       voting.scheme$execute(predictions)
 
       classify.output <- ClassificationOutput$new( voting.scheme = voting.scheme,
-                                                   models = train.output$getModels(metric) )
-      message("[D2MCS][INFO] -------------------------------------------------------")
-      message("[D2MCS][INFO] Classification operation finished")
-      message("[D2MCS][INFO] -------------------------------------------------------")
-
+                                                   models = train.output$getModels(metric),
+                                                   metric = metric)
+      message("[",class(self)[1],"][INFO] -------------------------------------------------",
+              "------")
+      message("[",class(self)[1],"][INFO] Finished")
+      message("[",class(self)[1],"][INFO] -------------------------------------------------",
+              "------")
       classify.output
     },
-    optimize = function(opt.set, train.output, voting.scheme, opt.algorithm, metric,
+    optimize = function(train.output, opt.set, voting.scheme, opt.algorithm, metric,
                         weights=NULL, positive.class=NULL){
       if ( !is.null(opt.set) && !inherits(opt.set,"Subset")  )
-        stop("[", class(self)[1], "][ERROR] Test dataset missing or incorrect. Should inherit",
-             " from 'Subset class'. Aborting...")
+        stop("[", class(self)[1], "][ERROR] Test dataset missing or incorrect. ",
+             "Should inherit from 'Subset class'. Aborting...")
 
       if ( !inherits(train.output, "TrainOutput") )
         stop("[", class(self)[1], "][ERROR] Train output missing or invalid. ",
@@ -377,10 +445,10 @@ D2MCS <- R6Class(
       if ( any(is.null(weights),length(weights) <
                length(train.output$getModels(metric)),!is.numeric(weights)) ) {
         message("[", class(self)[1], "][WARNING] Weights not defined.",
-                "Assuming default weigths: [", paste0(round(self$getBestPerformanceByCluster(train.output = train.output,
-                                                                                             metrics = metric)[[metric]],
-                                                            digits = 3),
-                                                     collapse = ", "), "].")
+                "Assuming default weigths: [",
+                paste0(round(self$getBestPerformanceByCluster(train.output = train.output,
+                                                              metrics = metric)[[metric]],
+                             digits = 3),collapse = ", "), "].")
         weights <- self$getBestPerformanceByCluster(train.output = train.output,
                                                     metrics = metric)[[metric]]
       }
@@ -522,47 +590,7 @@ D2MCS <- R6Class(
         ggsave(filename = save.path, device = "pdf")
       }, train.output)
     },
-    # getPredictions = function(type=NULL, target=NULL){
-    #   if( is.null(private$classify.output) ||
-    #       is.null(private$classify.output$getPredictions(type,target) ) )
-    #     stop("[D2MCS][ERROR] Prediction not computed. Execute 'classify' function first\n")
-    #   private$classify.output$getPredictions(type,target)
-    # },
-    # comparePerformance = function(test.set, opt.alg, measures){
-    #   if( !inherits(test.set,"Subset") )
-    #     stop("[D2MCS][ERROR] Test set must be a Subset class\n")
-    #
-    #   if ( is.null(test.set$getClass()) )
-    #     stop("[D2MCS][ERROR] Class values should be provided to compute performance\n")
-    #
-    #   if( !inherits(opt.alg,"Optimizers") )
-    #     stop("[D2MCS][ERROR] Optimization algorithms are incorrect. Must be a Optimizers class\n")
-    #
-    #   if ( !is.list(measures) || !all(sapply(measures, inherits,"MeasureFunction")) )
-    #     stop("[D2MCS][ERROR] Measures should be a list comprised of MeasureFunction objects\n")
-    #
-    #   private$classify.output
-    #
-    # },
-    getAvailableModels = function(){ private$availableModels[,c(1,2)] }#,
-    # savePredictions = function(dir.path, target){
-    #   if(missing(filename) || is.null(filename) )
-    #     stop("[D2MCS][ERROR] Store filename must be selected. Aborting...\n")
-    #   path <- file.path(getwd(),"results",filename)
-    #
-    #   if( is.null(private$classify.output) )
-    #     stop("[D2MCS][ERROR] Classification is not executed. Execute 'classify' function first. Aborting... \n")
-    #
-    #   write.csv(private$classify.output$preds, file=path, row.names = FALSE)
-    #   cat("[D2MCS][INFO] Classification results succesfully saved at: ",path,"\n")
-    # },
-    # removeAll = function(){
-    #   if(!is.null(private$path) && dir.exists(private$path)){
-    #     if(!unlink(private$path,recursive = TRUE,force = TRUE))
-    #       message("[D2MCS][INFO] Path '",private$path,"' succesfully removed")
-    #     else message("[D2MCS][ERROR] Path '",private$path,"' could not be removed")
-    #   }
-    # }
+    getAvailableModels = function(){ private$availableModels[,c(1,2)] }
   ),
   private = list(
     loadAvailableModels = function(){
@@ -594,8 +622,8 @@ D2MCS <- R6Class(
     loadPackages = function(pkgName){
       new.packages <- pkgName[!(pkgName %in% installed.packages()[,"Package"])]
       if ( length(new.packages) ) {
-        message("[", class(self)[1], "][INFO][", self$getName(), "]", length(new.packages),
-                "packages needed to execute aplication\n Installing packages ...")
+        message("[", class(self)[1], "][INFO][", self$getName(), "] ",length(new.packages),
+                " packages needed to execute aplication\n Installing packages ...")
         suppressMessages(install.packages( new.packages,
                                            repos ="https://ftp.cixug.es/CRAN/",
                                            dependencies = TRUE,

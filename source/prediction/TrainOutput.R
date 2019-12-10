@@ -25,7 +25,8 @@ TrainOutput <- R6Class(
     },
     getMetrics = function() { names(private$models) },
     getClassValues = function() { private$class.values },
-    getPositiveClass = function() { private$positive.class }
+    getPositiveClass = function() { private$positive.class },
+    getSize = function() { length(names(private$models)) }
   ),
   private = list(
     models = NULL,
