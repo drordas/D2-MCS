@@ -32,24 +32,43 @@ Download from CRAN Project: https://cran.r-project.org/bin/windows/
 
 ```R
 source("sources.R")
-data <- Dataset$new( filepath ="<path_to_dataset_file>", header=TRUE, 
-                     sep="\t",skip = 1, normalize.names=TRUE, classIndex = 1 )
-data$executePartition(4)
+data.loader <- DatasetLoader$new()
+data <- data.loader$load(filepath ="<path_to_dataset_file>.csv",
+                          header=TRUE, sep="\t",skip = 1, normalize.names=TRUE,
+                          positive.class="<value_positive_class>", 
+                          class.index = "<number_class_index>")
+
+data$createPartitions(num.folds = 4)
+
+subset.1_2 <- data$createSubset( num.folds = 1:2,
+                                  opts = list(remove.na=TRUE, remove.const=TRUE) )
+subset.2_3 <- data$createSubset( num.folds = c(2:3),
+                                 opts = list(remove.na=TRUE, remove.const=FALSE) )
+subset.4 <- data$createSubset( num.folds = 4,
+                               opts = list(remove.na=TRUE, remove.const=FALSE) )
+
   
 trFunction <- TwoClass$new( method = "cv", number = 10, savePredictions = "final", 
                             classProbs = TRUE, allowParallel = TRUE, verboseIter = FALSE)
   
-fisherC <- BinaryFisherClustering$new(dataset = data$getSubset(1,2), maxClusters = 50)
-fisherC$execute(positive.class = "<value_positive_class>")
-train.subset <- fisherC$createSubset( subset = data$getSubset(c(2,3)) )
-test.subset <- data$getSubset(4)
+cluster.binary <- SimpleStrategy$new( subset = subset.1_2,
+                                      heuristic = FisherTestHeuristic$new() )
+cluster.binary$execute(verbose = FALSE)
+binaryTrain <- cluster.binary$createTrain(subset = subset.2_3,
+                                          include.unclustered = TRUE)
   
-Benchmarking <- D2MCS$new( path = "models/BinaryFisherCluster", trainFunction = trFunction )
-Benchmarking$train( train.set = train.subset, metric = "MCC" )
-classify <- Benchmarking$classify( test.set = test.subset), voting.scheme = ClassWeightedVoting$new(), 
-                                   positive.class = "<value_positive_class>" )
-classify$computePerformance( ob = test.subset$getClass(), list(MCC$new(), PPV$new(), Accuracy$new()) )
-  
+Benchmarking <- D2MCS$new(dir.path= "models/BinaryFisherCluster_test/")
+
+trained <- Benchmarking$train(train.set = binaryTrain, train.function = trFunction,
+                                     ex.classifiers = c("nb","naive_bayes","ranger"),
+                                     metrics = c("MCC","PPV") )
+
+classified <- Benchmarking$classify(train.output = trained.models,
+                              subset = subset.4, voting.scheme= ClassWeightedVoting$new(), 
+                              metric="MCC" )
+classified$getPerformance(test.set= subset.4, measures= list(MCC$new(), PPV$new(), Accuracy$new()))
+
+
 ```
 Output visualization example
 
@@ -74,8 +93,12 @@ optimization <- Benchmarking$optimize( opt.set = test.subset,
                                        positive.class = "<value_positive_class>" )
 ```
 
-## Developers
+## Developer
 [David Ruano Ordás](http://drordas.info)
+
+##Contributors
+[Miguel Ferreiro Díaz]()
+[Martín Puga Egea]()
 
 ## Citation
 

@@ -133,13 +133,13 @@ D2MCS <- R6Class(
         message("[",class(self)[1],"][INFO][", current.model$name, "]",
                 " ***********************************************************************")
         message("[",class(self)[1],"][INFO][", current.model$name, "] ",
-                "'Model[", row, "-", nrow(available.models), "]': Start training")
+                "'Model [", row, "-", nrow(available.models), "]': Start training")
         message("[", class(self)[1], "][INFO][", current.model$name, "]",
                 " ***********************************************************************")
         loaded.packages <- FALSE
 
         for (current.metric in metrics) {
-          message("[",class(self)[1],"][INFO][", current.model$name, "]",
+          message("[",class(self)[1],"][INFO][", current.model$name, "] ",
                   "----------------------------------------------------------------------")
           message("[",class(self)[1],"][INFO][", current.model$name, "] ",
                   "'Metric [", which(current.metric == metrics), "-", length(metrics), "]': ",
@@ -346,9 +346,9 @@ D2MCS <- R6Class(
     },
     optimize = function(train.output, opt.set, voting.scheme, opt.algorithm, metric,
                         weights=NULL, positive.class=NULL){
-      if ( !is.null(opt.set) && !inherits(opt.set,"Subset")  )
+      if ( !inherits(opt.set,c("Subset"))  )
         stop("[", class(self)[1], "][ERROR] Test dataset missing or incorrect. ",
-             "Should inherit from 'Subset class'. Aborting...")
+             "Should inherit from 'Subset' class. Aborting...")
 
       if ( !inherits(train.output, "TrainOutput") )
         stop("[", class(self)[1], "][ERROR] Train output missing or invalid. ",
@@ -357,11 +357,11 @@ D2MCS <- R6Class(
       if ( !inherits(voting.scheme, "VotingScheme") )
         stop("[", class(self)[1], "][ERROR] Voting Scheme missing or invalid. Aborting...")
 
-      if ( !is.list(opt.algorithm) && !inherits(opt.algorithm,"WeightsOptimizer") )
+      if ( !is.list(opt.algorithm) ) opt.algorithm <- list(opt.algorithm)
+
+      if ( all(!sapply(opt.algorithm,function(x) {inherits(x,"WeightsOptimizer")})) )
         stop("[", class(self)[1], "][ERROR] Optimization algorithm is invalid. Must inherit",
              " from 'WeightedOptimizer' Aborting...")
-
-      if ( !is.list(opt.algorithm) ) opt.algorithm <- list(opt.algorithm)
 
       if ( is.list(opt.algorithm) && !all(sapply(opt.algorithm, inherits, "WeightsOptimizer")) )
         stop("[", class(self)[1], "][ERROR] Optimization algorithms is invalid. List elements",
@@ -372,9 +372,23 @@ D2MCS <- R6Class(
              " Aborting...")
       }
 
+      if( !identical(train.output$getPositiveClass(),
+                     opt.set$getPositiveClass()) ){
+        stop("[",class(self)[1],"][ERROR] Positive class mismatch between",
+             "train.output and opt.set [",train.output$getPositiveClass(),"!=",
+             opt.set$getPositiveClass(),"]. Aborting...")
+      }
+
+      if(!identical(levels(train.output$getClassValues()),
+                    levels(opt.set$getClassValues()))){
+        stop("[",class(self)[1],"][ERROR] Class values mismatch between",
+             "train.output and opt.set. Aborting...")
+      }
+
       if ( is.factor(opt.set$getClassValues()) )
         class.values <- levels(unique(opt.set$getClassValues()))
       else class.values <- unique(opt.set$getClassValues())
+
 
       if ( is.null(positive.class) )
         positive.class <- opt.set$getPositiveClass()
@@ -395,13 +409,11 @@ D2MCS <- R6Class(
 
       if ( any(is.null(weights),length(weights) <
                length(train.output$getModels(metric)),!is.numeric(weights)) ) {
+        perf <- self$getBestPerformanceByCluster(train.output,metrics= metric)
         message("[", class(self)[1], "][WARNING] Weights not defined.",
                 "Assuming default weigths: [",
-                paste0(round(self$getBestPerformanceByCluster(train.output = train.output,
-                                                              metrics = metric)[[metric]],
-                             digits = 3),collapse = ", "), "].")
-        weights <- self$getBestPerformanceByCluster(train.output = train.output,
-                                                    metrics = metric)[[metric]]
+                paste0(round(perf[[metric]],digits = 3),collapse = ", "), "].")
+        weights <- perf[[metric]]
       }
 
       weights <- weights[1:length(train.output$getModels(metric))]
@@ -412,21 +424,30 @@ D2MCS <- R6Class(
       message("[", class(self)[1], "][INFO] D2MCS Optimization stage")
       message("[", class(self)[1], "][INFO] -------------------------------------------------------")
 
-      instances <- opt.set$getFeatures()
+      #instances <- opt.set$getFeatures()
       negative.class <- setdiff(class.values, positive.class)
 
-      predictions <- ClusterPredictions$new(class.values = class.values,
-                                            positive.class = positive.class)
-
+      predictions <- ClusterPredictions$new( class.values = class.values,
+                                             positive.class = positive.class )
       num.clusters <- length(train.output$getModels(metric))
 
-      for ( cluster in 1:num.clusters ) {
+      for(cluster in 1:num.clusters){
+        message("[", class(self)[1], "][INFO] ------------------------------",
+                "-------------------------")
         message("[", class(self)[1], "][INFO] Computing predictions for cluster '",
                 cluster, "' of '", num.clusters, "'")
-        message("[", class(self)[1], "][INFO] ----------------------------------",
-                "---------------------")
-        pred <- Prediction$new( model = train.output$getModels(metric)[[cluster]])
-        pred$execute(instances)
+        message("[", class(self)[1], "][INFO] ------------------------------",
+                "-------------------------")
+        pred <- Prediction$new(model= train.output$getModels(metric)[[cluster]],
+                               feature.id = opt.set$getID() )
+
+        iterator <- opt.set$getIterator()
+        while(!iterator$isLast()){
+          instances <- iterator$getNext()
+          pred$execute(instances, class.values, positive.class)
+        }
+        iterator$finalize()
+        rm(iterator)
         predictions$add(pred)
       }
 
@@ -436,14 +457,14 @@ D2MCS <- R6Class(
 
       compute.fitness <- function(weights, min.function) {
         voting.scheme$execute(predictions = predictions, weights = weights)
-        pred.values <- voting.scheme$getPrediction("raw", positive.class)
+        pred.values <<- voting.scheme$getPrediction("raw", positive.class)
+        real.values <<- real.values
         mf <- min.function(caret::confusionMatrix(data = pred.values,
                                                   reference = real.values,
                                                   positive = positive.class,
                                                   mode = "everything"))
         return(mf)
       }
-
 
       message("[", class(self)[1], "][INFO] Starting optimization process using ",
               paste0(sapply(opt.algorithm, function(x) x$getName() ),
@@ -582,7 +603,9 @@ D2MCS <- R6Class(
       }
       lapply(pkgName, function(pkg) {
         if ( !pkg %in% loaded_packages() ) {
-          library(pkg, character.only = TRUE, warn.conflicts = FALSE, quietly = TRUE, attach.required = T)
+          suppressMessages(library(pkg, character.only = TRUE, warn.conflicts = FALSE,
+                                   verbose = FALSE, quietly = TRUE,
+                                   attach.required = TRUE))
         }
       })
     },

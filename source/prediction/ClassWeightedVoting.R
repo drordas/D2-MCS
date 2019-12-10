@@ -65,8 +65,6 @@ ClassWeightedVoting <- R6Class(
                 paste0(round(private$weights, digits=4),collapse=", ~"),
                 "' weights and cutoff of ",private$cutoff)
       }
-
-      #private$final.pred <- list(prob=data.frame(),raw=c(),bin=data.frame())
       private$positive.class <- predictions$getPositiveClass()
       private$class.values <- predictions$getClassValues()
       negative.class <- setdiff(private$class.values,private$positive.class)
@@ -78,10 +76,8 @@ ClassWeightedVoting <- R6Class(
         if (row.sum>private$cutoff){
           private$final.pred$raw <- c(private$final.pred$raw,
                                       private$positive.class)
-          #private$final.pred$bin <- rbind(private$final.pred$bin,c(1,0))
         }else {
           private$final.pred$raw <- c(private$final.pred$raw,negative.class)
-          #private$final.pred$bin <- rbind(private$final.pred$bin,c(0,1))
         }
       }
 
@@ -136,7 +132,7 @@ ClassWeightedVoting <- R6Class(
                                   names(private$final.pred$prob)[1],"' as default value")))
             target <- names(private$final.pred$prob)[1]
           }
-          private$final.pred$prob[,target, drop=FALSE]
+          private$final.pred$prob[ ,target, drop=FALSE]
         },
         "raw" = {private$final.pred$raw}
       )
