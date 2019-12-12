@@ -19,7 +19,7 @@ ClassificationOutput <- R6Class(
                                         private$positive.class)
     },
     getPerformance = function(test.set, measures){
-      if(!inherits(test.set,"Subset"))
+      if(!inherits(test.set, "Subset"))
         stop("[",class(self)[1],"][ERROR] Test set invalid.",
              " Must be a Subset object. Aborting...")
 
@@ -47,26 +47,19 @@ ClassificationOutput <- R6Class(
       if(is.null(private$real.values) || is.null(pred.values)){
         private$uniformize(test.set)
       }
-
-      private$performance <- do.call(rbind,lapply( measures, function(entry,cf,perf){
+      private$performance <- do.call(rbind, lapply(measures, function(entry, cf) {
         result <- entry$compute(cf)
-        if(entry$getName() %in% private$trained.models$metric){
-          df <- data.frame( entry$getName(), result)
-        }else{
-          df <- data.frame( entry$getName(), result)#,
-                            #"    ",train.perf.string)
-        }
+        df <- data.frame( entry$getName(), result)
         rownames(df) <- NULL
         names(df) <- c("Measure","Value")
         df
-      }, cf= ConFMatrix$new( caret::confusionMatrix(private$pred.values,
+      }, cf = ConFMatrix$new(caret::confusionMatrix(private$pred.values,
                              private$real.values,
-                             positive=private$voting$getPositiveClass())))
-      )
+                             positive = private$voting$getPositiveClass()))))
       private$performance
     },
     plot = function(test.set=NULL, measures=NULL){
-      if ( (!inherits(test.set,"Subset") || is.null(measures)) &&
+      if ( (!inherits(test.set, "Subset") || is.null(measures)) &&
            is.null(private$performance) )
         stop("[D2MCSOutput][ERROR] Method 'computedPerformance' should be ",
              "previously executed or arguments must be defined")
@@ -180,34 +173,18 @@ ClassificationOutput <- R6Class(
   private = list(
     uniformize = function(test.set){
       private$real.values <- test.set$getClassValues()
+      private$pred.values <- private$voting$getPrediction(type = "raw")
 
-      if( is.factor(private$real.values) ){
-        private$pred.values <- private$voting$getPrediction("raw",private$voting$getPositiveClass())
-        if( length(levels(private$real.values)) != length(levels(private$pred.values)) ||
-            !(levels(private$real.values) %in% levels(private$pred.values)) ){
-          stop("[",class(self)[1],"][ERROR] Class values missmatch. Aborting...")
-        }
-      }else{
-        if (all(sapply(unique(private$real.values),
-                       function(digit){
-                         !length(grep("[^[:digit:]]",
-                                      format(digit[1], scientific= FALSE)))
-                       }))) {
-          private$pred.values <- private$voting$getPrediction("bin",private$voting$getPositiveClass() )
-          if( length(unique(private$real.values)) != length(unique(private$pred.values)) ||
-              !(unique(private$real.values) %in% unique(private$pred.values)) ){
-            stop("[",class(self)[1],"][ERROR] Class values missmatch. Aborting...")
-          }
-        }
-        private$real.values <- factor(private$real.values,
-                                      levels=c(private$voting$getPositive(),
-                                               setdiff(private$voting$getClassValues(),
-                                                       private$voting$getPositive())))
-        private$pred.values <- factor(private$pred.values,
-                                      levels=c(private$voting$getPositive(),
-                                               setdiff(private$voting$getClassValues(),
-                                                       private$voting$getPositive())))
+      if( length(levels(private$real.values)) != length(unique(private$pred.values[,1])) ||
+          !(levels(private$real.values) %in% unique(private$pred.values[,1])) ){
+        stop("[",class(self)[1],"][ERROR] Class values missmatch. Aborting...")
       }
+      private$real.values <- relevel(x = private$real.values,
+                                     ref = private$voting$getPositiveClass())
+      private$pred.values <- factor(private$pred.values[,1],
+                                    levels = c(private$voting$getPositiveClass(),
+                                               setdiff(private$voting$getClassValues(),
+                                                       private$voting$getPositiveClass())))
     },
     pred.values = NULL,
     real.values = NULL,
