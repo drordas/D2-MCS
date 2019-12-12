@@ -82,12 +82,7 @@ D2MCS <- R6Class(
               "incorrect (must be of type 'TrainFunction')" )
       }
 
-      #CHECK IF NUM.CLUSTER IS VALID
-      if (missing(num.clusters)) {
-        message("[",class(self)[1],"][INFO] Number of clusters not set.",
-                "Using all clusters..." )
-      }
-      if (any( is.null(num.clusters),!is.numeric(num.clusters),
+      if (any( missing(num.clusters),!is.numeric(num.clusters),
                !is.vector(num.clusters) )) {
         message(yellow(paste0("[",class(self)[1],"][WARNING] Number of clusters not set",
                        " (must be numeric or vector). Using all clusters")))
@@ -153,13 +148,13 @@ D2MCS <- R6Class(
           for ( current.cluster in 1:train.set$getNumClusters() ) {
             #DELETE IMCOMPATIBLE MODELS
             if ( abs(mean(cor(train.set$getFeatureValues(current.cluster),
-                             as.numeric(train.set$getClassValues()) ),
-                         na.rm = TRUE) ) < 0.3 &&
-                grepl("Linea[l|r]|Discriminant",
-                      paste(available.models$description,
-                            available.models$family, sep = " ")) ) { ##CORRELATION
+                              as.numeric(train.set$getClassValues()) ),
+                          na.rm = TRUE) ) < 0.3 &
+                 grepl("Linea[l|r]|Discriminant",
+                       paste(current.model$description,
+                             current.model$family, sep = " "))) {  ##CORRELATION
               message(yellow(paste0("[", class(self)[1], "][WARNING] High-Correlated Data (< 0.3).",
-                                    " Incompatible M.L. model '", current.model,"' on the cluster '", current.cluster, "'")))
+                                    " Incompatible M.L. model '", current.model$name,"' on the cluster '", current.cluster, "'")))
               next
             }
 
