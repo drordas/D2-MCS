@@ -5,7 +5,7 @@ ConFMatrix <- R6Class(
     initialize = function (confMatrix){
       if( !inherits(confMatrix,"confusionMatrix") )
         stop("[ConFMatrix][ERROR] Argument must be a caret::confusionMatrix object. Aborting\n")
-      
+
       private$positive.class <- confMatrix$positive
       private$negative.class <- colnames(confMatrix$table)[which(colnames(confMatrix$table)!=confMatrix$positive)]
       private$confusionMatrix <- confMatrix
@@ -13,8 +13,8 @@ ConFMatrix <- R6Class(
     getConfusionMatrix = function() { private$confusionMatrix },
     getTP = function() { private$confusionMatrix$table[private$positive.class, private$positive.class] },
     getTN = function() { private$confusionMatrix$table[private$negative.class, private$negative.class] },
-    getFP = function() { private$confusionMatrix$table[private$negative.class, private$positive.class] },
-    getFN = function() { private$confusionMatrix$table[private$positive.class, private$negative.class] }
+    getFN = function() { private$confusionMatrix$table[private$negative.class, private$positive.class] },
+    getFP = function() { private$confusionMatrix$table[private$positive.class, private$negative.class] }
   ),
   private = list(
     confusionMatrix = NULL,
