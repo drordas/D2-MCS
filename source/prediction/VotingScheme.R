@@ -2,8 +2,11 @@ VotingScheme <- R6::R6Class(
   classname = "VotingScheme",
   portable = TRUE,
   public = list(
-    initialize = function(){
-      private$name <- class(self)[1]
+    initialize = function(metric){
+      if (!is.character(metric) || length(metric) != 1) {
+        stop("[", class(self)[1], "][INFO] Invalid values of metric. Aborting...")
+      }
+      private$metric <- metric
     },
     execute = function(predictions){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
@@ -13,7 +16,8 @@ VotingScheme <- R6::R6Class(
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
            " Method should be defined in inherited class. Aborting...")
     },
-    getName = function(){ private$name },
+    getName = function(){ class(self)[1] },
+    getMetric = function(){ private$metric },
     setWeights = function(weights){
       stop("[",class(self)[1],"][ERROR] Class is abstract.",
            " Method should be defined in inherited class. Aborting...")
@@ -35,5 +39,7 @@ VotingScheme <- R6::R6Class(
            " Method should be defined in inherited class. Aborting...")
     }
   ),
-  private = list( name = NULL )
+  private = list(
+    metric = NULL
+  )
 )

@@ -4,8 +4,8 @@ ProbMajorityVoting <- R6Class(
   portable = TRUE,
   inherit = VotingScheme,
   public = list(
-    initialize = function(class.tie = "first"){ 
-      super$initialize(private$voting.name)
+    initialize = function(metric, class.tie = "first"){
+      super$initialize(metric)
       private$class.tie <- class.tie
       private$final.pred <- NULL
       private$positive.class <- NULL
@@ -67,7 +67,6 @@ ProbMajorityVoting <- R6Class(
     }
   ),
   private = list(
-    voting.name = "ProbMajorityVoting",
     final.prediction = NULL,
     majority.class = NULL
   )

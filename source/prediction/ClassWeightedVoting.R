@@ -3,8 +3,8 @@ ClassWeightedVoting <- R6Class(
   portable = TRUE,
   inherit = VotingScheme,
   public = list(
-    initialize = function(class.tie = "first", weights=NULL, cutoff=.5){
-      super$initialize()
+    initialize = function(metric, class.tie = "first", weights=NULL, cutoff=.5){
+      super$initialize(metric = metric)
       private$class.tie <- class.tie
       private$weights <- weights
       private$positive.class <- NULL

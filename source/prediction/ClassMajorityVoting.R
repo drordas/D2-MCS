@@ -3,8 +3,8 @@ ClassMajorityVoting <- R6::R6Class(
   portable = TRUE,
   inherit = VotingScheme,
   public = list(
-    initialize = function(class.tie = "first", cutoff=.5){
-      super$initialize()
+    initialize = function(metric, class.tie = "first", cutoff=.5){
+      super$initialize(metric)
       private$class.tie <- class.tie
       private$final.pred <- list(prob=data.frame(),raw=c())
       private$positive.class <- NULL
