@@ -67,6 +67,7 @@ source("source/prediction/ProbMajorityVoting.R", chdir=TRUE)
 source("source/prediction/PerformanceMeasures.R", chdir=TRUE)
 source("source/prediction/ClassificationOutput.R", chdir=TRUE)
 source("source/prediction/TrainOutput.R", chdir=TRUE)
+source("source/prediction/PredictionOutput.R", chdir=TRUE)
 
 #LOAD PREDICTION ALGORITHMS
 cat("[SOURCES][INFO] Loading Optimization algorithms and utilities\n")
