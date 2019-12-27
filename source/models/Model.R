@@ -81,7 +81,7 @@ Model <- R6Class(
 
         private$metric <- metric
         tictoc::tic(quiet = TRUE)
-
+        set.seed(trFunction$getSeed())
         private$model.train$model.data <- caret::train( x=fitting, data=train.set,
                                                         method= private$model.info$name,
                                                         trControl= trFunction$getTrFunction(),
@@ -90,7 +90,7 @@ Model <- R6Class(
         private$model.train$model.performance <- self$getPerformance()
         if (!is.null(private$model.train$model.data) ){
           message("[",class(self)[1],"][INFO][",self$getName(),"] ",
-                  "Finished in [",(time$toc - time$tic)," segs]")
+                  "Finished in [",round(time$toc - time$tic,digits= 2)," segs]")
           private$model.train$exec.time <- (time$toc - time$tic)
         }else{
           message("[",class(self)[1],"][ERROR][",self$getName(),"] ",
@@ -151,19 +151,19 @@ Model <- R6Class(
       else{
         if( file.exists( private$RDS.path ) ){
           if (replace){
-            message("[",class(self)[1],"][INFO] Model '",private$method,
-                    "' already exists. Replacing previous model")
+            message("[",class(self)[1],"][INFO][",private$method,
+                    "] Model already exists. Replacing previous model")
             saveRDS (object = private$model.train, file=private$RDS.path )
-            message("[",class(self)[1],"][INFO] Model '",private$model.info$name,
-                    "' succesfully saved at:", private$RDS.path)
+            message("[",class(self)[1],"][INFO][",private$model.info$name,
+                    "] Model succesfully saved at:", private$RDS.path)
           }else{
-            message("[",class(self)[1],"][INFO] Model '",private$model.info$name,
-                    "' already exists. Model not saved")
+            message("[",class(self)[1],"][INFO][",private$model.info$name,
+                    "] Model already exists. Model not saved")
           }
         }else{
           saveRDS(object = private$model.train, file=private$RDS.path )
-          message("[",class(self)[1],"][INFO] Model '",private$model.info$name,
-                  "' succesfully saved at: ",private$RDS.path)
+          message("[",class(self)[1],"][INFO][",private$model.info$name,"] ",
+                  "Model succesfully saved at: ",private$RDS.path)
         }
       }
     },

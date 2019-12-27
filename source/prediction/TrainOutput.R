@@ -18,10 +18,23 @@ TrainOutput <- R6Class(
       private$positive.class <- positive.class
     },
     getModels = function(metric) {
-      if ( missing(metric) && !is.list(metric) && !metric %in% self$getMetrics() ) {
-        stop("[",class(self)[1],"][ERROR] Metric are incorrect. Must be a 'list' type. Aborting...")
+      if ( missing(metric) || is.list(metric) || !metric %in% self$getMetrics() ) {
+        stop("[",class(self)[1],"][ERROR] Metric not defined of invalid. Aborting...")
       }
       private$models[[metric]]
+    },
+    getPerformance = function(metric=NULL){
+      if (is.null(metric)){ metric <- self$getMetrics() }
+
+      if(all(metric %in% self$getMetrics())){
+        if(length(metric)==1) {
+          sapply(self$getModels(metric), function(model){model$model.performance})
+        }else{
+          sapply(self$getMetrics(), function(metric) {
+              sapply(self$getModels(metric),
+                     function(model){ model$model.performance} )  } )
+        }
+      }else{ message("[",class(self)[1],"][WARNING] Metric not defined or invalid") }
     },
     getMetrics = function() { names(private$models) },
     getClassValues = function() { private$class.values },

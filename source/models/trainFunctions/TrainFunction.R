@@ -1,19 +1,27 @@
 library("R6")
 TrainFunction <- R6Class(
   classname = "TrainFunction",
-  portable = TRUE,  
+  portable = TRUE,
   public = list(
     initialize = function(method, number, savePredictions, classProbs,
-                          allowParallel, verboseIter){
+                          allowParallel, verboseIter, seed){
       private$method <- method
       private$folds <- number
       private$savePredictions <- savePredictions
       private$classProbs <- classProbs
       private$allowParallel <- allowParallel
       private$verboseIter <- verboseIter
+      if(!is.numeric(seed)){
+        private$seed <- .Random.seed[ceiling(runif(1,0,length(.Random.seed)))]
+        message("[",class(self)[1],"][INFO] Using random seed '",private$seed,"'")
+      }else {
+        private$seed <- seed
+        message("[",class(self)[1],"][INFO] Using static seed '",private$seed,"'")
+      }
     },
     create = function(summaryFunction, search.method = "grid", class.probs){
-      stop("[TrainFunction][ERROR] create is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][ERROR] create function is abstract. ",
+           "Must be implemented in inherited class")
     },
     getResamplingMethod = function(){
       private$method
@@ -34,19 +42,25 @@ TrainFunction <- R6Class(
       private$verboseIter
     },
     getTrFunction = function(){
-      stop("[TrainFunction][ERROR] getTrFunction is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][ERROR] getTrFunction is abstract. ",
+           "Must be implemented in inherited class")
     },
     getMeasures = function(){
-      stop("[TrainFunction][ERROR] getMeasures is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][ERROR] getMeasures is abstract. ",
+           "Must be implemented in inherited class\n")
     },
     getType = function(){
-      stop("[TrainFuntion][ERROR] getType is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][ERROR] getType is abstract. ",
+           "Must be implemented in inherited class\n")
     },
+    getSeed = function(){ private$seed },
     setSummaryFunction = function (summaryFunction){
-      stop("[TrainFuntion][ERROR] setSummaryFunction is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][ERROR] setSummaryFunction is abstract. ",
+           "Must be implemented in inherited class\n")
     },
     setClassProbs = function(class.probs){
-      stop("[TrainFuntion][ERROR] setClassProbs is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][ERROR] setClassProbs is abstract. ",
+           "Must be implemented in inherited class\n")
     }
   ),
   private = list(
@@ -55,6 +69,7 @@ TrainFunction <- R6Class(
     savePredictions = NULL,
     classProbs = NULL,
     allowParallel = NULL,
-    verboseIter = NULL
+    verboseIter = NULL,
+    seed = NULL
   )
 )

@@ -105,38 +105,45 @@ Dataset <- R6Class(
         message(red("[Dataset][ERROR] Class name not found. Task not done")) }
       else { self$setClassIndex(which(names(private$corpus) == class.name),positive.class) }
     },
-    createPartitions = function( num.folds, percent.folds , class.balance = TRUE ){
+    createPartitions = function( num.folds, percent.folds, class.balance = TRUE ){
       if( (missing(num.folds) && missing(percent.folds)) ||
           ((!is.numeric(num.folds) || length(num.folds) != 1) &&
            !is.numeric(percent.folds)) ) {
-        message(yellow("[Dataset][WARNING] Parameters are invalid. Assuming division with default k=10 folds"))
+        message(yellow("[",class(self)[1],"][WARNING] Parameters are invalid. ",
+                       "Assuming division with default k=10 folds"))
         private$partitions <- createFolds( private$corpus[,private$class.index],
                                            k = 10, list = TRUE )
       }else{
         if ( is.numeric(num.folds) && length(num.folds) == 1 && missing(percent.folds) ) {
-          message( "[Dataset][INFO] Perfoming dataset partitioning into ",
+          message( "[",class(self)[1],"][INFO] Perfoming dataset partitioning into ",
                    num.folds," groups" )
           private$partitions <- createFolds( private$corpus[,private$class.index],
                                              k = num.folds, list = TRUE )
         }else{
-          if (!is.logical(class.balance)) { stop(red("[Dataset][ERROR] class.balance not defined")) }
+          if (!is.logical(class.balance)) {
+            stop(red("[",class(self)[1],"][ERROR] class.balance not defined"))
+          }
           if ( is.numeric(num.folds) && length(num.folds) == 1 && is.vector(percent.folds) ) {
             if ( length(percent.folds) == num.folds && is.numeric(percent.folds) &&
                  ( sum(percent.folds) == 100 || sum(percent.folds) == 1 ) ) {
               if ( sum(percent.folds) == 100 ) {
                 percent.folds <- percent.folds * 100
               }
-              message("[Dataset][INFO] Perfoming dataset partitioning into ",length(percent.folds)," groups")
+              message("[",class(self)[1],"][INFO] Perfoming dataset ",
+                      "partitioning into ",length(percent.folds)," groups")
               remaining <- private$corpus
 
               for (index in 1:(num.folds - 1)) {
-                message("===============================================================\n")
-                message("[Dataset][INFO] Spliting ",index," group with ", percent.folds[index], "\n")
+                message("===============================================================")
+                message("[",class(self)[1],"][INFO] Spliting ",index,
+                        " group with ", percent.folds[index], "\n")
                 message("===============================================================")
                 if (class.balance) {
-                  split <- createDataPartition(remaining[[self$getClassIndex()]], p = percent.folds[index],list = FALSE)
+                  split <- createDataPartition(remaining[[self$getClassIndex()]],
+                                               p = percent.folds[index],list = FALSE)
                 } else {
-                  split <- createDataPartition(remaining, p = percent.folds[index],list = FALSE)
+                  split <- createDataPartition(remaining,
+                                               p = percent.folds[index],list = FALSE)
                 }
                 private$partitions <- append( private$partitions, split)
                 remaining <- remaining[-split,]
@@ -148,7 +155,8 @@ Dataset <- R6Class(
               } else {
                 names(private$partitions) <- paste0("Fold",which(1:num.folds >= 10))
               }
-            }else{ message(red("[Dataset][ERROR] Fold partition and/or probability mismatch. Task not performed")) }
+            }else{ message("[",class(self)[1],"][ERROR] Fold partition and/or ",
+                           "probability mismatch. Task not performed") }
           }else{
             if( ( missing(num.folds) || !is.numeric(num.folds) || length(num.folds) != 1 )
                 && is.numeric(percent.folds) && ( sum(percent.folds) == 100 ||
@@ -156,12 +164,12 @@ Dataset <- R6Class(
               if (sum(percent.folds) == 1 ) {
                 percent.folds <- percent.folds * 100
               }
-              message("[Dataset][INFO] Perfoming dataset partitioning into ",
+              message("[",class(self)[1],"][INFO] Perfoming dataset partitioning into ",
                       length(percent.folds)," groups")
               remaining <- private$corpus
               for (index in 1:(length(percent.folds) - 1)) {
                 message("===============================================================\n")
-                message("[Dataset][INFO] Spliting ",index," group with ",percent.folds[index],"\n")
+                message("[",class(self)[1],"][INFO] Spliting ",index," group with ",percent.folds[index])
                 message("===============================================================")
                 if (class.balance) {
                   split <- createDataPartition(remaining[[self$getClassIndex()]], p = percent.folds[index],list = FALSE)
@@ -177,7 +185,10 @@ Dataset <- R6Class(
               } else {
                 names(private$partitions) <- paste0("Fold",which(1:num.folds >= 10))
               }
-            }else{ message(red("[Dataset][ERROR] Cannot perform partition process. Aborted")) }
+            }else{
+              message(paste0(red("[",class(self)[1],"][ERROR] Cannot perform ",
+                                 "partition process. Aborted")))
+            }
           }
         }
       }

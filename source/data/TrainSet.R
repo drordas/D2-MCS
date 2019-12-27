@@ -8,10 +8,10 @@ TrainSet <- R6Class(
         stop("[TrainSet][ERROR] Clusters empty or incorrect (must be a list). Aborting.")
       }
 
-      if ( !(positive.class %in% as.character(unique(class.values))) ) { 
+      if ( !(positive.class %in% as.character(unique(class.values))) ) {
         stop("[TrainSet][ERROR] Positive Class is incorrect. Must be '",
              paste0(as.character(unique(class.values))))
-      } 
+      }
 
       private$clusters <- cluster.dist
       private$positive.class <- positive.class
@@ -22,16 +22,16 @@ TrainSet <- R6Class(
     getClassName = function() { private$class.name },
     getClassValues = function() { private$class.values },
     getFeatureNames = function(num.cluster) {
-      if ( any( missing(position), !is.numeric(position),
-                !position %in% c(1:length(private$clusters)) )) {
+      if ( any( !is.numeric(num.cluster),
+                !num.cluster %in% c(1:length(private$clusters)) )) {
         stop("[TrainSet][ERROR] Position not defined or incorrect.",
              "Must be included between 1 and ",length(private$clusters))
       }
       names(private$clusters[[num.cluster]])
     },
     getFeatureValues = function(num.cluster){
-      if ( any(missing(num.cluster),!is.numeric(num.cluster),
-               !num.cluster %in% c(1:length(private$clusters))) ) 
+      if ( any(!is.numeric(num.cluster),
+               !num.cluster %in% c(1:length(private$clusters))) )
       {
         stop("[TrainSet][ERROR] Position not defined or incorrect.",
              "Must be included between 1 and ",length(private$clusters))
@@ -40,7 +40,7 @@ TrainSet <- R6Class(
     },
     getInstances = function(num.cluster){
       if ( any(missing(num.cluster),!is.numeric(num.cluster),
-               !num.cluster %in% c(1:length(private$clusters))) ) 
+               !num.cluster %in% c(1:length(private$clusters))) )
       {
         stop("[TrainSet][ERROR] Position not defined or incorrect.",
              "Must be included between 1 and ",length(private$clusters))
