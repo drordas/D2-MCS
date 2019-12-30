@@ -99,7 +99,7 @@ Prediction <- R6Class(
     unloadPackages = function(len.init.packages, len.init.DLLs) {
       pkgs <- paste0("package:", head(x = .packages(), n = length(.packages()) - len.init.packages))
       if ( length(head(x = .packages(), n = length(.packages()) - len.init.packages)) > 0) {
-        message("[", class(self)[1], "][INFO] Package to detach: ", paste(pkgs, collapse = " "))
+        # message("[", class(self)[1], "][INFO] Package to detach: ", paste(pkgs, collapse = " "))
         for (p in pkgs) {
           detach(p, unload = T, character.only = TRUE, force = F)
         }
@@ -120,7 +120,7 @@ Prediction <- R6Class(
       }
     },
     fbind = function(...,lvls,pclass){
-      fact <- factor(do.call(c, lapply(list(...), as.character)),levels=lvls)
+      fact <- factor(do.call("c", lapply(list(...), as.character)),levels=lvls)
       relevel(fact,ref= pclass)
     }
   )

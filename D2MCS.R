@@ -248,7 +248,18 @@ D2MCS <- R6Class(
         stop("[", class(self)[1], "][ERROR] Test dataset missing or invalid. ",
              "Must inherit from 'Subset' or 'HDSubset' class")
 
-      if( missing(voting.schemes) || length(Filter( function(x) inherits(x, "VotingScheme"), voting.schemes) ) == 0 ) {
+      if ( missing(voting.schemes)) {
+        stop("[", class(self)[1], "][ERROR] Voting Schemes missing or invalid. ",
+             "Must inherit from VotingScheme abstract class.")
+      }
+
+      if (!is.list(voting.schemes) || !is.vector(voting.schemes)) {
+        voting.schemes <- list(voting.schemes)
+      }
+
+      if (!all(sapply(voting.schemes,
+                     function(x)
+                       inherits(x, c("SimpleVoting", "CombinedVoting"))))) {
         stop("[", class(self)[1], "][ERROR] Voting Schemes missing or invalid. ",
              "Must inherit from VotingScheme abstract class.")
       }
@@ -289,60 +300,142 @@ D2MCS <- R6Class(
       final.voting.schemes <- list()
 
       for (voting.scheme in voting.schemes) {
-        metric <- voting.scheme$getMetric()
-        if ( any( is.null(train.output$getModels(metric)),
-                  !is.list(train.output$getModels(metric)),
-                  length(train.output$getModels(metric)) == 0) ) {
-          message("[",class(self)[1],"][WARNING] Models were not trained for '",
-               metric, "' metric. Checking next voting.scheme...")
-          next
-        }
 
-        message("[",class(self)[1],"][INFO] ----------------------------------",
-                "---------------------")
-        message("[",class(self)[1],"][INFO] Starting classification operation ",
-                "using '",metric,"' metric with '", voting.scheme$getCutoff(), "' cutoff ...")
+        if (inherits(voting.scheme, "SimpleVoting")) {
+          metric <- voting.scheme$getMetric()
 
-        predictions <- ClusterPredictions$new( class.values = class.values,
-                                               positive.class = positive.class )
-        num.clusters <- length(train.output$getModels(metric))
-
-        for(cluster in seq_len(num.clusters)) {
-          message("[", class(self)[1], "][INFO] ------------------------------",
-                  "-------------------------")
-          message("[", class(self)[1], "][INFO] Computing predictions for cluster '",
-                  cluster, "' of '", num.clusters, "'")
-          message("[", class(self)[1], "][INFO] ------------------------------",
-                  "-------------------------")
-          pred <- Prediction$new(model= train.output$getModels(metric)[[cluster]],
-                                 feature.id = subset$getID() )
-
-          iterator <- subset$getIterator(chunk.size=10000)
-          while(!iterator$isLast()){
-            instances <- iterator$getNext()
-            pred$execute(instances, class.values, positive.class)
+          if (is.null(metric)) {
+            message("[",class(self)[1],"][WARNING] The metric on voting.scheme '", voting.scheme$getName(),
+            "' is not defined. Checking next voting.scheme...")
+            next
           }
-          iterator$finalize()
-          rm(iterator)
-          predictions$add(pred)
+
+          if (any(is.null(train.output$getModels(metric)),
+                  !is.list(train.output$getModels(metric)),
+                  length(train.output$getModels(metric)) == 0)) {
+            message("[",class(self)[1],"][WARNING] Models were not trained for '",
+                    metric, "' metric. Checking next voting.scheme...")
+            next
+          }
+
+          message("[",class(self)[1],"][INFO] ----------------------------------",
+                  "---------------------")
+          if (is.null(voting.scheme$getCutoff())) {
+          message("[",class(self)[1],"][INFO] Starting classification operation ",
+                  "using '", voting.scheme$getName(), "' voting.scheme for '", metric,
+                  "' metric with '0.5' cutoff ...")
+          } else {
+            message("[",class(self)[1],"][INFO] Starting classification operation ",
+                    "using '",voting.scheme$getName(), "' voting.scheme for '", metric,
+                    "' metric with '", voting.scheme$getCutoff(), "' cutoff ...")
+          }
+          predictions <- ClusterPredictions$new( class.values = class.values,
+                                                 positive.class = positive.class )
+          num.clusters <- length(train.output$getModels(metric))
+
+          for (cluster in seq_len(num.clusters)) {
+            message("[", class(self)[1], "][INFO] ------------------------------",
+                    "-------------------------")
+            message("[", class(self)[1], "][INFO] Computing predictions for cluster '",
+                    cluster, "' of '", num.clusters, "'")
+            message("[", class(self)[1], "][INFO] ------------------------------",
+                    "-------------------------")
+            pred <- Prediction$new(model= train.output$getModels(metric)[[cluster]],
+                                   feature.id = subset$getID() )
+
+            iterator <- subset$getIterator(chunk.size=10000)
+            while(!iterator$isLast()){
+              instances <- iterator$getNext()
+              pred$execute(instances, class.values, positive.class)
+            }
+            iterator$finalize()
+            rm(iterator)
+            predictions$add(pred)
+          }
+
+          message("[D2MCS][INFO] Computing final prediction values using '",
+                  voting.scheme$getName(), "'")
+          voting.scheme$execute(predictions = predictions)
+          final.models <- append(final.models, list(train.output$getModels(metric)))
+          names(final.models)[[length(final.models)]] <- metric
+        } else {
+          if (inherits(voting.scheme, "CombinedVoting")) {
+            metrics <- voting.scheme$getMetrics()
+
+            final.predictions <- list()
+            if (length(Filter(function(metric)
+                              any(is.null(train.output$getModels(metric)),
+                                  !is.list(train.output$getModels(metric)),
+                                  length(train.output$getModels(metric)) == 0),
+                                         metrics)) != 0) {
+              message("[",class(self)[1],"][WARNING] Models were not trained for",
+                      " this metrics: ",
+                      paste0(Filter(function(metric)
+                        any(is.null(train.output$getModels(metric)),
+                            !is.list(train.output$getModels(metric)),
+                            length(train.output$getModels(metric)) == 0),
+                        metrics), collapse = " "),
+                      ". Checking next voting.scheme...")
+              next
+            }
+            for (metric in metrics) {
+              message("[",class(self)[1],"][INFO] ----------------------------------",
+                      "---------------------")
+              message("[",class(self)[1],"][INFO] Starting classification operation ",
+                      "using '", metric,"' metric with '", voting.scheme$getCutoff(), "' cutoff ...")
+
+              predictions <- ClusterPredictions$new(class.values = class.values,
+                                                    positive.class = positive.class)
+              num.clusters <- length(train.output$getModels(metric))
+
+              for (cluster in seq_len(num.clusters)) {
+                message("[", class(self)[1], "][INFO] ------------------------------",
+                        "-------------------------")
+                message("[", class(self)[1], "][INFO] Computing predictions for cluster '",
+                        cluster, "' of '", num.clusters, "'")
+                message("[", class(self)[1], "][INFO] ------------------------------",
+                        "-------------------------")
+                pred <- Prediction$new(model = train.output$getModels(metric)[[cluster]],
+                                       feature.id = subset$getID() )
+
+                iterator <- subset$getIterator(chunk.size = 10000)
+                while (!iterator$isLast()) {
+                  instances <- iterator$getNext()
+                  pred$execute(instances, class.values, positive.class)
+                }
+                iterator$finalize()
+                rm(iterator)
+                predictions$add(pred)
+              }
+              final.predictions <- append(final.predictions, predictions)
+              names(final.predictions)[length(final.predictions)] <- metric
+
+
+              final.models <- append(final.models, list(train.output$getModels(metric)))
+              names(final.models)[[length(final.models)]] <- metric
+            }
+            message("[D2MCS][INFO] Computing final prediction values using '",
+                    voting.scheme$getName(), "'")
+            voting.scheme$execute(predictions = final.predictions)
+          }
         }
-
-        message("[D2MCS][INFO] Computing final prediction values using '",
-                voting.scheme$getName(), "'")
-        voting.scheme$execute(predictions)
-
         final.voting.schemes <- append(final.voting.schemes, voting.scheme)
-        final.models <- append(final.models, train.output$getModels(metric))
-        names(final.models)[[length(final.models)]] <- metric
       }
-      classify.output <- ClassificationOutput$new(voting.schemes = final.voting.schemes,
-                                                  models = final.models)
-      message("[",class(self)[1],"][INFO] -------------------------------------------------",
-              "------")
-      message("[",class(self)[1],"][INFO] Finished")
-      message("[",class(self)[1],"][INFO] -------------------------------------------------",
-              "------")
-      classify.output
+
+      if (length(final.voting.schemes) == 0) {
+        message("[", class(self)[1], "][WARNING] No voting system could be ",
+                "executed for the indicated metrics.")
+        NULL
+      } else {
+        classify.output <- ClassificationOutput$new(voting.schemes = final.voting.schemes,
+                                                    models = final.models)
+        message("[",class(self)[1],"][INFO] -------------------------------------------------",
+                "------")
+        message("[",class(self)[1],"][INFO] Finished")
+        message("[",class(self)[1],"][INFO] -------------------------------------------------",
+                "------")
+        classify.output
+      }
     },
     optimize = function(train.output, opt.set, voting.scheme, opt.algorithm, metric,
                         weights=NULL, positive.class=NULL){
