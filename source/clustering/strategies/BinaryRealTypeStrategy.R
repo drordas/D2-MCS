@@ -48,9 +48,9 @@ BinaryRealTypeStrategy <- R6Class(
       private$all.distribution <- vector(mode = "list", length = 2)
       private$not.distribution <- vector(mode = "list", length = 2)
       
+      binary.data <- private$getBinaryFeatures( private$subset$getFeatures() )
       ##COMPUTING HEURISTIC FOR BINARY DATA (BETWEEN EACH FEATURE AND THE CLASS)
       if( !is.null(private$heuristic[[1]]) ){
-        binary.data <- private$getBinaryFeatures( private$subset$getFeatures() )
         if( nrow(binary.data) > 0 ){
           binary.bestDistribution <- data.frame(cluster= integer(), dist= I(list()))
           binary.allDistribution <- data.frame(k= integer(), deltha= numeric(), 
@@ -136,7 +136,7 @@ BinaryRealTypeStrategy <- R6Class(
       }else{
         message("[", super$getName(), "][INFO] ", super$getName(),
                 " has not heuristic to binary features. Assuming one cluster by default")  
-        private$all.distribution[[1]] <- data.frame( k = 1, homogeneity = 0, 
+        private$all.distribution[[1]] <- data.frame( k = 1, deltha = 0, 
                                               dist = I(list(names(binary.data))))
         private$best.distribution[[1]] <- data.frame(cluster = 1, 
                                                      dist= I(list(names(binary.data))) )
@@ -144,10 +144,9 @@ BinaryRealTypeStrategy <- R6Class(
       
       all.distribution <- private$all.distribution[[1]]
       best.distribution <- private$best.distribution[[1]]
-      
+      real.data <- private$getRealFeatures( private$subset$getFeatures() )
       ##COMPUTING HEURISTIC FOR REAL DATA (BETWEEN EACH FEATURE AND THE CLASS)
       if (!is.null(private$heuristic[[2]])){
-        real.data <- private$getRealFeatures( private$subset$getFeatures() )
         message("[", super$getName(), "][INFO] Using '", private$heuristic[[2]]$getName(), 
                 "' heuristic to distribute real features")
         if( nrow(real.data) > 0 ){
@@ -232,7 +231,7 @@ BinaryRealTypeStrategy <- R6Class(
       }else{
         message("[", super$getName(), "][INFO] ", super$getName(),
                 " has not heuristic to binary features. Assuming one cluster by default")  
-        private$all.distribution[[2]] <- data.frame( k= 1, homogeneity = 0, 
+        private$all.distribution[[2]] <- data.frame( k= 1, deltha = 0, 
                                                      dist= I(list(names(real.data))))
         private$best.distribution[[2]] <- data.frame( cluster= 1, 
                                                       dist = I(list(names(real.data))) )
@@ -374,11 +373,11 @@ BinaryRealTypeStrategy <- R6Class(
       } #else { plot }
       
     },
-    saveCSV = function(dir.path, name=NULL, num.clusters=NULL){
-      if(missing(dir.path))
-        stop("[",super$getName(),"][INFO] Path not defined. Aborting.")
+    saveCSV = function(dir.path, name = NULL, num.clusters = NULL){
+      if ( missing(dir.path) )
+        stop("[", super$getName(), "][INFO] Path not defined. Aborting.")
       
-      if(is.null(name)){
+      if ( is.null(name) ) {
         name <- private$heuristic[[1]]$getName()
         message("[",super$getName(),"][INFO] File name not defined. Using '",
                 name,".csv'.")
@@ -386,59 +385,70 @@ BinaryRealTypeStrategy <- R6Class(
       
       if ( is.null(private$all.distribution) || 
            length(private$all.distribution) == 0 ) {
-        stop("[",super$getName(),"][WARNING] Clustering not done or errorneous.",
+        stop("[", super$getName(), "][WARNING] Clustering not done or errorneous.",
              " Returning NULL")
       }
       
-      if (!dir.exists(dir.path)) { 
+      if ( !dir.exists(dir.path) ) { 
         dir.create(dir.path, recursive = TRUE) 
-        if(dir.exists(dir.path)) {
-          message("[",super$getName(),"][INFO] Directory '",dir.path,"'has been succesfully created")
-        }else {stop("[",super$getName(),"][ERROR] Cannot create directory '",dir.path,"'.") }
+        if ( dir.exists(dir.path) ) {
+          message("[", super$getName(), "][INFO] Directory '", dir.path, "'has been succesfully created")
+        } else {
+          stop("[", super$getName(), "][ERROR] Cannot create directory '", dir.path, "'.") 
+        }
       }
       
-      if( is.null(num.clusters) ){
+      if ( is.null(num.clusters) ) {
         message( "[",super$getName(),"][WARNING] Number of clusters not defined.",
                  " Saving all cluster configurations" )
-        num.clusters <- c( (max(private$all.distribution[[1]]$k)-1),
-                           (max(private$all.distribution[[2]]$k)-1) )
-      }else{
-        if ( length(num.clusters) >= length(private$all.distribution) ){
-          num.clusters <- num.clusters[c(1:length(private$all.distribution))]
-        }else{ num.clusters <- sapply(private$all.distribution, 
-                                      function(x) {nrow + 1 }) }
+        num.clusters <- list(list(1:max(private$all.distribution[[1]]$k)),
+                             list(1:max(private$all.distribution[[2]]$k)))
+      } else {
+        if ( !(is.list(num.clusters) && length(num.clusters) >= 0)) {
+          message( "[", super$getName(), "][WARNING] Type of num.clusters not valid (must be NULL or list )",
+                   " Saving all cluster configurations." )
+          num.clusters <- list(list(1:max(private$all.distribution[[1]]$k)),
+                               list(1:max(private$all.distribution[[2]]$k)))
+        } else {
+          if ( is.null(num.clusters[[1]]) || !is.list(num.clusters[[1]])) {
+            num.clusters[[1]] <- list(1:max(private$all.distribution[[1]]$k))
+          } 
+          if ( (length(num.clusters) >= 2 && (!is.list(num.clusters[[2]]) || is.null(num.clusters[[2]]))) ) {
+            num.clusters[[2]] <- list(1:max(private$all.distribution[[2]]$k))
+          }
+        }
       }
         
       all.binary <- private$all.distribution[[1]]
       all.real <- private$all.distribution[[2]]
       
-      if ( !( num.clusters[1] %in% c(1:nrow(all.binary)) ) ){
-        message("[",super$getName(),"][WARNING] Number of clusters incorrect.",
-                " Must be between ",min(all.binary$k)," and ",max(all.binary$k),
+      if ( !all(unlist(num.clusters[[1]]) %in% all.binary$k) ) {
+        message("[", super$getName(), "][WARNING] Number of clusters incorrect.",
+                " Must be between ", min(all.binary$k), " and ", max(all.binary$k),
                 ". Ignoring clustering for binary type features...")
-        dist.binary <- data.frame( k = numeric(),dispersion = numeric(),
-                                   feature_type= character() )
-      }else{ 
-        dist.binary <- data.frame(k=all.binary[c(1:(num.clusters[1]-1) ),"k"],
-                                  dispersion=all.binary[c(1:(num.clusters[1]-1) ),"deltha"],
-                                  feature_type= "binary", row.names = NULL) 
+        dist.binary <- data.frame( k = numeric(), dispersion = numeric(),
+                                   feature_type = character() )
+      } else { 
+        dist.binary <- data.frame( k = all.binary[c(all.binary$k %in% unlist(num.clusters[[1]])), "k"],
+                                   dispersion = all.binary[c(all.binary$k %in% unlist(num.clusters[[1]])), "deltha"],
+                                   feature_type = "binary", row.names = NULL) 
       }
       
-      if ( !( num.clusters[2] %in% c(1:nrow(all.real)) ) ){
-        message("[",super$getName(),"][INFO] Number of clusters incorrect.",
-                " Must be between ",min(all.real$k)," and ",max(all.real$k),
+      if ( !all(unlist(num.clusters[[2]]) %in% all.real$k) ) {
+        message("[", super$getName(), "][WARNING] Number of clusters incorrect.",
+                " Must be between ", min(all.real$k), " and ", max(all.real$k),
                 ". Ignoring clustering for real type features...")
-        dist.real <- data.frame( k = numeric(),dispersion = numeric(),
-                                 feature_type=character() )
-      }else{
-        dist.real <- data.frame(k=all.real[c(1:(num.clusters[2]-1) ),"k"],
-                                dispersion=all.real[c(1:(num.clusters[2]-1) ),"deltha"],
-                                feature_type="real", row.names = NULL) 
+        dist.real <- data.frame( k = numeric(), dispersion = numeric(),
+                                 feature_type = character() )
+      } else {
+        dist.real <- data.frame(k = all.real[c(all.real$k %in% unlist(num.clusters[[2]])), "k"],
+                                dispersion = all.real[c(all.real$k %in% unlist(num.clusters[[2]])), "deltha"],
+                                feature_type = "real", row.names = NULL) 
       }
       
-      write.table( rbind(dist.binary,dist.real), 
-                   file=file.path(dir.path,paste0(name,".csv")),
-                   row.names = FALSE, col.names = TRUE, sep=";")
+      write.table( rbind(dist.binary, dist.real), 
+                   file = file.path(dir.path, paste0(name, ".csv")),
+                   row.names = FALSE, col.names = TRUE, sep = ";")
     }
   ),
   private = list(

@@ -158,43 +158,58 @@ SimpleStrategy <- R6Class(
                 "at: ",file.path(dir.path,file.name,".pdf"))
       } else {  invisible(show(plot)) }
     },
-    saveCSV = function(dir.path, name=NULL, num.clusters=NULL){
-      if(missing(dir.path))
-        stop("[",super$getName(),"][INFO] Path not defined. Aborting.")
-
-      if(is.null(name)){
+    saveCSV = function(dir.path, name = NULL, num.clusters = NULL) {
+      if ( missing(dir.path) )
+        stop("[", super$getName(), "][INFO] Path not defined. Aborting.")
+      
+      if ( is.null(name) ) {
         name <- private$heuristic[[1]]$getName()
-        message("[",super$getName(),"][INFO] File name not defined. Using '",name,".csv'.")
+        message("[", super$getName(), "][INFO] File name not defined. Using '", name, ".csv'.")
       }
-
-      if(is.null(private$all.distribution) || nrow(private$all.distribution) == 0){
-        stop("[",super$getName(),"][INFO] Clustering method not performed. Aborting.")
+      
+      if ( is.null(private$all.distribution) || nrow(private$all.distribution) == 0 ) {
+        stop("[", super$getName(), "][INFO] Clustering method not performed. Aborting.")
       }
-
-      if (!dir.exists(dir.path)) {
-        dir.create(dir.path, recursive = TRUE)
-        if(dir.exists(dir.path)) {
-          message("[",super$getName(),"][INFO] Directory has been succesfully created")
-        }else {stop("[",super$getName(),"][ERROR] Cannot create directory.") }
-      }
-
-      if( is.null(num.clusters) ){
-        message( "[",super$getName(),"][WARNING] Number of clusters not defined.",
-                 " Saving all cluster configurations" )
-        num.clusters <- (max(private$all.distribution$k)-1)
-      }else{
-        if( !(num.clusters %in%c(2:max(private$all.distribution$k)) ) ) {
-          message( "[",super$getName(),"][WARNING] Number of clusters exceeds ",
-                   "maximun number of clusters. Saving all cluster configurations." )
-          num.clusters <- (max(private$all.distribution$k)-1)
+      
+      if ( !dir.exists(dir.path) ) { 
+        dir.create(dir.path, recursive = TRUE) 
+        if ( dir.exists(dir.path) ) {
+          message("[", super$getName(), "][INFO] Directory has been succesfully created")
+        } else { 
+          stop("[", super$getName(), "][ERROR] Cannot create directory.") 
         }
       }
 
-      write.table( data.frame( k = private$all.distribution[c(2:num.clusters),"k"],
-                               dispersion = private$all.distribution[c(2:num.clusters),"deltha"],
-                               row.names = NULL),
-                   file=file.path(dir.path, paste0(name,".csv")),row.names = FALSE,
-                   col.names = TRUE, sep=";")
+      if ( is.null(num.clusters) ) {
+        message( "[", super$getName(), "][WARNING] Number of clusters not defined.",
+                 " Saving all cluster configurations." )
+        num.clusters <- list(2:max(private$all.distribution$k))
+      } else {
+        if ( !is.list(num.clusters)) {
+          message( "[", super$getName(), "][WARNING] Type of num.clusters not valid (must be NULL or list type)",
+                   " Saving all cluster configurations." )
+          num.clusters <- list(2:max(private$all.distribution$k))
+        } else {
+          if (length(num.clusters[[1]]) > max(private$all.distribution$k)) {
+            message( "[",super$getName(), "][WARNING] Number of clusters exceeds ",
+                     "maximum number of clusters. Saving all cluster configurations." )
+            num.clusters <- list(2:max(private$all.distribution$k))
+          } else {
+            if ( !all(unlist(num.clusters) <= max(private$all.distribution$k) && unlist(num.clusters) >= min(private$all.distribution$k)) ) {
+              message( "[",super$getName(), "][WARNING] Number of clusters outsides the range of ",
+                       "minimum and maximum number of clusters. Saving all cluster configurations." )
+              num.clusters <- list(2:max(private$all.distribution$k))
+            }
+          }
+        }
+      }
+      write.table( data.frame( k = private$all.distribution[private$all.distribution$k %in% unlist(num.clusters), "k"],
+                               dispersion = private$all.distribution[private$all.distribution$k %in% unlist(num.clusters), "deltha"],
+                               row.names = NULL), 
+                   file = file.path(dir.path, paste0(name,".csv")), 
+                   row.names = FALSE, 
+                   col.names = TRUE, 
+                   sep = ";" )
     }
   )
 )
