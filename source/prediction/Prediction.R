@@ -26,13 +26,46 @@ Prediction <- R6Class(
                                 as.character(pred.values[,private$feature.id]))
         pred.values[,-which(names(pred.values)==private$feature.id)]
       }
-      private$results$raw <- private$fbind(private$results$raw,
-                                           predict(object = private$model$model.data,
-                                                   newdata=pred.values, type="raw" ),
-                                           lvls=class.values, pclass=positive.class )
-      private$results$prob <- rbind(private$results$prob,
-                                    predict(object = private$model$model.data,
-                                            newdata=pred.values, type="prob" ) )
+
+      if(isTRUE(private$model$model.data$control$classProbs)){
+
+        prob.aux <- predict( object = private$model$model.data,
+                             newdata = pred.values, type = "prob" )
+        private$results$prob <- rbind(private$results$prob, prob.aux)
+
+        raw.aux <- factor(apply(prob.aux,1,function(row,names,pclass,cutoff) {
+            pos <- which(row > cutoff)
+            ifelse(length(pos)==1,names[pos],pclass)
+          }, names=class.values, pclass=positive.class, cutoff = 0.5 ),
+        levels = class.values )
+        relevel(raw.aux,ref= positive.class)
+
+        private$results$raw <- rbind(private$results$raw, data.frame(raw.aux))
+
+      }else{
+        message("[",class(self)[1],"][WARNING] Model '",
+                private$model$model.name,"' is not able to compute a-posteriori ",
+                "probabilities")
+
+        raw.aux <- data.frame(predict(object = private$model$model.data,
+                                      newdata=pred.values,
+                                      type="raw"))
+
+        private$results$raw <- rbind(private$results$raw, raw.aux)
+
+        if(is.null(private$results$prob)){
+          names(private$results$prob) <- c(positive.class,
+                                           setdiff(class.values,positive.class))
+        }
+
+        prob.aux <- do.call(rbind,apply(raw.aux, 1, function(row, class.values) {
+            m <- matrix(0,nrow = 1, ncol = length(class.values))
+            m[ which(row == class.values) ] <-1
+            data.frame(m)
+          }, class.values = names(private$results$prob) ) )
+
+        private$results$prob <- rbind(private$results$prob,prob.aux)
+      }
     },
     getPrediction = function(type=NULL, target=NULL){
       if( is.null(type) || !type %in% c("raw","prob") ){
@@ -99,7 +132,7 @@ Prediction <- R6Class(
     unloadPackages = function(len.init.packages, len.init.DLLs) {
       pkgs <- paste0("package:", head(x = .packages(), n = length(.packages()) - len.init.packages))
       if ( length(head(x = .packages(), n = length(.packages()) - len.init.packages)) > 0) {
-        # message("[", class(self)[1], "][INFO] Package to detach: ", paste(pkgs, collapse = " "))
+        #message("[", class(self)[1], "][INFO] Package to detach: ", paste(pkgs, collapse = " "))
         for (p in pkgs) {
           detach(p, unload = T, character.only = TRUE, force = F)
         }
@@ -109,7 +142,7 @@ Prediction <- R6Class(
 
       pkglibs <- tail(x = .dynLibs(), n = length(.dynLibs()) - len.init.DLLs)
       if ( length(pkglibs) > 0) {
-        # message("[", class(self)[1], "][INFO] Dlls to detach: ", paste(pkglibs, collapse = " "))
+        #message("[", class(self)[1], "][INFO] Dlls to detach: ", paste(pkglibs, collapse = " "))
         for (lib in pkglibs) {
           dyn.unload(lib[["path"]])
         }
@@ -118,10 +151,10 @@ Prediction <- R6Class(
       } else {
         # message("[", class(self)[1], "][INFO] There are not DLLs to unload\n")
       }
-    },
-    fbind = function(...,lvls,pclass){
-      fact <- factor(do.call("c", lapply(list(...), as.character)),levels=lvls)
-      relevel(fact,ref= pclass)
-    }
+    }#,
+    # fbind = function(...,lvls,pclass){
+    #   fact <- factor(do.call("c", lapply(list(...), as.character)),levels=lvls)
+    #   relevel(fact,ref= pclass)
+    # }
   )
 )

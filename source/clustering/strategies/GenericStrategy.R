@@ -2,20 +2,20 @@ GenericStrategy <- R6Class(
   classname = "GenericStrategy",
   public = list(
     initialize = function( subset, heuristic, description, configuration) {
-      
+
       if ( missing(description) ){ stop(red("[GenericStrategy][ERROR] Strategy description not defined.")) }
 
       if ( !inherits(subset,"Subset") ) {
         stop(red("[GenericStrategy][ERROR] Subset parameter must inherit from 'Subset' class."))
       }
-      if(is.list(heuristic)){ 
+      if(is.list(heuristic)){
         if( length(Filter( function(x) inherits(x,"GenericHeuristic"), heuristic) ) == 0 ) {
           stop( red("[GenericStrategy][ERROR] Adequate heuristics not found",
                     "(must inherit from 'GenericHeuristic' class).") )
         }
-      }else{ 
-        if( inherits(heuristic,"GenericHeuristic") ) { 
-          heuristic <- list(heuristic) 
+      }else{
+        if( inherits(heuristic,"GenericHeuristic") ) {
+          heuristic <- list(heuristic)
         }else { stop(red("[GenericStrategy][ERROR] Heuristics is not correct",
                          "(must inherit from 'GenericHeuristic' class).")) }
       }
@@ -24,11 +24,7 @@ GenericStrategy <- R6Class(
         stop( "[GenericStrategy][ERROR] Configuration parameter must",
               "inherit from 'StrategyConfiguration' class." )
       }
-      
-      # if( !all(sapply(heuristic, function(h){ class(h)[1] %in% private$valid.heuristics })) ){
-      #   stop( red( "[GenericStrategy][ERROR] heuristic parameter must include on list of valid heuristics" ) )
-      # }
-      
+
       private$description <- description
       private$subset <- subset
       private$heuristic <- heuristic
@@ -46,7 +42,7 @@ GenericStrategy <- R6Class(
     execute = function(verbose, ...) {
       stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
     },
-    getDistribution = function(num.clusters = NULL, num.groups = NULL, 
+    getDistribution = function(num.clusters = NULL, num.groups = NULL,
                                include.unclustered = FALSE )  {
       stop(red("[GenericStrategy][ERROR] I am an abstract interface method"))
     },
@@ -68,7 +64,6 @@ GenericStrategy <- R6Class(
     configuration = NULL,
     all.distribution = NULL,
     best.distribution = NULL,
-    not.distribution = NULL#,
-    #valid.heuristics = c()
+    not.distribution = NULL
   )
 )

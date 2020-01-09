@@ -1,4 +1,3 @@
-library("R6")
 TrainFunction <- R6Class(
   classname = "TrainFunction",
   portable = TRUE,
@@ -23,24 +22,12 @@ TrainFunction <- R6Class(
       stop("[",class(self)[1],"][ERROR] create function is abstract. ",
            "Must be implemented in inherited class")
     },
-    getResamplingMethod = function(){
-      private$method
-    },
-    getNumberFolds = function(){
-      private$folds
-    },
-    getSavePredictions = function(){
-      private$savePredictions
-    },
-    getClassProbs = function(){
-      private$classProbs
-    },
-    getAllowParallel = function(){
-      private$allowParallel
-    },
-    getVerboseIter = function(){
-      private$verboseIter
-    },
+    getResamplingMethod = function(){ private$method },
+    getNumberFolds = function(){ private$folds },
+    getSavePredictions = function(){ private$savePredictions },
+    getClassProbs = function(){ private$classProbs },
+    getAllowParallel = function(){ private$allowParallel },
+    getVerboseIter = function(){ private$verboseIter },
     getTrFunction = function(){
       stop("[",class(self)[1],"][ERROR] getTrFunction is abstract. ",
            "Must be implemented in inherited class")

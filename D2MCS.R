@@ -1,4 +1,4 @@
-D2MCS <- R6Class(
+D2MCS <- R6::R6Class(
   classname = "D2MCS",
   portable = TRUE,
   public = list(
@@ -228,7 +228,12 @@ D2MCS <- R6Class(
         }
       }
 
-      message("[", class(self)[1], "][INFO] Finish!")
+      message("[",class(self)[1],"][INFO] ----------------------------------",
+              "---------------------")
+      message("[",class(self)[1],"][INFO] Finished")
+      message("[",class(self)[1],"][INFO] ----------------------------------",
+              "---------------------")
+
       if (!is.null(private$cluster.obj)) {
         stopCluster(private$cluster.obj)
         private$cluster.obj <- NULL
@@ -257,11 +262,11 @@ D2MCS <- R6Class(
         voting.schemes <- list(voting.schemes)
       }
 
-      if (!all(sapply(voting.schemes,
-                     function(x)
-                       inherits(x, c("SimpleVoting", "CombinedVoting"))))) {
-        stop("[", class(self)[1], "][ERROR] Voting Schemes missing or invalid. ",
-             "Must inherit from VotingScheme abstract class.")
+      if (!all(sapply(voting.schemes,  function(x) {
+                       inherits(x, c("SimpleVoting", "CombinedVoting"))
+        }))){
+          stop("[", class(self)[1], "][ERROR] Voting Schemes missing or invalid. ",
+              "Must inherit from VotingScheme abstract class.")
       }
 
       class.values <- unique(train.output$getClassValues())
@@ -305,8 +310,8 @@ D2MCS <- R6Class(
           metric <- voting.scheme$getMetric()
 
           if (is.null(metric)) {
-            message("[",class(self)[1],"][WARNING] The metric on voting.scheme '", voting.scheme$getName(),
-            "' is not defined. Checking next voting.scheme...")
+            message("[",class(self)[1],"][WARNING] Metric not selected for '",
+                    voting.scheme$getName(),"'. Checking next voting.scheme...")
             next
           }
 
@@ -352,7 +357,7 @@ D2MCS <- R6Class(
             rm(iterator)
             predictions$add(pred)
           }
-
+          #cluster.preds <<- predictions
           message("[D2MCS][INFO] Computing final prediction values using '",
                   voting.scheme$getName(), "'")
           voting.scheme$execute(predictions = predictions)
@@ -381,8 +386,8 @@ D2MCS <- R6Class(
             for (metric in metrics) {
               message("[",class(self)[1],"][INFO] ----------------------------------",
                       "---------------------")
-              message("[",class(self)[1],"][INFO] Starting classification operation ",
-                      "using '", metric,"' metric with '", voting.scheme$getCutoff(), "' cutoff ...")
+              message("[",class(self)[1],"][INFO] Starting Classification. ",
+                      " (metric='", metric,"', cutoff='", voting.scheme$getCutoff(), "')")
 
               predictions <- ClusterPredictions$new(class.values = class.values,
                                                     positive.class = positive.class)
@@ -429,11 +434,11 @@ D2MCS <- R6Class(
       } else {
         classify.output <- ClassificationOutput$new(voting.schemes = final.voting.schemes,
                                                     models = final.models)
-        message("[",class(self)[1],"][INFO] -------------------------------------------------",
-                "------")
+        message("[",class(self)[1],"][INFO] ----------------------------------",
+                "---------------------")
         message("[",class(self)[1],"][INFO] Finished")
-        message("[",class(self)[1],"][INFO] -------------------------------------------------",
-                "------")
+        message("[",class(self)[1],"][INFO] ----------------------------------",
+                "---------------------")
         classify.output
       }
     },
@@ -550,7 +555,7 @@ D2MCS <- R6Class(
 
       compute.fitness <- function(weights, min.function) {
         voting.scheme$execute(predictions = predictions, weights = weights)
-        pred.values <<- voting.scheme$getPrediction("raw", positive.class)
+        pred.values <- voting.scheme$getPrediction("raw", positive.class)
         real.values <<- real.values
         mf <- min.function(caret::confusionMatrix(data = pred.values,
                                                   reference = real.values,

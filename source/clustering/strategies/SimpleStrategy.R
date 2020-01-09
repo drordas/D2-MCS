@@ -1,5 +1,3 @@
-library("R6")
-
 SimpleStrategy <- R6Class(
   classname = "SimpleStrategy",
   inherit = GenericStrategy,
@@ -82,7 +80,7 @@ SimpleStrategy <- R6Class(
                  private$heuristic[[1]]$getName(), "' heuristic." )
         private$not.distribution <- data.frame( cluster = 1,
                                                 dist = I(list(notHeuristic)))
-      }
+      }else private$not.distribution <- data.frame()
     },
     getBestClusterDistribution = function() {
       list(private$best.distribution)
@@ -112,7 +110,7 @@ SimpleStrategy <- R6Class(
            num.groups %in% c(1:length(distribution)) ){
           distribution <- distribution[num.groups]
       }
-
+      dd <<- private$not.distribution
       if( isTRUE(include.unclustered) && nrow(private$not.distribution) ){
         distribution <- append(distribution,lapply(private$not.distribution$dist,
                                                    function(x) {x} ))

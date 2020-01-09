@@ -1,4 +1,4 @@
-ProbBasedMethodology <- R6Class(
+ProbBasedMethodology <- R6::R6Class(
   classname = "ProbBasedMethodology",
   portable = TRUE,
   inherit = Methodology,

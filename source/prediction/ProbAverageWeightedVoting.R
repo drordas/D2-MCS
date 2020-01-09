@@ -1,5 +1,5 @@
-ClassWeightedVoting <- R6Class(
-  classname = "ClassWeightedVoting",
+ProbAverageWeightedVoting <- R6::R6Class(
+  classname = "ProbAverageWeightedVoting",
   portable = TRUE,
   inherit = SimpleVoting,
   public = list(
@@ -9,15 +9,15 @@ ClassWeightedVoting <- R6Class(
       } else {
         message("[", class(self)[1], "][WARNING] Metric value has not been implemented")
       }
-
       if (!is.null(cutoff) && !dplyr::between(cutoff, 0, 1)) {
         if (!dplyr::between(cutoff, 0, 1) )
           message("[", class(self)[1], "][WARNING] Cutoff value should be in ",
-                  "the interval between 0 and 1. Assuming 0.5.")
-          cutoff <- .5
+                  "the interval between 0 and 1")
+        cutoff <- .5
       } else {
         message("[", class(self)[1], "][WARNING] Cut-off method has not been implemented")
       }
+
       super$initialize(metric = metric, cutoff = cutoff)
       private$weights <- weights
     },
@@ -39,16 +39,16 @@ ClassWeightedVoting <- R6Class(
         names(private$weights) <- colNames
       }
     },
-    execute = function(predictions, metric = NULL, cutoff = NULL, weights = NULL,
-                       verbose = FALSE) {
+    execute = function(predictions, metric = NULL, cutoff = NULL,
+                       weights = NULL, verbose = FALSE ) {
       if (!inherits(predictions, "ClusterPredictions")) {
         stop("[", class(self)[1], "][ERROR] Invalid prediction type. Must be a ",
              "ClusterPrediction object. Aborting...")
       }
 
       if (predictions$size() <= 0) {
-        stop("[", class(self)[1], "][ERROR] Cluster predictions were not",
-             "computed. Aborting...")
+        stop("[",class(self)[1],"][ERROR] Cluster predictions were not computed",
+             "Aborting...")
       }
 
       if (missing(metric) || !is.character(metric)) {
@@ -57,7 +57,7 @@ ClassWeightedVoting <- R6Class(
         }
       } else {
         message("[", class(self)[1], "][INFO] Metric attribute set on execute method.",
-                " Assigning the value of metric: ", metric)
+                " Assigning metric: '", metric,"'")
         private$metric <- metric
       }
 
@@ -78,86 +78,92 @@ ClassWeightedVoting <- R6Class(
         }
       }
 
-      if (isTRUE(verbose)) {
-        message("[", class(self)[1], "][INFO] Performing voting with '~",
-                paste0(round(self$getWeights(), digits = 4), collapse = ", ~"),
-                "' weights and cutoff of ", self$getCutoff())
-      }
-
-
       if (is.null(weights) || length(weights) != ncol(binary.pred)) {
         if (isTRUE(verbose)) {
           message( "[", class(self)[1], "][WARNING] Weight values are missing or",
                    " incorrect. Assuming default model performance values" )
         }
         private$weights <- sapply(predictions$getAll(), function(x) {
-          x$getModelPerformance()
+          1+x$getModelPerformance()
         })
       } else { private$weights <- weights }
 
-      private$final.pred <- list(prob = data.frame(), raw = c() )
-      private$positive.class <- predictions$getPositiveClass()
-      private$class.values <- predictions$getClassValues()
 
-      class.values <- ifelse(is.factor(predictions$getClassValues()),
-                             levels(predictions$getClassValues()),
-                             predictions$getClassValues())
-
-      raw.pred <- do.call(cbind, lapply(predictions$getAll(), function(x, col.index) {
-        x$getPrediction("raw", predictions$getPositiveClass())
-      }))
-
-      prob.pred <- do.call(cbind, lapply(predictions$getAll(), function(x, col.index) {
-        x$getPrediction("prob", predictions$getPositiveClass())
-      }))
-
-      for(row in seq_len(nrow(raw.pred))){
-        values <- unique( factor(as.matrix(raw.pred[row,]),
-                          levels = predictions$getClassValues()))
-
-        row.sum <- c()
-        for(val in values){
-          row.sum <- c(row.sum,sum(self$getWeights()[which(raw.pred[row,]==val)]))
-        }
-
-        names(row.sum) <- values
-        winner.class <- names(row.sum)[which(row.sum==max(row.sum))]
-
-        if(length(winner.class)!=1){
-          print(winner.class)
-          print(names(row.sum))
-          stop("[",class(self)[1],"][FATAL] Tie found. Untied method under ",
-               "development")
-        }else{
-          winner.prob <- weighted.mean(prob.pred[row,which(raw.pred[row,]==winner.class)],
-                                       self$getWeights()[which(raw.pred[row,]==winner.class)])
-          private$final.pred$prob <- rbind(private$final.pred$prob,
-                                           data.frame(winner.prob,1-winner.prob))
-          private$final.pred$raw <- c(private$final.pred$raw,winner.class)
-        }
+      if (isTRUE(verbose)) {
+        message("[", class(self)[1], "][INFO] Performing voting using '",
+                self$getClassTie(), "' as tie solving")
       }
 
-      names(private$final.pred$prob) <- c(private$positive.class,
-                                          setdiff(private$class.values,
-                                                  private$positive.class))
-      row.names(private$final.pred$prob) <- row.names(prob.pred)
+      private$final.pred <- list(prob = data.frame(), raw = c())
+      private$class.values <- predictions$getClassValues()
+      private$positive.class <- predictions$getPositiveClass()
 
-      private$final.pred$raw <- factor(self$getFinalPred()$raw,
-                                       levels = private$class.values)
+      prob.pred <- do.call(cbind, lapply(predictions$getAll(), function(x) {
+        pred <- x$getPrediction("prob", predictions$getPositiveClass())
+        data.frame(pred, row.names = row.names(pred))
+      }))
 
+      pred.weight <- as.data.frame(apply(prob.pred,1,function(row, weights) {
+        weighted.mean(row,weights) }, weights=self$getWeights() )
+      )
+
+
+      private$final.pred$prob <- data.frame( pred.weight,(1-pred.weight),
+                                             row.names = row.names(prob.pred) )
+      names(private$final.pred$prob) <- c(self$getPositiveClass(),
+                                          setdiff(self$getClassValues(),
+                                                  self$getPositiveClass()))
+
+      prob.raw <- apply(self$getFinalPred()$prob,1,function(row) {
+        max.value <- which(row==max(row))
+
+        if(length(max.value)==1){
+          if(row[max.value] > private$cutoff){
+            names(row)[max.value]
+          }else{
+            aux <- row[-max.value]
+            max.aux <- which(aux==max(aux))
+            if(length(max.aux)==1){
+              names(row)[aux]
+            }else{
+              if( !( self$getClassTie() %in% names(row)[max.aux] )  ){
+                message("[",class(self)[1],"][WARNING] Tie class does not match",
+                        "Using random tie solver.")
+                sample(names(row)[aux],1)
+              }else{
+                message("[",class(self)[1],"][INFO] Using '", self$getClassTie(),
+                        "' to solve tie.")
+                self$getClassTie()
+              }
+            }
+          }
+        }else{
+          if( !( self$getClassTie() %in% names(row)[max.value] )  ){
+            message("[",class(self)[1],"][WARNING] Tie class does not match",
+                    "Using random tie solver.")
+            sample(names(row)[max.value],1)
+          }else{
+            message("[",class(self)[1],"][INFO] Using '", self$getClassTie(),
+                    "' to solve tie.")
+            self$getClassTie()
+          }
+        }
+      } )
+
+      private$final.pred$raw  <- factor(prob.raw,levels = self$getClassValues())
       private$final.pred$raw  <- relevel(self$getFinalPred()$raw,
-                                         ref = private$positive.class)
+                                         ref = self$getPositiveClass())
 
       private$final.pred$raw <- as.data.frame(self$getFinalPred()$raw,
                                               row.names = row.names(prob.pred))
       colnames(private$final.pred$raw) <- c("Target Value")
 
-
-      #classWeight.pred.prob <<- private$final.pred$prob
-      #classWeight.pred.raw <<- private$final.pred$raw
+      #avgWeight.pred.prob <<- private$final.pred$prob
+      #avgWeight.pred.raw <<- private$final.pred$raw
     }
   ),
   private = list(
+    final.prediction = NULL,
     weights = NULL
   )
 )

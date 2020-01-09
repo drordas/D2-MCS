@@ -1,5 +1,5 @@
-ClassMajorityVoting <- R6::R6Class(
-  classname = "ClassMajorityVoting",
+ProbAverageVoting <- R6::R6Class(
+  classname = "ProbAverageVoting",
   portable = TRUE,
   inherit = SimpleVoting,
   public = list(
@@ -22,12 +22,10 @@ ClassMajorityVoting <- R6::R6Class(
       }
       super$initialize(metric = metric, cutoff = cutoff)
       private$class.tie <- class.tie
-      private$majority.class <- NULL
     },
     getMajorityClass = function() { private$majority.class },
     getClassTie = function() { private$class.tie },
-    execute = function(predictions, metric = NULL, cutoff = NULL,
-                       majority.class = NULL, verbose = FALSE){
+    execute = function(predictions, metric = NULL, cutoff = NULL, verbose = FALSE){
       if (!inherits(predictions, "ClusterPredictions")) {
         stop("[", class(self)[1], "][ERROR] Invalid prediction type. Must be a ",
              "ClusterPrediction object. Aborting...")
@@ -65,83 +63,81 @@ ClassMajorityVoting <- R6::R6Class(
         }
       }
 
-      private$majority.class <- predictions$getPositiveClass()
-      if (is.null(majority.class) || !(majority.class %in% predictions$getClassValues())) {
-        if (isTRUE(verbose)) {
-          message("[", class(self)[1], "][WARNING] Majority class not set or invalid.",
-                  " Assuming default value: ", predictions$getPositiveClass())
-        }
-      } else { private$majority.class <- majority.class }
-
       if (isTRUE(verbose)) {
         message("[", class(self)[1], "][INFO] Performing voting using '",
-                self$getMajorityClass(), "' as majority class")
+                self$getClassTie(), "' as tie solving")
       }
 
-      if (isTRUE(verbose)) {
-        message("[", class(self)[1], "][INFO] Refresh final predictions.")
-      }
-      private$final.pred <- list(prob = data.frame(),
-                                 raw = c())
-      raw.pred <- do.call(cbind, lapply(predictions$getAll(),function(x) {
-        pred <- x$getPrediction("raw")
-        data.frame(pred, row.names = row.names(pred) )
-      }))
+      private$final.pred <- list(prob = data.frame(), raw = c())
+      private$class.values <- predictions$getClassValues()
+      private$positive.class <- predictions$getPositiveClass()
 
       prob.pred <- do.call(cbind, lapply(predictions$getAll(), function(x) {
         pred <- x$getPrediction("prob", predictions$getPositiveClass())
         data.frame(pred, row.names = row.names(pred))
       }))
 
-      private$class.values <- predictions$getClassValues()
-      private$positive.class <- predictions$getPositiveClass()
-
-      for (row in 1:nrow(prob.pred)) {
-        row.summary <- table(as.matrix(raw.pred[row, ]))
-        max.values <- names(which(row.summary == max(row.summary)))
-
-        if (length(max.values) > 1) {
-          if (self$getMajorityClass() %in% max.values) {
-            message("[", class(self)[1], "][INFO] Found Tie. Resolving using ",
-                    "'majority class' solver")
-            entry <- self$getMajorityClass()
-            private$final.pred$raw <- c(self$getFinalPred()$raw, entry)
-          } else {
-            message("[", class(self)[1], "][INFO] Found Tie. Resolving using '",
-                    self$getClassTie(), "' tie solver")
-            entry <- which.max(rank(x = row.summary, ties.method = self$getClassTie())==1)
-            private$final.pred$raw <- c(self$getFinalPred()$raw, entry)
-          }
-        } else {
-          entry <- max.values
-          private$final.pred$raw <- c(self$getFinalPred()$raw, entry)
-        }
-
-        mean.row <- rowMeans(prob.pred[row, ])
-        private$final.pred$prob <- rbind(self$getFinalPred()$prob,
-                                         data.frame(mean.row, abs(mean.row - 1)))
-      }
-      private$final.pred$raw <- factor(self$getFinalPred()$raw,
-                                       levels = predictions$getClassValues())
-
-      private$final.pred$raw  <- relevel(self$getFinalPred()$raw,
-                                         ref = predictions$getPositiveClass())
-      private$final.pred$raw <- as.data.frame(self$getFinalPred()$raw,
-                                              row.names = row.names(raw.pred))
-      colnames(private$final.pred$raw) <- c("Target Value")
-
+      prob.mean <- rowMeans(prob.pred)
+      private$final.pred$prob <- data.frame( prob.mean,(1-prob.mean),
+                                             row.names = row.names(prob.pred) )
       names(private$final.pred$prob) <- c(predictions$getPositiveClass(),
                                           setdiff(predictions$getClassValues(),
                                                   predictions$getPositiveClass()))
-      private$final.pred$prob <- as.data.frame(self$getFinalPred()$prob,
-                                               row.names = row.names(prob.pred))
 
-      #classMaj.pred.prob <<- private$final.pred$prob
-      #classMaj.pred.raw <<- private$final.pred$raw
+      prob.raw <- apply(private$final.pred$prob,1,  function(row) {
+        #names(private$final.pred$prob)[which.max(rank(row,ties.method = self$getClassTie() )==1)]
+        max.value <- which(row==max(row))
+
+        if(length(max.value)==1){
+          if(row[max.value] > private$cutoff){
+            names(row)[max.value]
+          }else{
+            aux <- row[-max.value]
+            max.aux <- which(aux==max(aux))
+            if(length(max.aux)==1){
+              names(row)[aux]
+            }else{
+              if( !( self$getClassTie() %in% names(row)[max.aux] )  ){
+                message("[",class(self)[1],"][WARNING] Tie class does not match",
+                        "Using random tie solver.")
+                sample(names(row)[aux],1)
+              }else{
+                message("[",class(self)[1],"][INFO] Using '", self$getClassTie(),
+                        "' to solve tie.")
+                self$getClassTie()
+              }
+            }
+          }
+        }else{
+          #if(row[,max.value[1]]>cutoff){
+            if( !( self$getClassTie() %in% names(row)[max.value] )  ){
+              message("[",class(self)[1],"][WARNING] Tie class does not match",
+                      "Using random tie solver.")
+              sample(names(row)[max.value],1)
+            }else{
+              message("[",class(self)[1],"][INFO] Using '", self$getClassTie(),
+                      "' to solve tie.")
+              self$getClassTie()
+            }
+          #}
+        }
+
+      } )
+
+      private$final.pred$raw  <- factor(prob.raw,levels = predictions$getClassValues())
+      private$final.pred$raw  <- relevel(self$getFinalPred()$raw,
+                                         ref = predictions$getPositiveClass())
+
+      private$final.pred$raw <- as.data.frame(self$getFinalPred()$raw,
+                                              row.names = row.names(prob.pred))
+      colnames(private$final.pred$raw) <- c("Target Value")
+
+      #avg.pred.prob <<- private$final.pred$prob
+      #avg.pred.raw <<- private$final.pred$raw
     }
   ),
   private = list(
-    class.tie = NULL,
-    majority.class = NULL
+    final.prediction = NULL,
+    class.tie = NULL
   )
 )
