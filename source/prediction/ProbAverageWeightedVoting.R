@@ -94,7 +94,11 @@ ProbAverageWeightedVoting <- R6::R6Class(
                 self$getClassTie(), "' as tie solving")
       }
 
+      if (isTRUE(verbose)) {
+        message("[", class(self)[1], "][INFO] Refresh final predictions.")
+      }
       private$final.pred <- list(prob = data.frame(), raw = c())
+
       private$class.values <- predictions$getClassValues()
       private$positive.class <- predictions$getPositiveClass()
 

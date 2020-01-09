@@ -84,6 +84,11 @@ ClassWeightedVoting <- R6::R6Class(
                 "' weights and cutoff of ", self$getCutoff())
       }
 
+      if (isTRUE(verbose)) {
+        message("[", class(self)[1], "][INFO] Refresh final predictions.")
+      }
+      private$final.pred <- list(prob = data.frame(), raw = c())
+
 
       if (is.null(weights) || length(weights) != ncol(binary.pred)) {
         if (isTRUE(verbose)) {

@@ -380,7 +380,7 @@ D2MCS <- R6::R6Class(
                             !is.list(train.output$getModels(metric)),
                             length(train.output$getModels(metric)) == 0),
                         metrics), collapse = " "),
-                      ". Checking next voting.scheme...")
+                      ". Checking next Voting Scheme...")
               next
             }
             for (metric in metrics) {
@@ -556,7 +556,7 @@ D2MCS <- R6::R6Class(
       compute.fitness <- function(weights, min.function) {
         voting.scheme$execute(predictions = predictions, weights = weights)
         pred.values <- voting.scheme$getPrediction("raw", positive.class)
-        real.values <<- real.values
+        # real.values <- real.values
         mf <- min.function(caret::confusionMatrix(data = pred.values,
                                                   reference = real.values,
                                                   positive = positive.class,

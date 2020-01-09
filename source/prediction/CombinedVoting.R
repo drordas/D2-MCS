@@ -24,6 +24,7 @@ CombinedVoting <- R6::R6Class(
       if (!is.null(cutoff) && !is.numeric(cutoff)) {
         stop("[", class(self)[1], "][FATAL] Invalid values of cutoff. Aborting...")
       }
+
       super$initialize()
       private$voting.scheme <- voting.scheme
       private$combined.metrics <- combined.metrics
@@ -38,26 +39,29 @@ CombinedVoting <- R6::R6Class(
     getCutoff = function() { private$cutoff },
     execute = function(predictions, verbose = FALSE) {
 
-      if (missing(predictions) || length(Filter( function(x) inherits(x, "ClusterPredictions"), predictions) ) == 0) {
-        stop("[", class(self)[1], "][FATAL] Predictions missing or invalid. ",
-             "Must be a list of ClusterPredictions object. Aboring")
+      if ( !all(sapply(predictions, function(pred) {
+                                    !inherits(pred, "ClusterPrediction") } )) )
+      {
+        stop("[", class(self)[1], "][FATAL] Invalid prediction type. Must be a ",
+             "ClusterPrediction object. Aborting...")
       }
-      if (!all(Filter( function(prediction) prediction$size() <= 0, predictions))) {
-        stop("[", class(self)[1], "][FATAL] Some cluster predictions were not",
-             "computed. Aborting...")
+
+      if ( any(sapply(predictions, function(pred) { pred$size() <= 0 } ))) {
+        stop("[", class(self)[1], "][FATAL] Cluster predictions were not",
+             " computed. Aborting...")
       }
 
       if (!all(self$getMetrics() %in% names(predictions))) {
-        stop("[", class(self)[1], "][FATAL] predictions are incorrect. Must have required metrics. ",
-             paste(self$getMetrics(), collapse = " "), ". Aborting...")
+        stop("[", class(self)[1], "][FATAL] predictions are incorrect. ",
+             "Must have the required metrics: ",
+             paste(self$getMetrics(), collapse = ", "), ". Aborting...")
       }
 
       if (isTRUE(verbose)) {
         message("[", class(self)[1], "][INFO] Refresh final predictions.")
       }
 
-      private$final.pred <- list(prob = data.frame(),
-                                 raw = c())
+      private$final.pred <- list(prob = data.frame(), raw = c())
 
       predictions <- predictions[self$getMetrics()]
 
@@ -89,7 +93,6 @@ CombinedVoting <- R6::R6Class(
         all.prob.pred <- cbind(all.prob.pred,
                                clusterPredictions)
       }
-
       final.raw.pred <- c()
       final.prob.pred <- data.frame()
 
@@ -105,9 +108,7 @@ CombinedVoting <- R6::R6Class(
                                                          cutoff = self$getCutoff())) {
           final.raw.pred <- c(final.raw.pred, self$getPositiveClass())
 
-        } else {
-          final.raw.pred <- c(final.raw.pred, negative.class)
-        }
+        } else { final.raw.pred <- c(final.raw.pred, negative.class) }
 
         prob.pred <- self$getMethodology()$compute(raw.pred = row.raw.pred,
                                                    prob.pred = row.prob.pred,

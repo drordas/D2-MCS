@@ -38,17 +38,17 @@ ClassMajorityVoting <- R6::R6Class(
              "Aborting...")
       }
 
-      if (missing(metric) || !is.character(metric)) {
+      if (is.null(metric) || !is.character(metric)) {
         if (is.null(self$getMetric())) {
           stop("[", class(self)[1], "][FATAL] Metric attribute not set or invalid.")
         }
       } else {
-        message("[", class(self)[1], "][INFO] Metric attribute set on execute method.",
-                " Assigning the value of metric: ", metric)
+        message("[", class(self)[1], "][INFO] Metric attribute was set on ",
+                "execute method. Assigning the value of metric: ", metric)
         private$metric <- metric
       }
 
-      if (missing(cutoff) || !dplyr::between(cutoff, 0, 1)) {
+      if (is.null(cutoff) || !dplyr::between(cutoff, 0, 1)) {
         if (is.null(self$getCutoff())) {
           message("[", class(self)[1], "][WARNING] Cutoff value should be in ",
                   "the interval between 0 and 1. Assuming 0.5.")
@@ -81,8 +81,8 @@ ClassMajorityVoting <- R6::R6Class(
       if (isTRUE(verbose)) {
         message("[", class(self)[1], "][INFO] Refresh final predictions.")
       }
-      private$final.pred <- list(prob = data.frame(),
-                                 raw = c())
+      private$final.pred <- list(prob = data.frame(), raw = c())
+
       raw.pred <- do.call(cbind, lapply(predictions$getAll(),function(x) {
         pred <- x$getPrediction("raw")
         data.frame(pred, row.names = row.names(pred) )
