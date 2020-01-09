@@ -13,11 +13,11 @@ SOO <- R6::R6Class(
     },
     execute = function(init.weights=NULL, fitness){
       if ( missing(fitness) || !is.function(fitness))
-        stop("[",private$name,"][ERROR] Fitness function should be provided to perform optimization process\n")
-      
+        stop("[",private$name,"][FATAL] Fitness function should be provided to perform optimization process")
+
       if( is.null(init.weights) && is.null(private$init.weights) )
-        stop("[",private$name,"][ERROR] Initial weights should be previously defined\n\n")
-      
+        stop("[",private$name,"][FATAL] Initial weights should be previously defined")
+
       if(!is.null(init.weights)) private$init.weights <- init.weights
       
       private$init.weights <- as.vector(private$parse.population(init.weights))

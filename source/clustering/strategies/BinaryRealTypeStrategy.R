@@ -5,18 +5,18 @@ BinaryRealTypeStrategy <- R6::R6Class(
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new() ) {
       if ( !inherits(subset,"Subset" ) ) {
-        stop("[",super$getName(),"][ERROR] Subset parameter must be defined as",
+        stop("[",super$getName(),"][FATAL] Subset parameter must be defined as",
              "'Subset' type")
       }
       
       if ( !is.list(heuristic) || length(heuristic) != 2 ) {
-        stop("[",super$getName(),"][ERROR] Heuristic parameter is not defined",
+        stop("[",super$getName(),"][FATAL] Heuristic parameter is not defined ",
              " or incorrect. Must contain two elements.")
       }
       
       if(!any(sapply(heuristic, inherits, "GenericHeuristic"))){
-        stop("[",super$getName(),"][ERROR] Defined heuristics are not correct.",
-             " Must inherit from 'GenericHeuristic' class.")
+        stop("[",super$getName(),"][FATAL] Defined heuristics are not correct. ",
+             "Must inherit from 'GenericHeuristic' class.")
       }
       
       if( is.null(heuristic[[1]]) ){
@@ -314,11 +314,11 @@ BinaryRealTypeStrategy <- R6::R6Class(
     createTrain = function( subset, num.clusters= NULL, num.groups=NULL,
                             include.unclustered= FALSE) {
       if ( !inherits(subset,"Subset") ) {
-        stop("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object")
+        stop("[",super$getName(),"][FATAL] Subset parameter must be a 'Subset' object")
       }
       
       if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
-        stop("[",super$getName(),"][ERROR] Clustering not done or erroneous. Aborting...")
+        stop("[",super$getName(),"][FATAL] Clustering not done or erroneous. Aborting...")
       }
       
       distribution <- self$getDistribution( num.clusters = num.clusters, 
@@ -375,7 +375,7 @@ BinaryRealTypeStrategy <- R6::R6Class(
     },
     saveCSV = function(dir.path, name = NULL, num.clusters = NULL){
       if ( missing(dir.path) )
-        stop("[", super$getName(), "][INFO] Path not defined. Aborting.")
+        stop("[", super$getName(), "][FATAL] Path not defined. Aborting")
       
       if ( is.null(name) ) {
         name <- private$heuristic[[1]]$getName()
@@ -394,7 +394,8 @@ BinaryRealTypeStrategy <- R6::R6Class(
         if ( dir.exists(dir.path) ) {
           message("[", super$getName(), "][INFO] Directory '", dir.path, "'has been succesfully created")
         } else {
-          stop("[", super$getName(), "][ERROR] Cannot create directory '", dir.path, "'.") 
+          stop("[", super$getName(), "][FATAL] Cannot create directory '", dir.path, "'. ",
+               "Aborting")
         }
       }
       

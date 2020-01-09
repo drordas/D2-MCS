@@ -8,15 +8,15 @@ PerformanceComparator <- R6::R6Class(
       if ( !is.list(measures) ) measures <- list(measures)
       
       if ( !inherits(test.set,"Subset")  )
-        stop("[",class(self)[1],"][ERROR] Test dataset missing or incorrect.",
+        stop("[",class(self)[1],"][FATAL] Test dataset missing or incorrect.",
              " Should inherit from 'Subset' class. Aborting...")
 
       if ( !all(sapply(op.results, inherits,"Optimizers")) )
-        stop("[",class(self)[1],"][ERROR] Optimizers must inherit from ",
+        stop("[",class(self)[1],"][FATAL] Optimizers must inherit from ",
              "'Optimizers' class. Aborting...")
       
       if ( !all(sapply(measures, inherits,"MeasureFunction")) )
-        stop("[",class(self)[1],"][ERROR] Measures should be a list comprised ",
+        stop("[",class(self)[1],"][FATAL] Measures should be a list comprised ",
              "of 'MeasureFunction' objects. Aborting...")
       
       if ( !inherits(pareto.optimal,"ParetoDistance") ){

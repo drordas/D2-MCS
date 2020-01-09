@@ -5,8 +5,8 @@ HDSubset <- R6::R6Class(
     initialize = function(file.path, feature.names, feature.id, start.at=0,
                           sep= ",", chunk.size) {
       if (is.null(feature.names) || ncol(feature.names) ==0){
-        stop("[",class(self)[1],"][ERROR] Dataset has not being preloaded.",
-             " Aborting...")
+        stop("[",class(self)[1],"][FATAL] Dataset has not being preloaded. ",
+             "Aborting...")
       }
       private$chunk.size <- chunk.size
       private$conection <- NULL

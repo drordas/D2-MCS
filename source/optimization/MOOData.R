@@ -7,11 +7,11 @@ MOOData <- R6::R6Class(
                            n.positive, n.negative)
     {
       if (!inherits(pareto.front,"data.frame"))
-        stop("[",class(self)[1],"][ERROR] Pareto front must be a data.frame")
+        stop("[",class(self)[1],"][FATAL] Pareto front must be a data.frame")
 
       if (!inherits(population,"list"))
-        stop("[",class(self)[1],"][ERROR] Population must be a list")
-      
+        stop("[",class(self)[1],"][FATAL] Population must be a list")
+
       super$initialize(name,n.positive, n.negative)
       private$pareto.front <- pareto.front
       private$population <- population
@@ -45,7 +45,7 @@ MOOData <- R6::R6Class(
     getNumPositives = function(){ private$n.positive },
     getNumNegatives = function(){ private$n.negative },
     getConfusionMatrix = function( pareto.distance = NULL) { 
-      stop("[",class(self)[1],"][ERROR] Method 'getConfusionMatrix' is abstract.",
+      stop("[",class(self)[1],"][FATAL] Method 'getConfusionMatrix' is abstract.",
            "Must be implemented in inherited class")
     },
     getFP = function(){

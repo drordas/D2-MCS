@@ -7,11 +7,11 @@ Dataset <- R6::R6Class(
                            class.index, positive.class ){
 
       if (is.null(class.index) || is.null(positive.class)){
-        stop("[",class(self)[1],"][ERROR] Positive class was not defined")
+        stop("[",class(self)[1],"][FATAL] Positive class was not defined")
       }
 
       if( !is.numeric(class.index) || class.index < 0){
-        stop("[",class(self)[1],"][ERROR] Class index is incorrect. ",
+        stop("[",class(self)[1],"][FATAL] Class index is incorrect. ",
              "Must be an integer greater than 0")
       }
 
@@ -21,7 +21,7 @@ Dataset <- R6::R6Class(
       }
 
       if (!file.exists(filepath)) {
-        stop("[",class(self)[1],"][ERROR] Corpus cannot be found at defined location")
+        stop("[",class(self)[1],"][FATAL] Corpus cannot be found at defined location")
       }
 
       dt.size <- (file.info(filepath)$size / 2^30)
@@ -30,7 +30,7 @@ Dataset <- R6::R6Class(
               round(dt.size,digits = 4)," Gb.")
 
       if(dt.size > 1){
-        stop("[",class(self)[1],"][ERROR] High Dimensional Dataset is not compatible with",
+        stop("[",class(self)[1],"][FATAL] High Dimensional Dataset is not compatible with ",
              "Dataset class loader")
       }
 
@@ -40,8 +40,8 @@ Dataset <- R6::R6Class(
         private$corpus <- read.csv( filepath, header= header,
                                     skip= (skip + 1), sep= sep )
         if(! (class.index %in% 1:ncol(private$corpus)) ){
-          stop("[",class(self)[1],"][ERROR] Class index exceeds dataset limits.",
-               " Must be between 1 and ",ncol(private$corpus)," Aborting...")
+          stop("[",class(self)[1],"][FATAL] Class index exceeds dataset limits. ",
+               "Must be between 1 and ",ncol(private$corpus)," Aborting...")
         }
         columnNames <- unlist(strsplit(scan(file = filepath, nlines = 1,
                                             what = "character"), split = sep))
@@ -64,8 +64,8 @@ Dataset <- R6::R6Class(
         private$positive.class <- positive.class
         private$class.values <- as.character(unique(private$corpus[,class.index]))
       }else{
-        stop("[",class(self)[1],"][ERROR] Positive class value not found.",
-                      "Aborting dataset loading...")
+        stop("[",class(self)[1],"][FATAL] Positive class value not found. ",
+             "Aborting dataset loading...")
       }
 
       message("[",class(self)[1],"][INFO] Finish. Total: ",
@@ -86,7 +86,7 @@ Dataset <- R6::R6Class(
     setPositiveClass = function(positive.class) {
       if ( positive.class %in% private$class.values ){
         private$positive.class <- positive.class
-      }else{ stop(red("[Dataset][ERROR] Positive class value not found. Task not done\n")) }
+      }else{ stop("[",class(self)[1],"][FATAL] Positive class value not found. Task not done") }
     },
     setClassIndex = function(class.index, positive.class) {
       if ( class.index %in% 1:ncol(private$corpus) ) {
@@ -121,7 +121,7 @@ Dataset <- R6::R6Class(
                                              k = num.folds, list = TRUE )
         }else{
           if (!is.logical(class.balance)) {
-            stop(red("[",class(self)[1],"][ERROR] class.balance not defined"))
+            stop("[",class(self)[1],"][FATAL] class.balance not defined")
           }
           if ( is.numeric(num.folds) && length(num.folds) == 1 && is.vector(percent.folds) ) {
             if ( length(percent.folds) == num.folds && is.numeric(percent.folds) &&

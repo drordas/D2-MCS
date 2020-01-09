@@ -6,7 +6,7 @@ HDDataset <- R6::R6Class(
                            normalize.names = FALSE, ignore.columns=FALSE)
     {
       if (!file.exists(filepath)) {
-        stop("[",class(self)[1],"][ERROR] Corpus cannot be found at defined location")
+        stop("[",class(self)[1],"][FATAL] Corpus cannot be found at defined location")
       }
 
       private$file.path <- filepath
@@ -16,7 +16,7 @@ HDDataset <- R6::R6Class(
               round(dt.size,digits = 4)," Gb.")
 
       if(dt.size < 1){
-        stop("[",class(self)[1],"][ERROR] Low Dimensional Dataset is not compatible with",
+        stop("[",class(self)[1],"][FATAL] Low Dimensional Dataset is not compatible with",
              " HDDataset class loader")
       }
 

@@ -6,7 +6,7 @@ GenericPlot <- R6::R6Class(
     getName = function() { class(self)[1] },
     plot = function(summary, ...) {
       if (!is.data.frame(summary)) {
-        stop("[", super$getName(), "][ERROR] summary parameter must be defined as 'data.frame' type")
+        stop("[", super$getName(), "][FATAL] summary parameter must be defined as 'data.frame' type")
       }
       min <- data.frame(x = summary[which.min(summary[, 2]), ][, 1],y = min(summary[, 2]))
       max <- data.frame(x = summary[which.max(summary[, 2]), ][, 1],y = max(summary[, 2]))

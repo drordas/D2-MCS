@@ -5,7 +5,7 @@ GenericHeuristic <- R6::R6Class(
     initialize = function() { },
     getName = function() { class(self)[1]},
     heuristic = function(col1, col2, column.names = NULL, ...) {
-      stop("[GenericHeuristic][ERROR] Function 'heuristic must be implemented in inherited class'")
+      stop("[",class(self)[1],"][FATAL] Function 'heuristic must be implemented in inherited class'")
     }
   ),
   private = list(

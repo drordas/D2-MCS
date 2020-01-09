@@ -7,7 +7,7 @@ VotingStrategy <- R6::R6Class(
                                  raw = c())
     },
     execute = function(predictions, ...) {
-      stop("[", class(self)[1], "][ERROR] Class is abstract.",
+      stop("[", class(self)[1], "][FATAL] Class is abstract.",
            " Method should be defined in inherited class. Aborting...")
     },
     getName = function() { class(self)[1] },
@@ -16,7 +16,7 @@ VotingStrategy <- R6::R6Class(
     getFinalPred = function() { private$final.pred },
     getPrediction = function(type = NULL, target = NULL, filter = FALSE) {
       if (is.null(self$getFinalPred()) || is.null(self$getPositiveClass())) {
-        stop("[", class(self)[1], "][ERROR] Predictions not found.",
+        stop("[", class(self)[1], "][FATAL] Predictions not found.",
              "Voting method has not been executed. Aborting...")
       }
 
@@ -28,7 +28,7 @@ VotingStrategy <- R6::R6Class(
       }
 
       if (!is.logical(filter)) {
-        stop("[", class(self)[1], "][ERROR] Filter is incorrect. Must be a 'logical' type. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Filter is incorrect. Must be a 'logical' type. Aborting...")
       }
 
       switch(type,

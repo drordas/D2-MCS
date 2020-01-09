@@ -4,15 +4,15 @@ ParetoDistance <- R6::R6Class(
   public = list(
     initialize = function (name){
       if(is.null(name) || !is.character(name))
-        stop("[ParetoDistance][ERROR] Named not defined. Aborting")
+        stop("[ParetoDistance][FATAL] Named not defined. Aborting")
 
       private$name <- name
       private$pareto.front <- NULL
     },
     compute = function(pareto.front){
       if(is.null(pareto.front) || !is.data.frame(pareto.front))
-        stop("[ParetoDistance][ERROR] Pareto Front not included or incorrect. Must be a data.frame. Aborting")
-      
+        stop("[ParetoDistance][FATAL] Pareto Front not included or incorrect. Must be a data.frame. Aborting")
+
       if( "p.front" %in% colnames(pareto.front) )
         private$pareto.front <- pareto.front[,-(which( colnames(pareto.front) == "p.front" )) ]
       

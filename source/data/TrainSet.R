@@ -5,11 +5,11 @@ TrainSet <- R6::R6Class(
     initialize = function(cluster.dist, class.name, class.values, positive.class) {
 
       if ( !is.list(cluster.dist) && length(cluster.dist) == 0 ) {
-        stop("[TrainSet][ERROR] Clusters empty or incorrect (must be a list). Aborting.")
+        stop("[",class(self)[1],"][FATAL] Clusters empty or incorrect (must be a list). Aborting")
       }
 
       if ( !(positive.class %in% as.character(unique(class.values))) ) {
-        stop("[TrainSet][ERROR] Positive Class is incorrect. Must be '",
+        stop("[",class(self)[1],"][FATAL] Positive Class is incorrect. Must be '",
              paste0(as.character(unique(class.values))))
       }
 
@@ -24,7 +24,7 @@ TrainSet <- R6::R6Class(
     getFeatureNames = function(num.cluster) {
       if ( any( !is.numeric(num.cluster),
                 !num.cluster %in% c(1:length(private$clusters)) )) {
-        stop("[TrainSet][ERROR] Position not defined or incorrect.",
+        stop("[",class(self)[1],"][FATAL] Position not defined or incorrect. ",
              "Must be included between 1 and ",length(private$clusters))
       }
       names(private$clusters[[num.cluster]])
@@ -33,7 +33,7 @@ TrainSet <- R6::R6Class(
       if ( any(!is.numeric(num.cluster),
                !num.cluster %in% c(1:length(private$clusters))) )
       {
-        stop("[TrainSet][ERROR] Position not defined or incorrect.",
+        stop("[",class(self)[1],"][FATAL] Position not defined or incorrect. ",
              "Must be included between 1 and ",length(private$clusters))
       }
       private$clusters[[num.cluster]]
@@ -42,7 +42,7 @@ TrainSet <- R6::R6Class(
       if ( any(missing(num.cluster),!is.numeric(num.cluster),
                !num.cluster %in% c(1:length(private$clusters))) )
       {
-        stop("[TrainSet][ERROR] Position not defined or incorrect.",
+        stop("[",class(self)[1],"][FATAL] Position not defined or incorrect. ",
              "Must be included between 1 and ",length(private$clusters))
       }
       instances <- cbind(private$clusters[[num.cluster]],private$class.values)

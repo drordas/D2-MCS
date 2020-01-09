@@ -4,7 +4,7 @@ Prediction <- R6::R6Class(
   public = list(
     initialize = function(model, feature.id=NULL){
       if ( !inherits(model,"list") || length(model) != 5 )
-        stop("[",class(self)[1],"][ERROR] Model must be defined as a list of four ",
+        stop("[",class(self)[1],"][FATAL] Model must be defined as a list of four ",
              "elements. Aborting...")
       private$model <- model
       private$feature.id <- feature.id
@@ -16,7 +16,7 @@ Prediction <- R6::R6Class(
     },
     execute = function(pred.values,class.values, positive.class){
       if (!inherits(pred.values,"data.frame")){
-        stop("[",class(self)[1],"][ERROR] Prediction values are not correct. ",
+        stop("[",class(self)[1],"][FATAL] Prediction values are not correct. ",
              "Must be a data.frame. Aborting..")
       }
 

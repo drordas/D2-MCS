@@ -8,12 +8,12 @@ Model <- R6::R6Class(
         message("[",class(self)[1],"][INFO] Save directory not exist. Creating...")
         dir.create(private$dir.path, showWarnings= FALSE, recursive = TRUE)
         if(!dir.exists(private$dir.path))
-          stop("[",class(self)[1],"][ERROR] Path '",private$dir.path,
+          stop("[",class(self)[1],"][FATAL] Path '",private$dir.path,
                "' cannot be created. Aborting execution...")
       }
 
       if( missing(model) ){
-        stop("[",class(self)[1],"][ERROR] Model is missing or incorrect.",
+        stop("[",class(self)[1],"][FATAL] Model is missing or incorrect. ",
              "Aborting...")
       }
 
@@ -54,24 +54,24 @@ Model <- R6::R6Class(
                 "has not been trained. Starting training process...")
 
         if( !inherits(train.set,"data.frame") ){
-          stop("[",class(self)[1],"][ERROR][",self$getName(),"] ",
-               "Cannot perform trainning stage.",
+          stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
+               "Cannot perform trainning stage. ",
                "Train set must be a data.frame type")
         }
 
         if( nrow(train.set) == 0 ){
-          stop("[",class(self)[1],"][ERROR][",self$getName(),"] ",
+          stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
                "Cannot perform trainning stage. Train set is empty")
         }
 
         if( !inherits(trFunction,"TrainFunction") ){
-          stop("[",class(self)[1],"][ERROR][",self$getName(),"] ",
+          stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
                "TrainFunction invalid. Should inherit from TrainFunction class")
         }
 
         valid.metrics <- trFunction$getMeasures()
         if(any(is.null(metric),!(metric %in% valid.metrics))){
-          stop("[",class(self)[1],"][ERROR][",self$getName(),"] ",
+          stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
                "Metric is not defined or unavailable ",
                "Must be a [",paste(valid.metrics,collapse=", "),"] type")
         }
@@ -123,9 +123,8 @@ Model <- R6::R6Class(
           model.result <- private$model.train$model.data$results
           model.result[best(model.result, metric=metric, maximize= TRUE), ][[metric]]
         }else {
-          stop("[",class(self)[1],"][ERROR] Metric is not defined or unavailable ",
+          stop("[",class(self)[1],"][FATAL] Metric is not defined or unavailable ",
                "Must be a [",paste(self$getValidMetrics(),collapse=", "),"] type.")
-          NULL
         }
       }else{
         if (is.null(private$model.train$model.data))

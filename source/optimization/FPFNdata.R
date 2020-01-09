@@ -12,7 +12,7 @@ FPFNdata <- R6::R6Class(
       private$pareto.distance <- pareto.distance
       solution <- super$getBestSolution(pareto.distance)
       if( !is.data.frame(solution) || nrow(solution) > 1  )
-        stop("[",private$name,"][ERROR] Solution is incorrect. Should be a single-row data.frame")
+        stop("[",private$name,"][FATAL] Solution is incorrect. Should be a single-row data.frame")
 
       fp <- solution[,"FP"]
       fn <- solution[,"FN"]

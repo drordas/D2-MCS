@@ -19,7 +19,7 @@ TrainFunction <- R6::R6Class(
       }
     },
     create = function(summaryFunction, search.method = "grid", class.probs){
-      stop("[",class(self)[1],"][ERROR] create function is abstract. ",
+      stop("[",class(self)[1],"][FATAL] create function is abstract. ",
            "Must be implemented in inherited class")
     },
     getResamplingMethod = function(){ private$method },
@@ -29,25 +29,25 @@ TrainFunction <- R6::R6Class(
     getAllowParallel = function(){ private$allowParallel },
     getVerboseIter = function(){ private$verboseIter },
     getTrFunction = function(){
-      stop("[",class(self)[1],"][ERROR] getTrFunction is abstract. ",
+      stop("[",class(self)[1],"][FATAL] getTrFunction is abstract. ",
            "Must be implemented in inherited class")
     },
     getMeasures = function(){
-      stop("[",class(self)[1],"][ERROR] getMeasures is abstract. ",
-           "Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] getMeasures is abstract. ",
+           "Must be implemented in inherited class")
     },
     getType = function(){
-      stop("[",class(self)[1],"][ERROR] getType is abstract. ",
-           "Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] getType is abstract. ",
+           "Must be implemented in inherited class")
     },
     getSeed = function(){ private$seed },
     setSummaryFunction = function (summaryFunction){
-      stop("[",class(self)[1],"][ERROR] setSummaryFunction is abstract. ",
-           "Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] setSummaryFunction is abstract. ",
+           "Must be implemented in inherited class")
     },
     setClassProbs = function(class.probs){
-      stop("[",class(self)[1],"][ERROR] setClassProbs is abstract. ",
-           "Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] setClassProbs is abstract. ",
+           "Must be implemented in inherited class")
     }
   ),
   private = list(

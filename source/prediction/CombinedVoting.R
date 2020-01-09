@@ -5,24 +5,24 @@ CombinedVoting <- R6::R6Class(
   public = list(
     initialize = function(voting.scheme, combined.metrics, methodology, metrics, cutoff = NULL) {
       if (!inherits(voting.scheme, "SimpleVoting")) {
-        stop("[", class(self)[1], "][ERROR] Invalid voting.scheme type. Must be a ",
+        stop("[", class(self)[1], "][FATAL] Invalid voting.scheme type. Must be a ",
              "SimpleVoting object. Aborting...")
       }
       if (!inherits(combined.metrics, "CombinedMetrics")) {
-        stop("[", class(self)[1], "][ERROR] Invalid combined.metrics type. Must be a ",
+        stop("[", class(self)[1], "][FATAL] Invalid combined.metrics type. Must be a ",
              "CombinedMetrics object. Aborting...")
       }
       if (!inherits(methodology, "Methodology")) {
-        stop("[", class(self)[1], "][ERROR] Invalid methodology type. Must be a ",
+        stop("[", class(self)[1], "][FATAL] Invalid methodology type. Must be a ",
              "SimpleVoting object. Aborting...")
       }
 
       if ( !all(is.character(metrics), length(metrics) >= 2) ) {
-        stop("[", class(self)[1], "][INFO] Invalid values of metrics ")
+        stop("[", class(self)[1], "][FATAL] Invalid values of metrics ")
       }
 
       if (!is.null(cutoff) && !is.numeric(cutoff)) {
-        stop("[", class(self)[1], "][INFO] Invalid values of cutoff. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Invalid values of cutoff. Aborting...")
       }
       super$initialize()
       private$voting.scheme <- voting.scheme
@@ -39,16 +39,16 @@ CombinedVoting <- R6::R6Class(
     execute = function(predictions, verbose = FALSE) {
 
       if (missing(predictions) || length(Filter( function(x) inherits(x, "ClusterPredictions"), predictions) ) == 0) {
-        stop("[", class(self)[1], "][ERROR] Predictions missing or invalid. ",
+        stop("[", class(self)[1], "][FATAL] Predictions missing or invalid. ",
              "Must be a list of ClusterPredictions object. Aboring")
       }
       if (!all(Filter( function(prediction) prediction$size() <= 0, predictions))) {
-        stop("[", class(self)[1], "][ERROR] Some cluster predictions were not",
+        stop("[", class(self)[1], "][FATAL] Some cluster predictions were not",
              "computed. Aborting...")
       }
 
       if (!all(self$getMetrics() %in% names(predictions))) {
-        stop("[", class(self)[1], "][ERROR] predictions are incorrect. Must have required metrics. ",
+        stop("[", class(self)[1], "][FATAL] predictions are incorrect. Must have required metrics. ",
              paste(self$getMetrics(), collapse = " "), ". Aborting...")
       }
 

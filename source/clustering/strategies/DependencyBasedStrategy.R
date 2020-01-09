@@ -5,17 +5,17 @@ DependencyBasedStrategy <- R6::R6Class(
   public = list(
     initialize = function(subset, heuristic, configuration = DependencyBasedStrategyConfiguration$new()) {
       if ( !inherits(subset, "Subset" ) ) {
-        stop("[", super$getName(), "][ERROR] Subset parameter must be defined as",
+        stop("[", super$getName(), "][FATAL] Subset parameter must be defined as ",
              "'Subset' type")
       }
       if ( !is.list(heuristic) || length(heuristic) != 2 ) {
-        stop("[", super$getName(), "][ERROR] Heuristic parameter is not defined",
-             " or incorrect. Must contain two elements.")
+        stop("[", super$getName(), "][FATAL] Heuristic parameter is not defined ",
+             "or incorrect. Must contain two elements.")
       }
       
       if ( !any(sapply(heuristic, inherits, "GenericHeuristic")) ) {
-        stop("[", super$getName() ,"][ERROR] Defined heuristics are not correct.",
-             " Must inherit from 'GenericHeuristic' class.")
+        stop("[", super$getName() ,"][FATAL] Defined heuristics are not correct. ",
+             "Must inherit from 'GenericHeuristic' class.")
       }
       if ( is.null(heuristic[[1]]) ) {
         message("[", super$getName(), "][INFO] Heuristic for binary data not defined")
@@ -32,22 +32,22 @@ DependencyBasedStrategy <- R6::R6Class(
       }
 
       if (!"StrategyConfiguration" %in% class(configuration)) {
-        stop("[DependencyBasedStrategy][ERROR] configuration parameter must be defined as 'StrategyConfiguration' type")
+        stop("[", super$getName(),"][FATAL] configuration parameter must be defined as 'StrategyConfiguration' type")
       }
       if (!exists("getBinaryCutoff", configuration)) {
-        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have getCutoffBinary method")
+        stop("[", super$getName(),"][FATAL] configuration parameter must have getCutoffBinary method")
       }
       if (!exists("getRealCutoff", configuration)) {
-        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have getCutoffReal method")
+        stop("[", super$getName(),"][FATAL] configuration parameter must have getCutoffReal method")
       }
       if (!exists("tiebreak", configuration)) {
-        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have tiebreak method")
+        stop("[", super$getName(),"][FATAL] configuration parameter must have tiebreak method")
       }
       if (!exists("qualityOfCluster", configuration)) {
-        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have qualityOfCluster method")
+        stop("[", super$getName(),"][FATAL] configuration parameter must have qualityOfCluster method")
       }
       if (!exists("isImprovingClustering", configuration)) {
-        stop("[DependencyBasedStrategy][ERROR] configuration parameter must have isImprovingClustering method")
+        stop("[", super$getName(),"][FATAL] configuration parameter must have isImprovingClustering method")
       }
       super$initialize(  subset = subset, heuristic = heuristic, 
                          description = "<<Pending>>",configuration = configuration
@@ -243,11 +243,11 @@ DependencyBasedStrategy <- R6::R6Class(
     createTrain = function(subset, num.clusters = NULL, num.groups=NULL,
                            include.unclustered = FALSE) {
       if ( !inherits(subset,"Subset") ) {
-        stop("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object")
+        stop("[",super$getName(),"][FATAL] Subset parameter must be a 'Subset' object")
       }
       
       if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
-        stop("[",super$getName(),"][ERROR] Clustering not done or erroneous. Aborting...")
+        stop("[",super$getName(),"][FATAL] Clustering not done or erroneous. Aborting...")
       }
       
       distribution <- self$getDistribution( num.clusters = num.clusters, 
@@ -295,8 +295,8 @@ DependencyBasedStrategy <- R6::R6Class(
     },
     saveCSV = function(dir.path, name = NULL, num.clusters = NULL) {
       if ( missing(dir.path) )
-        stop("[",super$getName(),"][INFO] Path not defined. Aborting.")
-      
+        stop("[",super$getName(),"][FATAL] Path not defined. Aborting.")
+
       if ( is.null(name)) {
         name <- private$heuristic[[1]]$getName()
         message("[", super$getName(), "][INFO] File name not defined. Using '",
@@ -314,7 +314,7 @@ DependencyBasedStrategy <- R6::R6Class(
         if (dir.exists(dir.path)) {
           message("[", super$getName(), "][INFO] Directory '", dir.path,
                   "'has been succesfully created")
-        } else { stop("[", super$getName(), "][ERROR] Cannot create directory '",
+        } else { stop("[", super$getName(), "][FATAL] Cannot create directory '",
                       dir.path, "'.") }
       }
       

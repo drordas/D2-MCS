@@ -9,11 +9,11 @@ UseProbability <- R6::R6Class(
     execute = function(data, lev = NULL, model = NULL){
       lvls <- levels(data$obs)
       if( length(lvls) > 2 )
-        stop( paste("Your outcome has", length(lvls),
-                    "levels. The UseProbability function isn't appropriate."))
+        stop("[",class(self)[1],"][FATAL] Your outcome has ", length(lvls),
+             " levels. The UseProbability function isn't appropriate.")
       if (!all(levels(data[, "pred"]) == lvls))
-        stop("levels of observed and predicted data do not match")
-      
+        stop("[",class(self)[1],"][FATAL] levels of observed and predicted data do not match")
+
       data$y = as.numeric(data$obs == lvls[2])
       data$z = as.numeric(data$pred == lvls[2])
       rocAUC <- ModelMetrics::auc(ifelse(data$obs == lev[2], 0, 1), data[, lvls[1]])

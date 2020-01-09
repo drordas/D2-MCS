@@ -4,14 +4,14 @@ ClassifierPerformance <- R6::R6Class(
   public = list(
     initialize = function (preds, obs){
       if(is.null(preds) || !is.list(preds) || is.null(obs))
-        stop("[ClassifierPerformance][ERROR] Input parameters are incorrect.")
-      
+        stop("[ClassifierPerformance][FATAL] Input parameters are incorrect.")
+
       if(length(preds$preds) != length(obs) )
-        stop("[ClassifierPerformance][ERROR] Number of Predictions and Observations mismatch")
-      
+        stop("[ClassifierPerformance][FATAL] Number of Predictions and Observations mismatch")
+
       if(!all.equal(sort(levels(preds$preds)),sort(levels(obs))))
-        stop("[ClassifierPerformance][ERROR] Levels of Predictions and Observations mismatch")
-      
+        stop("[ClassifierPerformance][FATAL] Levels of Predictions and Observations mismatch")
+
       private$positive.class <- preds$positive
       private$negative.class <- preds$negative
       private$metric <- preds$metric

@@ -8,7 +8,7 @@ FPFN <- R6::R6Class(
     },
     computeMeasure = function(conf.matrix){
       if( !"confusionMatrix" %in% class(conf.matrix) )
-        stop("[",super$name,"][ERROR] Argument must be a valid caret confusionMatrix object\n")
+        stop("[",super$name,"][FATAL] Argument must be a valid caret confusionMatrix object")
 
       fn <- as.double(conf.matrix$table[1,2])
       fp <- as.double(conf.matrix$table[2,1])

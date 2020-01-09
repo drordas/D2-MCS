@@ -120,11 +120,11 @@ SimpleStrategy <- R6::R6Class(
     createTrain = function( subset, num.clusters= NULL, num.groups=NULL,
                             include.unclustered= FALSE) {
       if ( !inherits(subset,"Subset") ) {
-        stop("[",super$getName(),"][ERROR] Subset parameter must be a 'Subset' object")
+        stop("[",super$getName(),"][FATAL] Subset parameter must be a 'Subset' object")
       }
 
       if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
-        stop("[",super$getName(),"][ERROR] Clustering not done or errorneous. Aborting...")
+        stop("[",super$getName(),"][FATAL] Clustering not done or errorneous. Aborting...")
       }
       distribution <- self$getDistribution( num.clusters = num.clusters,
                                             num.groups = num.groups,
@@ -158,15 +158,15 @@ SimpleStrategy <- R6::R6Class(
     },
     saveCSV = function(dir.path, name = NULL, num.clusters = NULL) {
       if ( missing(dir.path) )
-        stop("[", super$getName(), "][INFO] Path not defined. Aborting.")
-      
+        stop("[", super$getName(), "][FATAL] Path not defined. Aborting")
+
       if ( is.null(name) ) {
         name <- private$heuristic[[1]]$getName()
-        message("[", super$getName(), "][INFO] File name not defined. Using '", name, ".csv'.")
+        message("[", super$getName(), "][FATAL] File name not defined. Using '", name, ".csv'. Aborting")
       }
       
       if ( is.null(private$all.distribution) || nrow(private$all.distribution) == 0 ) {
-        stop("[", super$getName(), "][INFO] Clustering method not performed. Aborting.")
+        stop("[", super$getName(), "][FATAL] Clustering method not performed. Aborting")
       }
       
       if ( !dir.exists(dir.path) ) { 
@@ -174,7 +174,7 @@ SimpleStrategy <- R6::R6Class(
         if ( dir.exists(dir.path) ) {
           message("[", super$getName(), "][INFO] Directory has been succesfully created")
         } else { 
-          stop("[", super$getName(), "][ERROR] Cannot create directory.") 
+          stop("[", super$getName(), "][FATAL] Cannot create directory. Aborting")
         }
       }
 

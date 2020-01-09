@@ -5,23 +5,23 @@ Subset <- R6::R6Class(
     initialize = function(dataset, feature.id=NULL, class.index,
                           class.values, positive.class){
       if ( any(is.null(dataset), nrow(dataset) == 0, !is.data.frame(dataset)) ) {
-        stop("[",class(self)[1],"][ERROR] Dataset empty or incorrect ",
+        stop("[",class(self)[1],"][FATAL] Dataset empty or incorrect ",
              "(must be a data.frame). Aborting.")
       }
 
       if( missing(class.index) || is.null(class.index) ||
           !(class.index %in% c(1:nrow(dataset))) ){
-        stop("[",class(self)[1],"][ERROR] Class index missing or incorrect. Must be between 1 and",
+        stop("[",class(self)[1],"][FATAL] Class index missing or incorrect. Must be between 1 and",
               nrow(dataset)," Aborting.")
       }
 
       if (!(positive.class %in% as.character(unique(dataset[,class.index])) ) ) {
-        stop("[",class(self)[1],"][ERROR] Positive Class is incorrect. Must be '",
+        stop("[",class(self)[1],"][FATAL] Positive Class is incorrect. Must be '",
              paste0(as.character(unique(dataset[,class.index]))))
       }
 
       if (! all(class.values %in% as.character(unique(dataset[,class.index])) ) ) {
-        stop("[",class(self)[1],"][ERROR] Class values missmatch. Must be '",
+        stop("[",class(self)[1],"][FATAL] Class values missmatch. Must be '",
              paste0(as.character(unique(dataset[,class.index]))))
       }
 

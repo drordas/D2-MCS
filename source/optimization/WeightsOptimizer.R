@@ -4,19 +4,19 @@ WeightsOptimizer <- R6::R6Class(
   public = list(
     initialize = function ( name, dependences = NULL, min.function ){
       if(missing(name) || is.null(name) || !is.character(name) )
-        stop("[WeightsOptimizer][ERROR] Optimizer name should be defined. Aborting...")
+        stop("[",class(self)[1],"][FATAL] Optimizer name should be defined. Aborting...")
 
       if(missing(min.function) || !"MinFunction" %in% class(min.function) )
-        stop("[WeightsOptimizer][ERROR] Minimization function incorrect. ",
-             "Must inherit from 'MinFunction'. Aborting...\n")
-      
+        stop("[",class(self)[1],"][FATAL] Minimization function incorrect. ",
+             "Must inherit from 'MinFunction'. Aborting...")
+
       private$name <- name
       private$min.function <- min.function
       private$dependences <- dependences
       loadPackages(private$dependences)
     },
     execute = function(fitness = NULL){
-      stop("[WeightsOptimizer][ERROR] Method 'execute' is abstract.",
+      stop("[",class(self)[1],"][FATAL] Method 'execute' is abstract.",
            "Should be implemented in inherited class")
     },
     #plot = function(){

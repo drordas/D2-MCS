@@ -8,7 +8,7 @@ DatasetLoader <- R6::R6Class(
                     class.index= NULL, positive.class= NULL){
 
       if (!file.exists(filepath)) {
-        stop("[",class(self)[1],"][ERROR] Corpus cannot be found at defined location")
+        stop("[",class(self)[1],"][FATAL] Corpus cannot be found at defined location")
       }
 
       dt.size <- (file.info(filepath)$size / 2^30)
@@ -16,11 +16,11 @@ DatasetLoader <- R6::R6Class(
       if ( dplyr::between(dt.size,0,1) ){
 
         if (is.null(class.index) || is.null(positive.class)){
-          stop("[",class(self)[1],"][ERROR] Positive class was not defined")
+          stop("[",class(self)[1],"][FATAL] Positive class was not defined")
         }
 
         if( !is.numeric(class.index) || class.index < 0){
-          stop("[",class(self)[1],"][ERROR] Class index is incorrect. ",
+          stop("[",class(self)[1],"][FATAL] Class index is incorrect. ",
                "Must be an integer greater than 0")
         }
 
@@ -30,7 +30,7 @@ DatasetLoader <- R6::R6Class(
         }
 
         if (!file.exists(filepath)) {
-          stop("[",class(self)[1],"][ERROR] Corpus cannot be found at defined location")
+          stop("[",class(self)[1],"][FATAL] Corpus cannot be found at defined location")
         }
 
         dataset <- Dataset$new(filepath= filepath, header= header, sep= sep,

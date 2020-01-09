@@ -3,13 +3,12 @@ SummaryFunction <- R6::R6Class(
   portable = TRUE,                   
   public = list(
     initialize = function(measures){
-      #stop("[ERROR][SummaryFunction] Function 'initialize' must be implemented\n")
       if(is.null(measures))
-        stop("[ERROR][SummaryFunction] Measures not defined.\n")
+        stop("[",class(self)[1],"][FATAL] Measures not defined")
       private$measures <- measures
     },
     execute = function(){
-      stop("[ERROR][SummaryFunction] Function 'execute' must be implemented\n")
+      stop("[",class(self)[1],"][FATAL] Function 'execute' must be implemented")
     },
     getMeasures = function(){
       private$measures

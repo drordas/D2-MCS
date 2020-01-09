@@ -5,15 +5,15 @@ Optimizers <- R6::R6Class(
     initialize = function (voting.scheme, cluster.models, metric, 
                            optimizers, positive.class, negative.class)
     {
-      
+
       if (!inherits(voting.scheme,"VotingScheme"))
-        stop("[",class(self)[1],"][ERROR] Voting scheme argument missing or invalid.",
+        stop("[",class(self)[1],"][FATAL] Voting scheme argument missing or invalid.",
              "Should inherit from 'VotingScheme' class. Aborting...")
       
       if ( !is.null(optimizers) && !all(sapply(optimizers,inherits, "MinResult")  ) ) 
-        stop("[",class(self)[1],"][ERROR] Optimizers are missing or invalid.",
+        stop("[",class(self)[1],"][FATAL] Optimizers are missing or invalid.",
              "Should inherit from 'MinResult' class. Aborting...")
-      
+
       private$optimizers <- optimizers
       private$voting.scheme <- voting.scheme
       private$cluster.models <- cluster.models

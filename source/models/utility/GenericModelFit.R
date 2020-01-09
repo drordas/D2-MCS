@@ -4,11 +4,11 @@ GenericModelFit <- R6::R6Class(
   public = list(
     initialize = function(instances, class.name){
       if( any(!"data.frame" %in% class(instances), nrow(instances) == 0) ){
-        stop("[",class(self)[1],"][ERROR] Instances must be a non-empty data.frame")
+        stop("[",class(self)[1],"][FATAL] Instances must be a non-empty data.frame")
       }
 
       if ( !(class.name %in% names(instances)) ){
-        stop("[",class(self)[1],"][ERROR] Class name not included in instances data.frame")
+        stop("[",class(self)[1],"][FATAL] Class name not included in instances data.frame")
       }
       
       if(!"recipes" %in% rownames(installed.packages()))
@@ -20,10 +20,10 @@ GenericModelFit <- R6::R6Class(
       private$instances <- instances
     },
     createFormula = function(simplify = TRUE){
-      stop("[ModelFit][ERROR] createFormula method is abstract\n")
+      stop("[",class(self)[1],"][FATAL] createFormula method is abstract")
     },
     createRecipe = function(){
-      stop("[ModelFit][ERROR] createRecipe method is abstract\n")
+      stop("[",class(self)[1],"][FATAL] createRecipe method is abstract")
     }
   ),
   private = list(

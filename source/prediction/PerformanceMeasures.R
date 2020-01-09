@@ -1,12 +1,12 @@
 PerformanceMeasures <- R6::R6Class(
   classname = "PerformanceMeasures",
-  portable = TRUE,                   
+  portable = TRUE,
   public = list(
     initialize = function(cf){
       if("confusionMatrix" %in% class(cf)){
         private$cf <- cf
         private$mcc <- mltools::mcc(TP=cf$table[1,1],FP=cf$table[1,2],TN=cf$table[2,2],FN=cf$table[2,1])
-      }else stop("[PerformanceMeasures][ERROR] Incorrect type of Confusion Matrix\n")
+      }else stop("[", class(self)[1], "][FATAL] Incorrect type of Confusion Matrix")
     },
     getMCC = function(){ private$mcc },
     getConfMatrix = function(){ private$cf$table},
@@ -19,7 +19,7 @@ PerformanceMeasures <- R6::R6Class(
     getNPV = function() { private$cf$byClass["Neg Pred Value"] },
     getMeasure = function(measure){
       if (missing(measure) || is.null(measure))
-        stop("[PerformanceMeasures][ERROR] Measure should be specified\n")
+        stop("[", class(self)[1], "][FATAL] Measure should be specified")
       else{
         switch (toupper(measure),
           "MCC" = { self$getMCC() },

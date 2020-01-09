@@ -8,7 +8,7 @@ SPPV <- R6::R6Class(
     },
     computeMeasure = function(conf.matrix){
       if( !"confusionMatrix" %in% class(conf.matrix) )
-        stop("[",super$name,"][ERROR] Argument must be a valid caret confusionMatrix object\n")
+        stop("[",super$name,"][FATAL] Argument must be a valid caret confusionMatrix object")
 
       return( conf.matrix$byClass["Pos Pred Value"] )
     },

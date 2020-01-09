@@ -4,7 +4,7 @@ ConFMatrix <- R6::R6Class(
   public = list(
     initialize = function (confMatrix){
       if( !inherits(confMatrix,"confusionMatrix") )
-        stop("[ConFMatrix][ERROR] Argument must be a caret::confusionMatrix object. Aborting\n")
+        stop("[ConFMatrix][FATAL] Argument must be a caret::confusionMatrix object. Aborting")
 
       private$positive.class <- confMatrix$positive
       private$negative.class <- colnames(confMatrix$table)[which(colnames(confMatrix$table)!=confMatrix$positive)]

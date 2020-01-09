@@ -15,14 +15,14 @@ SMSEMOA <- R6::R6Class(
     },
     execute = function(init.weights=NULL, fitness){
       if ( missing(fitness) || !is.function(fitness))
-        stop("[",private$name,"][ERROR] Fitness function should be provided to perform optimization process\n")
-      
+        stop("[",private$name,"][FATAL] Fitness function should be provided to perform optimization process")
+
       if( is.null(init.weights) && is.null(private$init.weights) )
-        stop("[",private$name,"][ERROR] Initial weights should be previously defined\n")
-      
+        stop("[",private$name,"][FATAL] Initial weights should be previously defined")
+
       if (is.null(private$min.function$getNumOjectives()) && is.null(private$ref.point) )
-        stop("[",private$name,"][ERROR] Default hypervolumne reference point can only be generated if number of objectives is passed.\n")
-      
+        stop("[",private$name,"][FATAL] Default hypervolumne reference point can only be generated if number of objectives is passed.")
+
       if ( is.null(private$ref.point) ) private$ref.point <- rep(11,private$min.function$getNumOjectives())
       
       if(!is.null(init.weights)) private$init.weights <- init.weights
@@ -77,7 +77,7 @@ SMSEMOA <- R6::R6Class(
     },
     getParetoValues = function(){
       if( is.null(private$optimize) || length(private$optimize) == 0 )
-        stop("[",private$name,"][ERROR] Multi-Objective Algorithm not executed or failed\n")
+        stop("[",private$name,"][FATAL] Multi-Objective Algorithm not executed or failed")
       else{
         as.data.frame(do.call(rbind,lapply(1:length(private$optimize), function(x) {
           df <- data.frame(private$optimize[[x]]$pareto.front,x)
@@ -88,8 +88,8 @@ SMSEMOA <- R6::R6Class(
     },
     getLastPopulation = function(){
       if( is.null(private$optimize) || length(private$optimize) == 0 )
-        stop("[",super$getName(),"][ERROR] Multi-Objective Algorithm not executed or failed\n")
-      else{ 
+        stop("[",super$getName(),"][FATAL] Multi-Objective Algorithm not executed or failed")
+      else{
         out <- do.call(c, lapply(private$optimize, function(iteration) {
           l <- do.call(rbind,lapply(iteration$last.population, function(pop){
             values <- as.vector( attributes(pop)$fitness )

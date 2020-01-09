@@ -5,7 +5,7 @@ ProbAverageWeightedVoting <- R6::R6Class(
   public = list(
     initialize = function(metric = NULL, cutoff = NULL, weights = NULL) {
       if (!is.null(metric) && (!is.character(metric) || length(metric) != 1)) {
-        stop("[", class(self)[1], "][INFO] Invalid values of metric. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Invalid values of metric. Aborting...")
       } else {
         message("[", class(self)[1], "][WARNING] Metric value has not been implemented")
       }
@@ -42,18 +42,18 @@ ProbAverageWeightedVoting <- R6::R6Class(
     execute = function(predictions, metric = NULL, cutoff = NULL,
                        weights = NULL, verbose = FALSE ) {
       if (!inherits(predictions, "ClusterPredictions")) {
-        stop("[", class(self)[1], "][ERROR] Invalid prediction type. Must be a ",
+        stop("[", class(self)[1], "][FATAL] Invalid prediction type. Must be a ",
              "ClusterPrediction object. Aborting...")
       }
 
       if (predictions$size() <= 0) {
-        stop("[",class(self)[1],"][ERROR] Cluster predictions were not computed",
+        stop("[",class(self)[1],"][FATAL] Cluster predictions were not computed",
              "Aborting...")
       }
 
       if (missing(metric) || !is.character(metric)) {
         if (is.null(self$getMetric())) {
-          stop("[", class(self)[1], "][ERROR] Metric attribute not set or invalid.")
+          stop("[", class(self)[1], "][FATAL] Metric attribute not set or invalid.")
         }
       } else {
         message("[", class(self)[1], "][INFO] Metric attribute set on execute method.",

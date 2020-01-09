@@ -11,7 +11,7 @@ TwoClass <- R6::R6Class(
     },
     create = function(summaryFunction, search.method = "grid", class.probs){
       if( is.null(summaryFunction) ||  !"SummaryFunction" %in% class(summaryFunction) )
-        stop("[",class(self)[1],"][ERROR] SummaryFunction must be defined as 'SummaryFunction' type\n")
+        stop("[",class(self)[1],"][FATAL] SummaryFunction must be defined as 'SummaryFunction' type")
       else{
         private$summaryFunction <- summaryFunction$execute
         if ( search.method %in% c("grid","random") ){

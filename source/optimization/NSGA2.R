@@ -17,13 +17,13 @@ NSGAII <- R6::R6Class(
     },
     execute = function(init.weights=NULL, fitness){
       if ( missing(fitness) || !is.function(fitness))
-        stop("[",super$getName(),"][ERROR] Fitness function should be provided",
-             " to perform optimization process\n")
-      
+        stop("[",super$getName(),"][FATAL] Fitness function should be provided",
+             " to perform optimization process")
+
       if( is.null(init.weights) && is.null(private$init.weights) )
-        stop("[",super$getName(),"][ERROR] Initial weights should be",
-             "previously defined\n")
-      
+        stop("[",super$getName(),"][FATAL] Initial weights should be",
+             "previously defined")
+
       if(!is.null(init.weights)) private$init.weights <- init.weights
 
       private$init.weights <- private$parse.population(init.weights)
@@ -80,7 +80,7 @@ NSGAII <- R6::R6Class(
     },
     getParetoValues = function(){
       if( is.null(private$optimize) || length(private$optimize) == 0 )
-        stop("[",super$getName(),"][ERROR] Optimization Algorithm not executed or failed")
+        stop("[",super$getName(),"][FATAL] Optimization Algorithm not executed or failed")
       else{
         as.data.frame(do.call(rbind,lapply(1:length(private$optimize), function(x) {
           df <- data.frame(private$optimize[[x]]$pareto.front,x)
@@ -91,7 +91,7 @@ NSGAII <- R6::R6Class(
     },
     getLastPopulation = function(){
       if( is.null(private$optimize) || length(private$optimize) == 0 )
-        stop("[",super$getName(),"][ERROR] Optimization Algorithm not executed or failed")
+        stop("[",super$getName(),"][FATAL] Optimization Algorithm not executed or failed")
       else{
         out <- do.call(c, lapply(private$optimize, function(iteration) {
           l <- do.call(rbind,lapply(iteration$last.population, function(pop){

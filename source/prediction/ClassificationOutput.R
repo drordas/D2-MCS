@@ -5,11 +5,11 @@ ClassificationOutput <- R6::R6Class(
     initialize = function(voting.schemes, models) {
       if (missing(voting.schemes) || length(Filter( function(x) inherits(x, "SimpleVoting") ||
                                                     inherits(x, "CombinedVoting"), voting.schemes) ) == 0) {
-        stop("[", class(self)[1], "][ERROR] Voting Schemes missing or invalid. ",
+        stop("[", class(self)[1], "][FATAL] Voting Schemes missing or invalid. ",
              "Must inherit from 'SimpleVoting' or 'CombinedVoting' class.")
       }
       if (missing(models) && !is.list(models)) {
-        stop("[", class(self)[1], "][ERROR] Models are incorrect. Must be a 'list' type. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Models are incorrect. Must be a 'list' type. Aborting...")
       }
 
       private$voting.schemes <- voting.schemes
@@ -20,19 +20,19 @@ ClassificationOutput <- R6::R6Class(
     },
     getPerformances = function(test.set, measures, voting.schemes = NULL, metrics = NULL, cutoffs = NULL){
       if (!inherits(test.set, "Subset"))
-        stop("[",class(self)[1],"][ERROR] Test set invalid.",
+        stop("[",class(self)[1],"][FATAL] Test set invalid.",
              " Must be a Subset object. Aborting...")
 
       if (test.set$getNrow() == 0)
-        stop("[",class(self)[1],"][ERROR] Test set is empty. Aborting...")
+        stop("[",class(self)[1],"][FATAL] Test set is empty. Aborting...")
 
       if (!is.list(measures) || !all(sapply(measures, inherits,"MeasureFunction"))) {
-        stop("[",class(self)[1],"][ERROR] Measures should be a list comprised of ",
+        stop("[",class(self)[1],"][FATAL] Measures should be a list comprised of ",
              "'MeasureFunction' objects. Aborting...")
       }
 
       if (private$positive.class != test.set$getPositiveClass()) {
-        stop("[", class(self)[1], "][ERROR] Positive class values missmatch. ['",
+        stop("[", class(self)[1], "][FATAL] Positive class values missmatch. ['",
              test.set$getPositiveClass(), "' vs '",
              private$positive.class, "'] used in classification",
              "and test respectively. Aborting... ")
@@ -77,7 +77,7 @@ ClassificationOutput <- R6::R6Class(
       for (voting.scheme in final.voting.schemes) {
 
         if (!(test.set$getPositiveClass() %in% voting.scheme$getClassValues())) {
-          stop("[", class(self)[1], "][ERROR] Positive class '",
+          stop("[", class(self)[1], "][FATAL] Positive class '",
                test.set$getPositiveClass(), "' in test set does not match",
                " with [", paste0(voting.scheme$getClassValues(), collapse = ", "), "]")
         }
@@ -87,7 +87,7 @@ ClassificationOutput <- R6::R6Class(
 
         if (length(levels(real.values)) != length(unique(pred.values[,1])) ||
             !(levels(real.values) %in% unique(pred.values[,1]))) {
-          stop("[",class(self)[1],"][ERROR] Class values missmatch. Aborting...")
+          stop("[",class(self)[1],"][FATAL] Class values missmatch. Aborting...")
         }
         real.values <- relevel(x = real.values,
                                ref = private$positive.class)
@@ -123,14 +123,14 @@ ClassificationOutput <- R6::R6Class(
     },
     plot = function(dir.path, test.set, measures, voting.schemes = NULL, metrics = NULL, cutoffs = NULL){
       if (missing(dir.path))
-        stop("[", class(self)[1],"][INFO] Path not defined. Aborting.")
+        stop("[", class(self)[1],"][FATAL] Path not defined. Aborting.")
 
       if (!dir.exists(dir.path)) {
         dir.create(dir.path, recursive = TRUE)
         if (dir.exists(dir.path)) {
           message("[", class(self)[1], "][INFO] Folder '", dir.path,
                   "' has been succesfully created")
-        } else { stop("[", class(self)[1], "][ERROR] Cannot create directory '",
+        } else { stop("[", class(self)[1], "][FATAL] Cannot create directory '",
                       dir.path, "'. Aborting... ") }
       } else { message("[", class(self)[1], "][INFO] Folder already exists") }
 
@@ -260,7 +260,7 @@ ClassificationOutput <- R6::R6Class(
       }
 
       if (missing(dir.path))
-        stop( "[",class(self)[1],"][ERROR] Save folder not set. Aborting...")
+        stop( "[",class(self)[1],"][FATAL] Save folder not set. Aborting...")
 
       dir.path <- gsub("\\/$", "", dir.path)
 
@@ -269,7 +269,7 @@ ClassificationOutput <- R6::R6Class(
         if (dir.exists(dir.path)) {
           message("[", class(self)[1], "][INFO] Folder '", dir.path,
                   "' has been succesfully created")
-        } else { stop("[", class(self)[1], "][ERROR] Cannot create directory '",
+        } else { stop("[", class(self)[1], "][FATAL] Cannot create directory '",
                      dir.path, "'. Aborting... ") }
       } else { message("[", class(self)[1], "][INFO] Folder already exists") }
 

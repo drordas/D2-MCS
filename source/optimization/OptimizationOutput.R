@@ -4,7 +4,7 @@ OptimizationOutput <- R6::R6Class(
   public = list(
     initialize = function (optimizer = NULL, n.positive= NULL, n.negative = NULL){
       if(is.null(optimizer) || !"WeightsOptimizer" %in% class(optimizer) ){
-        stop("[OptimizationOutput][ERROR] Optimizer name should be defined. Aborting...\n")
+        stop("[",class(self)[1],"][FATAL] Optimizer name should be defined. Aborting...")
       }
 
       private$method <- optimizer$getName()
