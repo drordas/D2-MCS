@@ -1,4 +1,4 @@
-Prediction <- R6Class(
+Prediction <- R6::R6Class(
   classname = "Prediction",
   portable = TRUE,
   public = list(

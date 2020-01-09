@@ -1,5 +1,4 @@
-library("R6")
-KendallPlot <- R6Class(
+KendallPlot <- R6::R6Class(
   classname = "KendallPlot",
   inherit = GenericPlot,
   portable = TRUE,

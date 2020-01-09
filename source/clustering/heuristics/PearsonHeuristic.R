@@ -1,5 +1,4 @@
-library("R6")
-PearsonHeuristic <- R6Class(
+PearsonHeuristic <- R6::R6Class(
   classname = "PearsonHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

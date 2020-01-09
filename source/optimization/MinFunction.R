@@ -1,4 +1,4 @@
-MinFunction <- R6Class(
+MinFunction <- R6::R6Class(
   classname = "MinFunction",
   portable = TRUE,
   public = list(

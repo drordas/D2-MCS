@@ -1,4 +1,4 @@
-GenericHeuristic <- R6Class(
+GenericHeuristic <- R6::R6Class(
   classname = "GenericHeuristic",
   portable = TRUE,
   public = list(

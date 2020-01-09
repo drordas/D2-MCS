@@ -1,4 +1,4 @@
-Methodology <- R6Class(
+Methodology <- R6::R6Class(
   classname = "Methodology",
   portable = TRUE,
   public = list(

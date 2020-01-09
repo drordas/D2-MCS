@@ -1,5 +1,4 @@
-library("R6")
-MultinformationHeuristic <- R6Class(
+MultinformationHeuristic <- R6::R6Class(
   classname = "MultinformationHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

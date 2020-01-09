@@ -1,4 +1,4 @@
-DIterator <- R6Class(
+DIterator <- R6::R6Class(
   classname = "DIterator",
   portable = TRUE,
   public = list(

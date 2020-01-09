@@ -1,4 +1,4 @@
-SOO <- R6Class(
+SOO <- R6::R6Class(
   classname = "SOO",
   portable = TRUE,
   inherit = WeightsOptimizer,

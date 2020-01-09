@@ -1,4 +1,4 @@
-TrainSet <- R6Class(
+TrainSet <- R6::R6Class(
   classname = "TrainSet",
   portable = TRUE,
   public = list(

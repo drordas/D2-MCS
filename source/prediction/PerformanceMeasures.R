@@ -1,5 +1,4 @@
-library("R6")
-PerformanceMeasures <- R6Class(
+PerformanceMeasures <- R6::R6Class(
   classname = "PerformanceMeasures",
   portable = TRUE,                   
   public = list(

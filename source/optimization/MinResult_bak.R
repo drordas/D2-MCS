@@ -1,4 +1,4 @@
-MinResult <- R6Class(
+MinResult <- R6::R6Class(
   classname = "MinResult",
   portable = TRUE,
   public = list(

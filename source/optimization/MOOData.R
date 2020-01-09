@@ -1,4 +1,4 @@
-MOOData <- R6Class(
+MOOData <- R6::R6Class(
   classname = "MOOData",
   inherit = MinResult,
   portable = TRUE,

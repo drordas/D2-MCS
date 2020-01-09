@@ -1,4 +1,4 @@
-SPPV <- R6Class(
+SPPV <- R6::R6Class(
   classname = "SPPV",
   portable = TRUE,
   inherit = MinFunction,

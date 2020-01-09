@@ -1,4 +1,4 @@
-Model <- R6Class(
+Model <- R6::R6Class(
   classname = "Model",
   portable = TRUE,
   public = list(

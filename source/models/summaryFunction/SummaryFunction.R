@@ -1,5 +1,4 @@
-library("R6")
-SummaryFunction <- R6Class(
+SummaryFunction <- R6::R6Class(
   classname = "SummaryFunction",
   portable = TRUE,                   
   public = list(

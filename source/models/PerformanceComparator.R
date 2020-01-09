@@ -1,4 +1,4 @@
-PerformanceComparator <- R6Class(
+PerformanceComparator <- R6::R6Class(
   classname = "PerformanceComparator",
   portable = TRUE,
   public = list(

@@ -1,4 +1,4 @@
-ConFMatrix <- R6Class(
+ConFMatrix <- R6::R6Class(
   classname = "ConFMatrix",
   portable = TRUE,
   public = list(

@@ -1,4 +1,4 @@
-SFP <- R6Class(
+SFP <- R6::R6Class(
   classname = "SFP",
   portable = TRUE,
   inherit = MinFunction,

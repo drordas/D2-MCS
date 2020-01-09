@@ -1,5 +1,4 @@
-library("R6")
-ChiSquareHeuristic <- R6Class(
+ChiSquareHeuristic <- R6::R6Class(
   classname = "ChiSquareHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

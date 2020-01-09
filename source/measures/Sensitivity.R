@@ -1,4 +1,4 @@
-Sensitivity <- R6Class(
+Sensitivity <- R6::R6Class(
   classname = "Sensitivity",
   inherit = MeasureFunction,
   portable = TRUE,

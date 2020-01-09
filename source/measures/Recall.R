@@ -1,4 +1,4 @@
-Recall <- R6Class(
+Recall <- R6::R6Class(
   classname = "Recall",
   inherit = MeasureFunction,
   portable = TRUE,

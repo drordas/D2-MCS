@@ -1,5 +1,4 @@
-library("R6")
-StrategyConfiguration <- R6Class(
+StrategyConfiguration <- R6::R6Class(
   classname = "StrategyConfiguration",
   portable = TRUE,
   public = list(

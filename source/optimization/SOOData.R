@@ -1,4 +1,4 @@
-SOOData <- R6Class(
+SOOData <- R6::R6Class(
   classname = "SOOData",
   inherit = MinResult,
   portable = TRUE,

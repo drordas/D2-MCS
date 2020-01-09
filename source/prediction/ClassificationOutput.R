@@ -1,4 +1,4 @@
-ClassificationOutput <- R6Class(
+ClassificationOutput <- R6::R6Class(
   classname = "ClassificationOutput",
   portable = TRUE,
   public = list(

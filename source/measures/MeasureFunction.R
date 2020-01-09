@@ -1,4 +1,4 @@
-MeasureFunction <- R6Class(
+MeasureFunction <- R6::R6Class(
   classname = "MeasureFunction",
   portable = TRUE,
   public = list(

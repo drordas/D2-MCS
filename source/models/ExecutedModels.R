@@ -1,5 +1,4 @@
-library("R6")
-ExecutedModels <- R6Class(
+ExecutedModels <- R6::R6Class(
   classname = "ExecutedModels",
   portable = TRUE,                   
   public = list(

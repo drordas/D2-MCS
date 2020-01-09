@@ -1,5 +1,4 @@
-library("R6")
-KendallHeuristic <- R6Class(
+KendallHeuristic <- R6::R6Class(
   classname = "KendallHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

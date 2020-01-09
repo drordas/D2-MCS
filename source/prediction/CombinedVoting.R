@@ -1,4 +1,4 @@
-CombinedVoting <- R6Class(
+CombinedVoting <- R6::R6Class(
   classname = "CombinedVoting",
   portable = TRUE,
   inherit = VotingStrategy,

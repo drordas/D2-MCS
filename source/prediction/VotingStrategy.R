@@ -1,4 +1,4 @@
-VotingStrategy <- R6Class(
+VotingStrategy <- R6::R6Class(
   classname = "VotingStrategy",
   portable = TRUE,
   public = list(

@@ -1,9 +1,4 @@
-library("R6")
-library("mltools")
-library("caret")
-library("ModelMetrics")
-source("SummaryFunction.R")
-NoProbability <- R6Class(
+NoProbability <- R6::R6Class(
   classname = "NoProbability",
   inherit = SummaryFunction,
   portable = TRUE,

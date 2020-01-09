@@ -1,4 +1,4 @@
-Optimizers <- R6Class(
+Optimizers <- R6::R6Class(
   classname = "Optimizers",
   portable = TRUE,
   public = list(

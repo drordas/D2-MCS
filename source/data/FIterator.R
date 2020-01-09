@@ -1,4 +1,4 @@
-FIterator <- R6Class(
+FIterator <- R6::R6Class(
   classname = "FIterator",
   portable = TRUE,
   public = list(

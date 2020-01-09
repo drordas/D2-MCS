@@ -1,5 +1,4 @@
-library("R6")
-DependencyBasedStrategy <- R6Class(
+DependencyBasedStrategy <- R6::R6Class(
   classname = "DependencyBasedStrategy",
   inherit = GenericStrategy,
   portable = TRUE,

@@ -1,5 +1,4 @@
-library("R6")
-ClusterPredictions <- R6Class(
+ClusterPredictions <- R6::R6Class(
   classname = "ClusterPredictions",
   portable = TRUE,                   
   public = list(

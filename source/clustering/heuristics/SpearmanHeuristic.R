@@ -1,5 +1,4 @@
-library("R6")
-SpearmanHeuristic <- R6Class(
+SpearmanHeuristic <- R6::R6Class(
   classname = "SpearmanHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

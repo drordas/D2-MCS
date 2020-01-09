@@ -1,4 +1,4 @@
-Accuracy <- R6Class(
+Accuracy <- R6::R6Class(
   classname = "Accuracy",
   inherit = MeasureFunction,
   portable = TRUE,

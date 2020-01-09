@@ -1,4 +1,4 @@
-FP <- R6Class(
+FP <- R6::R6Class(
   classname = "FP",
   inherit = MeasureFunction,
   portable = TRUE,

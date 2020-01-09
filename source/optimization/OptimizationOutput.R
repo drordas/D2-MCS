@@ -1,4 +1,4 @@
-OptimizationOutput <- R6Class(
+OptimizationOutput <- R6::R6Class(
   classname = "OptimizationOutput",
   portable = TRUE,
   public = list(

@@ -1,5 +1,4 @@
-library("R6")
-GenericModelFit <- R6Class(
+GenericModelFit <- R6::R6Class(
   classname = "GenericModelFit",
   portable = TRUE,                   
   public = list(

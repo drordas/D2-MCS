@@ -1,4 +1,4 @@
-MinimizeFP <- R6Class(
+MinimizeFP <- R6::R6Class(
   classname = "MinimizeFP",
   portable = TRUE,
   inherit = CombinedMetrics,

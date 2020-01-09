@@ -1,4 +1,4 @@
-TwoClass <- R6Class(
+TwoClass <- R6::R6Class(
   classname = "TwoClass",
   portable = TRUE,
   inherit = TrainFunction,

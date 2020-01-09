@@ -1,4 +1,4 @@
-WeightsOptimizer <- R6Class(
+WeightsOptimizer <- R6::R6Class(
   classname = "WeightsOptimizer",
   portable = TRUE,
   public = list(

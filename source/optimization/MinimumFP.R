@@ -1,4 +1,4 @@
-MinimumFP <- R6Class(
+MinimumFP <- R6::R6Class(
   classname = "MinimumFP",
   inherit = ParetoDistance,
   portable = TRUE,

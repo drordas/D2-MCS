@@ -1,5 +1,4 @@
-source("SummaryFunction.R")
-UseProbability <- R6Class(
+UseProbability <- R6::R6Class(
   classname = "UseProbability",
   inherit = SummaryFunction,
   portable = TRUE, 

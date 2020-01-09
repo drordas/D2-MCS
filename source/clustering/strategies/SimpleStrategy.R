@@ -1,4 +1,4 @@
-SimpleStrategy <- R6Class(
+SimpleStrategy <- R6::R6Class(
   classname = "SimpleStrategy",
   inherit = GenericStrategy,
   portable = TRUE,

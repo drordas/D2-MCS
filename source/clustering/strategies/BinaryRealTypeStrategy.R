@@ -1,4 +1,4 @@
-BinaryRealTypeStrategy <- R6Class(
+BinaryRealTypeStrategy <- R6::R6Class(
   classname = "BinaryRealTypeStrategy",
   inherit = GenericStrategy,
   portable = TRUE,

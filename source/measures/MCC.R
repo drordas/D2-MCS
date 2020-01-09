@@ -1,4 +1,4 @@
-MCC <- R6Class(
+MCC <- R6::R6Class(
   classname = "MCC",
   inherit = MeasureFunction,
   portable = TRUE,

@@ -1,4 +1,4 @@
-ParetoDistance <- R6Class(
+ParetoDistance <- R6::R6Class(
   classname = "ParetoDistance",
   portable = TRUE,
   public = list(

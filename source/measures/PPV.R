@@ -1,4 +1,4 @@
-PPV <- R6Class(
+PPV <- R6::R6Class(
   classname = "PPV",
   inherit = MeasureFunction,
   portable = TRUE,

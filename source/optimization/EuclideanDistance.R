@@ -1,4 +1,4 @@
-EuclideanDistance <- R6Class(
+EuclideanDistance <- R6::R6Class(
   classname = "EuclideanDistance",
   inherit = ParetoDistance,
   portable = TRUE,

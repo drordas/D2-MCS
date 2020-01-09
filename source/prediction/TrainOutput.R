@@ -1,4 +1,4 @@
-TrainOutput <- R6Class(
+TrainOutput <- R6::R6Class(
   classname = "TrainOutput",
   portable = TRUE,
   public = list(

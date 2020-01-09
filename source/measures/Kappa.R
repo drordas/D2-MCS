@@ -1,4 +1,4 @@
-Kappa <- R6Class(
+Kappa <- R6::R6Class(
   classname = "Kappa",
   inherit = MeasureFunction,
   portable = TRUE,

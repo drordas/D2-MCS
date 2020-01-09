@@ -1,5 +1,4 @@
-library("R6")
-BinaryPlot <- R6Class(
+BinaryPlot <- R6::R6Class(
   classname = "BinaryPlot",
   inherit = GenericPlot,
   portable = TRUE,

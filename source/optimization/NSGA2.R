@@ -1,4 +1,4 @@
-NSGAII <- R6Class(
+NSGAII <- R6::R6Class(
   classname = "NSGAII",
   portable = TRUE,
   inherit = WeightsOptimizer,

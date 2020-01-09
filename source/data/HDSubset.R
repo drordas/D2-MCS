@@ -1,4 +1,4 @@
-HDSubset <- R6Class(
+HDSubset <- R6::R6Class(
   classname = "HDSubset",
   portable = TRUE,
   public = list(

@@ -1,4 +1,4 @@
-GenericStrategy <- R6Class(
+GenericStrategy <- R6::R6Class(
   classname = "GenericStrategy",
   public = list(
     initialize = function( subset, heuristic, description, configuration) {

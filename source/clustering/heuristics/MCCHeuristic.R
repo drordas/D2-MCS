@@ -1,5 +1,4 @@
-library("R6")
-MCCHeuristic <- R6Class(
+MCCHeuristic <- R6::R6Class(
   classname = "MCCHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

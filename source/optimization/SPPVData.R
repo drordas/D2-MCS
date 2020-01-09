@@ -1,4 +1,4 @@
-SPPVData <- R6Class(
+SPPVData <- R6::R6Class(
   classname = "SPPVData",
   portable = TRUE,
   inherit = SOOData,

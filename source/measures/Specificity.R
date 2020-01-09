@@ -1,4 +1,4 @@
-Specificity <- R6Class(
+Specificity <- R6::R6Class(
   classname = "Specificity",
   inherit = MeasureFunction,
   portable = TRUE,

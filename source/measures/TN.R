@@ -1,4 +1,4 @@
-TN <- R6Class(
+TN <- R6::R6Class(
   classname = "TN",
   inherit = MeasureFunction,
   portable = TRUE,

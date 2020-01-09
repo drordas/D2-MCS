@@ -1,4 +1,4 @@
-HDDataset <- R6Class(
+HDDataset <- R6::R6Class(
   classname = "HDDataset",
   portable = TRUE,
   public = list(

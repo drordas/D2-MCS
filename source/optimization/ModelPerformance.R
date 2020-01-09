@@ -1,4 +1,4 @@
-ModelPerformance <- R6Class(
+ModelPerformance <- R6::R6Class(
   classname = "ModelPerformance",
   portable = TRUE,
   public = list(

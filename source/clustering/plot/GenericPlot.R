@@ -1,5 +1,4 @@
-library("R6")
-GenericPlot <- R6Class(
+GenericPlot <- R6::R6Class(
   classname = "GenericPlot",
   portable = TRUE,
   public = list(

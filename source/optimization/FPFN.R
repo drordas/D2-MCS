@@ -1,4 +1,4 @@
-FPFN <- R6Class(
+FPFN <- R6::R6Class(
   classname = "FPFN",
   portable = TRUE,
   inherit = MinFunction,

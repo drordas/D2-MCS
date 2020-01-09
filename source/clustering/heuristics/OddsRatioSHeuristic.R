@@ -1,5 +1,4 @@
-library("R6")
-OddsRatioSHeuristic <- R6Class(
+OddsRatioSHeuristic <- R6::R6Class(
   classname = "OddsRatioSHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

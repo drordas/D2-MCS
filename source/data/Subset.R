@@ -1,4 +1,4 @@
-Subset <- R6Class(
+Subset <- R6::R6Class(
   classname = "Subset",
   portable = TRUE,
   public = list(

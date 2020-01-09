@@ -1,4 +1,4 @@
-SimpleVoting <- R6Class(
+SimpleVoting <- R6::R6Class(
   classname = "SimpleVoting",
   portable = TRUE,
   inherit = VotingStrategy,

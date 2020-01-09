@@ -1,5 +1,4 @@
-library("R6")
-SpearmanPlot <- R6Class(
+SpearmanPlot <- R6::R6Class(
   classname = "SpearmanPlot",
   inherit = GenericPlot,
   portable = TRUE,

@@ -1,4 +1,4 @@
-ClassWeightedVoting <- R6Class(
+ClassWeightedVoting <- R6::R6Class(
   classname = "ClassWeightedVoting",
   portable = TRUE,
   inherit = SimpleVoting,

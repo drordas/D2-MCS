@@ -1,4 +1,4 @@
-SMSEMOA <- R6Class(
+SMSEMOA <- R6::R6Class(
   classname = "SMSEMOA",
   portable = TRUE,
   inherit = WeightsOptimizer,

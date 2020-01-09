@@ -1,4 +1,4 @@
-FPFNdata <- R6Class(
+FPFNdata <- R6::R6Class(
   classname = "FPFNdata",
   portable = TRUE,
   inherit = MOOData,

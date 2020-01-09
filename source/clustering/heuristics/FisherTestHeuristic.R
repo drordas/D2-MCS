@@ -1,5 +1,4 @@
-library("R6")
-FisherTestHeuristic <- R6Class(
+FisherTestHeuristic <- R6::R6Class(
   classname = "FisherTestHeuristic",
   inherit = GenericHeuristic,
   portable = TRUE,

@@ -1,4 +1,4 @@
-CombinedMetrics <- R6Class(
+CombinedMetrics <- R6::R6Class(
   classname = "CombinedMetrics",
   portable = TRUE,
   public = list(

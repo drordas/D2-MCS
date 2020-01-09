@@ -1,4 +1,4 @@
-PredictionOutput <- R6Class(
+PredictionOutput <- R6::R6Class(
   classname = "PredictionOutput",
   portable = TRUE,
   public = list(

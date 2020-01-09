@@ -1,4 +1,4 @@
-TrainFunction <- R6Class(
+TrainFunction <- R6::R6Class(
   classname = "TrainFunction",
   portable = TRUE,
   public = list(

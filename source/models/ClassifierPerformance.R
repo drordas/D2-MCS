@@ -1,4 +1,4 @@
-ClassifierPerformance <- R6Class(
+ClassifierPerformance <- R6::R6Class(
   classname = "ClassifierPerformance",
   portable = TRUE,
   public = list(
