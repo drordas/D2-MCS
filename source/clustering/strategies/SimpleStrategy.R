@@ -91,7 +91,8 @@ SimpleStrategy <- R6::R6Class(
     getDistribution = function( num.clusters= NULL, num.groups=NULL,
                                 include.unclustered = FALSE){
       if (is.null(private$best.distribution) || is.null(private$all.distribution)) {
-        stop(red("[", super$getName(), "][WARNING] Clustering not done or errorneous. Returning NULL"))
+        message("[", super$getName(), "][ERROR] Clustering not done or errorneous. Returning NULL")
+        return(NULL)
       }
 
       if(is.null(num.clusters)){

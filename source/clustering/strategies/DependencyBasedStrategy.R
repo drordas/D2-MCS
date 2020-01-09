@@ -399,9 +399,9 @@ DependencyBasedStrategy <- R6::R6Class(
 
       #Computing the metrics with independent features ----
 
-      message(white("[", super$getName(), "][INFO] Computing metric of dependency between independent features and the target"))
-      message(white("[", super$getName(), "][INFO] Computing metric of dependency between independent features (", length(indep.fea.list), ")"))
-      
+      message("[", super$getName(), "][INFO] Computing metric of dependency between independent features and the target")
+      message("[", super$getName(), "][INFO] Computing metric of dependency between independent features (", length(indep.fea.list), ")")
+
       if (length(indep.fea.list) > 1) {
         if ( isTRUE( verbose ) ) {
           pb <- txtProgressBar( min = 0, max = (length(indep.fea.list)), style = 3 )
@@ -445,26 +445,26 @@ DependencyBasedStrategy <- R6::R6Class(
         }
       }
 
-      message(white("[", super$getName(), "][INFO] Metric of dependency between independent features and the target:", mean.indep.tar))
-      message(white("[", super$getName(), "][INFO] Metric of dependency between independent features", mean.indep.fea))
+      message("[", super$getName(), "][INFO] Metric of dependency between independent features and the target: ", mean.indep.tar)
+      message("[", super$getName(), "][INFO] Metric of dependency between independent features: ", mean.indep.fea)
       message("---------------------------------------------------------------")
 
       #Clustering dependent features... ----
-      message(white("[", super$getName(), "][INFO] Start of clustering dependent features..."))
-      message(white("[", super$getName(), "][INFO] Checking set of clusters:", min.num.clusters, ":", max.num.clusters))
+      message("[", super$getName(), "][INFO] Start of clustering dependent features...")
+      message("[", super$getName(), "][INFO] Checking set of clusters: ", min.num.clusters, ":", max.num.clusters)
       for (actual.num.cluster in min.num.clusters:max.num.clusters) {
-        message(white("[", super$getName(), "][INFO] Checking next set of clusters:", actual.num.cluster, "/", max.num.clusters))
+        message("[", super$getName(), "][INFO] Checking next set of clusters: ", actual.num.cluster, "/", max.num.clusters)
         ##########################Independent features...#########################
         #Initializing clusters with independent features ----
 
-        message(green("[", super$getName(), "][INFO] Independent elements:", length(indep.fea.list)))
+        message("[", super$getName(), "][INFO] Independent elements: ", length(indep.fea.list))
         fea.indep.dist.clus <- vector( mode = "list", length = length(indep.fea.list) )
         fea.indep.dist.clus <- rep_len( list(list()), length(indep.fea.list) )
         names(fea.indep.dist.clus) <- indep.fea.list
         ##Adds independent features to all clusters
         fea.indep.dist.clus <- lapply(fea.indep.dist.clus, function(fea, actual.num.cluster){
           list(1:actual.num.cluster)
-        }, actual.num.cluster) 
+        }, actual.num.cluster)
 
         #Initializing metrics of independent features
         metrics.indep <- list(
@@ -481,11 +481,11 @@ DependencyBasedStrategy <- R6::R6Class(
         metrics.indep[["dep.tar"]] <- sapply(metrics.indep[["dep.tar"]], function(fea, actual.num.cluster){
           mean.indep.tar
         }, actual.num.cluster) 
-        message(white("[", super$getName(), "][INFO] Added independent features to all clusters"))
+        message("[", super$getName(), "][INFO] Added independent features to all clusters")
 
         #Dependet features
         #Initializing clusters of dependent features ----
-        message(green("[", super$getName(), "][INFO] Dependent elements:", length(all.fea.dep)))
+        message("[", super$getName(), "][INFO] Dependent elements: ", length(all.fea.dep))
         fea.dep.dist.clus <- vector( mode = "list", length = length(all.fea.dep) )
         fea.dep.dist.clus <- rep_len(list(list()),length(all.fea.dep))
         names(fea.dep.dist.clus) <- all.fea.dep
@@ -498,7 +498,7 @@ DependencyBasedStrategy <- R6::R6Class(
         #Adding feature ----
         ##All features that have dependency are checked
         if (isTRUE(verbose)) {
-          message(white("[", super$getName(), "][INFO] Beginning add features"))
+          message("[", super$getName(), "][INFO] Beginning add features")
           pb <- txtProgressBar(min = 0, max = (length(all.fea.dep)), style = 3 )
         }
         for (fea in all.fea.dep) {
@@ -533,7 +533,7 @@ DependencyBasedStrategy <- R6::R6Class(
             if (length(clus.candidates) == 0) {
               clus.candidates <- 1:actual.num.cluster
             }
-            # message(blue("[", super$getName(), "][INFO] Element", fea, "tiebreak: clusters candidates", paste(clus.candidates, collapse = ",")))
+            # message("[", super$getName(), "][INFO] Element ", fea, " tiebreak: clusters candidates ", paste(clus.candidates, collapse = ","))
             fea.dep.dist.clus[[fea]] <- private$configuration$tiebreak(fea,
                                                                        clus.candidates,
                                                                        fea.dep.dist.clus,
@@ -542,7 +542,7 @@ DependencyBasedStrategy <- R6::R6Class(
                                                                        class,
                                                                        class.name)
           }
-          # message(blue("[", super$getName(), "][INFO] Element", fea, "added to cluster", paste(fea.dep.dist.clus[[fea]], collapse = ",")))
+          # message("[", super$getName(), "][INFO] Element ", fea, " added to cluster ", paste(fea.dep.dist.clus[[fea]], collapse = ","))
           #Computing metrics of dependent features on clusters ----
           clus.recal.metrics <- fea.dep.dist.clus[[fea]]
           result.heuristic.tar <- abs(heu$heuristic(corpus[, fea],
@@ -574,8 +574,8 @@ DependencyBasedStrategy <- R6::R6Class(
         if (isTRUE(verbose)) { close(pb) }
 
         #Computing final distribution ----
-        message(white("[", super$getName(), "][INFO] Added dependent features to all clusters (", length(all.fea.dep), ")"))
-  
+        message("[", super$getName(), "][INFO] Added dependent features to all clusters (", length(all.fea.dep), ")")
+
         metrics <- list(
           dep.fea = vector( mode = "numeric", length = actual.num.cluster ),#dependencyFeatures
           dep.tar  = vector( mode = "numeric", length = actual.num.cluster )#dependencyTarget
@@ -600,23 +600,23 @@ DependencyBasedStrategy <- R6::R6Class(
         for (clus in 1:length(final.dist.actual.cluster)) {
           aux <- paste0(aux, clus, "\t")
         }        
-        message(blue(aux))
+
         aux <- paste0("[", super$getName(), "][INFO] Number of features:\t")
         for (clus in 1:length(final.dist.actual.cluster)) {
           aux <- paste0(aux, length(final.dist.actual.cluster[[clus]]), "\t")
         }   
-        message(blue(aux))
-        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "independencyTarget:", mean(metrics.indep[["dep.tar"]]))))
-        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "independencyFeatures:", mean(metrics.indep[["dep.fea"]]))))
-        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "dependencyTarget:", mean(metrics.dep[["dep.tar"]]))))
-        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "dependencyFeatures:", mean(metrics.dep[["dep.fea"]]))))
-        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "Target:", mean(metrics[["dep.tar"]]))))
-        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, "Features:", mean(metrics[["dep.fea"]]))))
-        
+
+        message("[", super$getName(), "][INFO] Metric of clusters ", actual.num.cluster, " independencyTarget: ", mean(metrics.indep[["dep.tar"]]))
+        message("[", super$getName(), "][INFO] Metric of clusters ", actual.num.cluster, " independencyFeatures: ", mean(metrics.indep[["dep.fea"]]))
+        message("[", super$getName(), "][INFO] Metric of clusters ", actual.num.cluster, " dependencyTarget: ", mean(metrics.dep[["dep.tar"]]))
+        message("[", super$getName(), "][INFO] Metric of clusters ", actual.num.cluster, " dependencyFeatures: ", mean(metrics.dep[["dep.fea"]]))
+        message("[", super$getName(), "][INFO] Metric of clusters ", actual.num.cluster, " Target: ", mean(metrics[["dep.tar"]]))
+        message("[", super$getName(), "][INFO] Metric of clusters ", actual.num.cluster, " Features: ", mean(metrics[["dep.fea"]]))
+
         #Quality of the distribution of features between the clusters
         quality.cluster <- private$configuration$qualityOfCluster(final.dist.actual.cluster,
                                                                   metrics)
-        message(bgWhite(black("[", super$getName(), "][INFO] Metric of clusters", actual.num.cluster, ":", quality.cluster)))
+        message("[", super$getName(), "][INFO] Metric of clusters ", actual.num.cluster, " : ", quality.cluster)
 
         cluster.data <- rbind(cluster.data,
                               data.frame(k = actual.num.cluster,
@@ -627,8 +627,8 @@ DependencyBasedStrategy <- R6::R6Class(
         clusters.deltha <- cluster.data$deltha
         names(clusters.deltha) <- cluster.data$k
         if (!private$configuration$isImprovingClustering(clusters.deltha)) {
-          message(yellow("[", super$getName(), "][INFO] Clustering is not considered to improve from the number of clusters:", actual.num.cluster))
-          message(red("[", super$getName(), "][WARNING] Stopping to check the following clusters (", min.num.clusters, ":", max.num.clusters, ")"))
+          message("[", super$getName(), "][INFO] Clustering is not considered to improve from the number of clusters: ", actual.num.cluster)
+          message("[", super$getName(), "][WARNING] Stopping to check the following clusters (", min.num.clusters, ":", max.num.clusters, ")")
           return(cluster.data)
         }
       }
@@ -696,11 +696,11 @@ DependencyBasedStrategy <- R6::R6Class(
                                                      names.corpus[[j]])
                       added <- TRUE
                       if ( isTRUE(verbose) ) {
-                        message(blue("[", self$getName(),"][INFO] Added:",
-                                     names.corpus[[j]],
-                                     "to an existent group. Group",
-                                     pos.list,
-                                     "(Actual column:", i, ")"))
+                        message("[", self$getName(),"][INFO] Added: ",
+                                names.corpus[[j]], " ",
+                                "to an existent group. Group ",
+                                pos.list, " ",
+                                "(Actual column: ", i, ")")
                       }
                     }
                   } else {
@@ -721,74 +721,74 @@ DependencyBasedStrategy <- R6::R6Class(
               dep.fea <- append( dep.fea,
                                  aux )
               if ( isTRUE(verbose) ) {
-                message(silver("[", self$getName(),"][INFO] New group(",
-                               length(dep.fea), "):",
-                               names(corpus)[[i]], "-",
-                               names.corpus[[j]],
-                               "(Actual column:", i, ")"))
+                message("[", self$getName(),"][INFO] New group (",
+                        length(dep.fea), "): ",
+                        names(corpus)[[i]], " - ",
+                        names.corpus[[j]], " ",
+                        "(Actual column: ", i, ")")
               }
             }
           }
         }
-        
+
         if ( is.na(val.heu) ) {
           not.clus.fea <- append( not.clus.fea,
                                   names.corpus[i] )
           if ( isTRUE(verbose) ) {
-            message(magenta("[", self$getName(),"][INFO] Column",
-                            names.corpus[[i]],
-                            "no clustering",
-                            "(Actual column:", i, ")"))
+            message("[", self$getName(),"][INFO] Column ",
+                    names.corpus[[i]],
+                    " no clustering ",
+                    "(Actual column: ", i, ")")
           }
           next
         }
-        
+
         if ( !names.corpus[[i]] %in% unlist(dep.fea) ) {
           indep.fea <- append( indep.fea,
                                names.corpus[[i]] )
           if ( isTRUE(verbose) ) {
-            message(green("[", self$getName(),"][INFO] Column",
-                          names.corpus[[i]],
-                          "independent",
-                          "(Actual column:", i, ")"))
+            message("[", self$getName(),"][INFO] Column ",
+                    names.corpus[[i]],
+                    " independent ",
+                    "(Actual column: ", i, ")")
           }
         } else {
           if ( isTRUE(verbose) ) {
-            message(cyan("[", self$getName(),"][INFO] Column",
-                         names.corpus[[i]],
-                         "dependent",
-                         "(Actual column:", i, ")"))
+            message("[", self$getName(),"][INFO] Column" ,
+                    names.corpus[[i]],
+                    " dependent ",
+                    "(Actual column: ", i, ")")
           }
         }
       }
-      
+
       #CHECKING LAST FEATURES
       if ( !names(corpus)[[length(corpus)]] %in% unlist(dep.fea) ) {
         indep.fea <- append( indep.fea,
                              names.corpus[[length(corpus)]] )
         if ( isTRUE(verbose) ) {
-          message(green("[", self$getName(),"][INFO] Column", 
-                        names.corpus[[length(corpus)]], "independent",
-                        "(Actual column:", length(corpus), ")"))
+          message("[", self$getName(),"][INFO] Column ",
+                  names.corpus[[length(corpus)]], " independent ",
+                  "(Actual column: ", length(corpus), ")")
         }
       } else {
         if ( isTRUE(verbose) ) {
-          message(cyan("[", self$getName(),"][INFO] Column", 
-                       names.corpus[[length(corpus)]], "dependent",
-                       "(Actual column:", length(corpus), ")"))
+          message("[", self$getName(),"][INFO] Column ",
+                  names.corpus[[length(corpus)]], " dependent ",
+                  "(Actual column: ", length(corpus), ")")
         }
       }
       if ( binary ) {
         private$indep.fea[[1]] <- indep.fea
         private$dep.fea[[1]] <- dep.fea
-        private$not.clus.fea[[1]] <- append( private$not.clus.fea[[1]], 
+        private$not.clus.fea[[1]] <- append( private$not.clus.fea[[1]],
                                              not.clus.fea )
         names(private$dep.fea[[1]]) <- 1:length(private$dep.fea[[1]])
         names(private$indep.fea[[1]]) <- 1:length(private$indep.fea[[1]])
       } else {
         private$indep.fea[[2]] <- indep.fea
         private$dep.fea[[2]] <- dep.fea
-        private$not.clus.fea[[2]] <- append( private$not.clus.fea[[2]], 
+        private$not.clus.fea[[2]] <- append( private$not.clus.fea[[2]],
                                              not.clus.fea )
         names(private$dep.fea[[2]]) <- 1:length(private$dep.fea[[2]])
         names(private$indep.fea[[2]]) <- 1:length(private$indep.fea[[2]])

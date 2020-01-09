@@ -42,15 +42,15 @@ ExecutedModels <- R6::R6Class(
       if ( !is.null(private$best.model) ){
         private$best.model
       }else {
-        message(yellow(paste0("[",class(self)[1],"][WARNING] Best model not found.")))
+        message("[",class(self)[1],"][WARNING] Best model not found.")
         NULL
       }
     },
     add = function(model, keep.best=TRUE){
       if(!inherits(model,"Model")){
-        message(yellow(paste0("[",class(self)[1],"][WARNING] ML model invalid.",
-                              " Must be an instance of Model class.",
-                              " Model not inserted")) )
+        message("[",class(self)[1],"][WARNING] ML model invalid. ",
+                "Must be an instance of Model class. ",
+                "Model not inserted")
       }else{
         
         private$models <- rbind(private$models,
@@ -90,8 +90,8 @@ ExecutedModels <- R6::R6Class(
         write.table(private$models, file=file.path(private$dir.path,".executed"), 
                     append= FALSE, sep= ",", row.names = FALSE)
       }else{
-        message(yellow(paste0("[",class(self)[1],"][WARNING] File is empty.",
-                               " Operation not done")) )
+        message("[",class(self)[1],"][WARNING] File is empty. ",
+                "Operation not done")
       }
     },
     delete = function(model.name){

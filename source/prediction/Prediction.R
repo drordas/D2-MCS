@@ -69,18 +69,18 @@ Prediction <- R6::R6Class(
     },
     getPrediction = function(type=NULL, target=NULL){
       if( is.null(type) || !type %in% c("raw","prob") ){
-        message(yellow(paste0("[",class(self)[1],"][WARNING] Probability type ",
-                              "missing or incorrect. Should be 'raw' or 'prob' ",
-                              ". Assuming 'raw' by default")))
+        message("[",class(self)[1],"][WARNING] Probability type ",
+                "missing or incorrect. Should be 'raw' or 'prob' ",
+                ". Assuming 'raw' by default")
         type <- "raw"
       }
       switch (type,
               "prob"= {
                 class.names <- names(private$results$prob)
                 if(is.null(target) || !(target %in% class.names ) ){
-                  message(yellow(paste0("[",class(self)[1],"][WARNING] Target not ",
-                                        "specified or invalid. Using '",
-                                        class.names[1],"' as default value")))
+                  message("[",class(self)[1],"][WARNING] Target not ",
+                          "specified or invalid. Using '",
+                          class.names[1],"' as default value")
                   target <- class.names[1]
                 }
                 ret <- private$results$prob[,target, drop=FALSE]

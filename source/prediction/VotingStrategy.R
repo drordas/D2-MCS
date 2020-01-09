@@ -21,9 +21,9 @@ VotingStrategy <- R6::R6Class(
       }
 
       if (is.null(type) || !type %in% c("raw", "prob")) {
-        message(yellow(paste0("[", class(self)[1], "][WARNING] Probability type ",
-                              "missing or incorrect. Should be 'raw' or 'prob'.",
-                              " Assuming 'prob' by default")))
+        message("[", class(self)[1], "][WARNING] Probability type ",
+                "missing or incorrect. Should be 'raw' or 'prob'. ",
+                "Assuming 'prob' by default")
         type <- "prob"
       }
 
@@ -34,10 +34,10 @@ VotingStrategy <- R6::R6Class(
       switch(type,
              "prob" = {
                if (is.null(target) || !(target %in% names(self$getFinalPred()$prob))) {
-                 message(yellow(paste0("[", class(self)[1], "][WARNING] Target not ",
-                                       "specified or invalid. Using '",
-                                       names(self$getFinalPred()$prob)[1],
-                                       "' as default value")))
+                 message("[", class(self)[1], "][WARNING] Target not ",
+                         "specified or invalid. Using '",
+                         names(self$getFinalPred()$prob)[1],
+                         "' as default value")
                  target <- names(self$getFinalPred()$prob)[1]
                }
                if (filter) {

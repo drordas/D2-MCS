@@ -34,11 +34,11 @@ D2MCS <- R6::R6Class(
 
       if( any(is.null(num.cores), (num.cores >= detectCores()), num.cores > 10)  ){
         if(detectCores() > 10){
-          message(yellow(paste0("[",class(self)[1],"][WARNING] Invalid number of cores",
-                         " (1>= num.cores <= 10)")))
+          message("[",class(self)[1],"][WARNING] Invalid number of cores ",
+                  "(1>= num.cores <= 10)")
         }else{
-          message(yellow(paste0("[",class(self)[1],"][WARNING] Invalid number of cores",
-                         " (1>= num.cores < ",detectCores(),")")))
+          message("[",class(self)[1],"][WARNING] Invalid number of cores ",
+                  "(1>= num.cores < ",detectCores(),")")
         }
         cores <- min(max(1,detectCores()-2),10)
         message("[",class(self)[1],"][INFO] Using default number of cores (",
@@ -47,15 +47,15 @@ D2MCS <- R6::R6Class(
       else {cores <- nCores}
 
       if( !socket.type %in% c("PSOCK","FORK") ){
-        warning(yellow("[",class(self)[1],"][WARNING] Invalid socket type.",
-                       "Assuming 'PSOCK' cluster\n"))
+        warning("[",class(self)[1],"][WARNING] Invalid socket type. ",
+                "Assuming 'PSOCK' cluster")
         socket <- "PSOCK"
       }
       else { socket <- socket.type }
 
       if(!is.logical(serialize)){
-        message(yellow("[",class(self)[1],"][WARNING] Invalid serialization",
-                       "option. Assuming not serialization\n"))
+        message("[",class(self)[1],"][WARNING] Invalid serialization ",
+                "option. Assuming not serialization")
         xdr <- FALSE
       }
       else xdr <- serialize
@@ -84,14 +84,14 @@ D2MCS <- R6::R6Class(
 
       if (any( missing(num.clusters),!is.numeric(num.clusters),
                !is.vector(num.clusters) )) {
-        message(yellow(paste0("[",class(self)[1],"][WARNING] Number of clusters not set",
-                       " (must be numeric or vector). Using all clusters")))
+        message("[",class(self)[1],"][WARNING] Number of clusters not set ",
+                "(must be numeric or vector). Using all clusters")
         num.clusters <- c(1:train.set$getNumClusters())
       } else {
         if (all(is.numeric(num.clusters), num.clusters > train.set$getNumClusters()) ) {
-          message(yellow(paste0("[",class(self)[1],"][WARNING] Number of clusters ",
-                         "is higher than number of existing clusters.",
-                         "Using all clusters")))
+          message("[",class(self)[1],"][WARNING] Number of clusters ",
+                  "is higher than number of existing clusters. ",
+                  "Using all clusters")
           num.clusters <- c(1:train.set$getNumClusters())
         } else num.clusters <- c(1:num.clusters)
       }
@@ -153,8 +153,8 @@ D2MCS <- R6::R6Class(
                  grepl("Linea[l|r]|Discriminant",
                        paste(current.model$description,
                              current.model$family, sep = " "))) {  ##CORRELATION
-              message(yellow(paste0("[", class(self)[1], "][WARNING] High-Correlated Data (< 0.3).",
-                                    " Incompatible M.L. model '", current.model$name,"' on the cluster '", current.cluster, "'")))
+              message("[", class(self)[1], "][WARNING] High-Correlated Data (< 0.3). ",
+                      "Incompatible M.L. model '", current.model$name,"' on the cluster '", current.cluster, "'")
               next
             }
 

@@ -95,22 +95,22 @@ Dataset <- R6::R6Class(
           private$class.index <- class.index
           private$class.name  <- names(private$corpus)[class.index]
           private$positive.class <- positive.class
-        }else{ message( red("[Dataset][ERROR] Positive class value not found. Task not done.\n") ) }
+        }else{ message("[",class(self)[1],"][ERROR] Positive class value not found. Task not done")}
       }else {
-        message(red("[Dataset][ERROR] Class index exceeds dataset limits. Must be between 1 and ",ncol(private$corpus),". Task not done\n"))
+        message("[",class(self)[1],"][ERROR] Class index exceeds dataset limits. Must be between 1 and ",ncol(private$corpus),". Task not done")
       }
     },
     setClassName = function(class.name, positive.class) {
       if( (length(which(self$getColumnNames() == class.name )) == 0) ){
-        message(red("[Dataset][ERROR] Class name not found. Task not done")) }
+        message("[",class(self)[1],"][ERROR] Class name not found. Task not done") }
       else { self$setClassIndex(which(names(private$corpus) == class.name),positive.class) }
     },
     createPartitions = function( num.folds, percent.folds, class.balance = TRUE ){
       if( (missing(num.folds) && missing(percent.folds)) ||
           ((!is.numeric(num.folds) || length(num.folds) != 1) &&
            !is.numeric(percent.folds)) ) {
-        message(yellow("[",class(self)[1],"][WARNING] Parameters are invalid. ",
-                       "Assuming division with default k=10 folds"))
+        message("[",class(self)[1],"][WARNING] Parameters are invalid. ",
+                "Assuming division with default k=10 folds")
         private$partitions <- createFolds( private$corpus[,private$class.index],
                                            k = 10, list = TRUE )
       }else{
@@ -136,7 +136,7 @@ Dataset <- R6::R6Class(
               for (index in 1:(num.folds - 1)) {
                 message("===============================================================")
                 message("[",class(self)[1],"][INFO] Spliting ",index,
-                        " group with ", percent.folds[index], "\n")
+                        " group with ", percent.folds[index])
                 message("===============================================================")
                 if (class.balance) {
                   split <- createDataPartition(remaining[[self$getClassIndex()]],
@@ -186,8 +186,8 @@ Dataset <- R6::R6Class(
                 names(private$partitions) <- paste0("Fold",which(1:num.folds >= 10))
               }
             }else{
-              message(paste0(red("[",class(self)[1],"][ERROR] Cannot perform ",
-                                 "partition process. Aborted")))
+              message("[",class(self)[1],"][ERROR] Cannot perform ",
+                      "partition process. Aborted")
             }
           }
         }
@@ -197,7 +197,7 @@ Dataset <- R6::R6Class(
                              opts = list(remove.na=TRUE, remove.const=FALSE)){
       subset <- NULL
       if (is.null(private$partitions)) {
-        message(red("[",class(self)[1],"][ERROR] Dataset distribution is null. Task not performed"))
+        message("[",class(self)[1],"][ERROR] Dataset distribution is null. Task not performed")
         return(NULL)
       }
       if ( missing(num.folds) || is.null(num.folds) || !is.numeric(num.folds) ||
