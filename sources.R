@@ -30,9 +30,6 @@ source("source/clustering/heuristics/MCCHeuristic.R", chdir = TRUE)
 
 source("source/clustering/plot/GenericPlot.R", chdir = TRUE)
 source("source/clustering/plot/BinaryPlot.R", chdir = TRUE)
-source("source/clustering/plot/KendallPlot.R", chdir = TRUE)
-source("source/clustering/plot/SpearmanPlot.R", chdir = TRUE)
-source("source/clustering/plot/SimplePlot.R", chdir = TRUE)
 
 source("source/clustering/strategies/StrategyConfiguration.R", chdir = TRUE)
 source("source/clustering/strategies/DependencyBasedStrategyConfiguration.R", chdir = TRUE)

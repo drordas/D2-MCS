@@ -3,22 +3,67 @@ ClassificationOutput <- R6::R6Class(
   portable = TRUE,
   public = list(
     initialize = function(voting.schemes, models) {
-      if (missing(voting.schemes) || length(Filter( function(x) inherits(x, "SimpleVoting") ||
-                                                    inherits(x, "CombinedVoting"), voting.schemes) ) == 0) {
-        stop("[", class(self)[1], "][FATAL] Voting Schemes missing or invalid. ",
-             "Must inherit from 'SimpleVoting' or 'CombinedVoting' class.")
+      if(length(voting.schemes) == 0){
+        stop("[",class(self)[1],"][FATAL] Voting Schemes not executed. ",
+             "Aborting...")
       }
-      if (missing(models) && !is.list(models)) {
-        stop("[", class(self)[1], "][FATAL] Models are incorrect. Must be a 'list' type. Aborting...")
+
+      if (! (names(voting.schemes) %in% c("SingleVoting", "CombinedVoting") )) {
+        stop("[", class(self)[1], "][FATAL] Voting Schemes must inherit from ",
+             "'SimpleVoting' or 'CombinedVoting' classes. Aborting...")
+      }
+
+      if (!is.list(models)) {
+        stop("[", class(self)[1], "][FATAL] Models are incorrect.",
+             "Must be a 'list' type. Aborting...")
+      }
+
+      positive.class <- unique( as.vector(sapply(voting.schemes, function(metrics) {
+                                sapply(metrics, function(cutoffs) {
+                                    sapply(cutoffs, function(voting.names) {
+                                      sapply(voting.names, function(votings) {
+                                        votings$getPositiveClass() } )
+                                      } )
+                                  } ) }
+                                )) )
+
+      class.values <- unique( as.vector(sapply(voting.schemes, function(metrics) {
+                              sapply(metrics, function(cutoffs) {
+                                sapply(cutoffs, function(voting.names) {
+                                  sapply(voting.names, function(votings) {
+                                    votings$getClassValues() } )
+                                } )
+                              } ) }
+                            )) )
+
+      if (length(positive.class) != 1 ){
+        stop("[",class(self)[1],"][FATAL] Defined positive class does ",
+             "not match. Aborting...")
       }
 
       private$voting.schemes <- voting.schemes
       private$trained.models <- models
-      private$positive.class <- voting.schemes[[1]]$getPositiveClass()
-      private$negative.class <- setdiff(voting.schemes[[1]]$getClassValues(),
-                                        private$positive.class)
+      private$positive.class <- positive.class
+      private$negative.class <- setdiff(class.values,positive.class)
+
+      private$available$cutoffs <- unique( as.vector(sapply(private$voting.schemes,
+                                           function(metrics) {
+                                             sapply(metrics, function(cutoff) {
+                                               names(cutoff) })
+                                           })))
+
+      private$available$metrics <- unique( as.vector(sapply(private$voting.schemes,
+                                           function(metrics) { names(metrics) })))
+
+      private$available$votings <- unique( as.vector(sapply(private$voting.schemes,
+                                           function(metrics) {
+                                              sapply(metrics, function(cutoff) {
+                                                sapply(cutoff, function(voting) {
+                                                  names(voting) } ) } )
+                                            })) )
     },
-    getPerformances = function(test.set, measures, voting.schemes = NULL, metrics = NULL, cutoffs = NULL){
+    getPerformances = function(test.set, measures, voting.names = NULL,
+                               metric.names = NULL, cutoff.values = NULL){
       if (!inherits(test.set, "Subset"))
         stop("[",class(self)[1],"][FATAL] Test set invalid.",
              " Must be a Subset object. Aborting...")
@@ -37,64 +82,89 @@ ClassificationOutput <- R6::R6Class(
              private$positive.class, "'] used in classification",
              "and test respectively. Aborting... ")
       }
-      final.voting.schemes <- private$voting.schemes
-      if (all(missing(voting.schemes), missing(metrics), missing(cutoffs),
-              !is.character(voting.schemes), !is.character(metrics), !is.numeric(cutoffs))) {
-        message("[", class(self)[1], "][WARNING] Voting.schemes, metric and cutoff are not defined or invalid. ",
-                "Asuming all voting schemes to get its performance.")
-      } else {
-        if (!missing(voting.schemes) && is.character(voting.schemes)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which",
-                  " inherit from :", paste(voting.schemes, collapse = " "))
-          final.voting.schemes <- Filter(function(vot) all(inherits(vot, voting.schemes)),
-                                         final.voting.schemes)
-        }
-        if (!missing(metrics) && is.character(metrics)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which",
-                  " have this metrics: ", paste(metrics, collapse = " "))
-          final.voting.schemes <- Filter(function(vot)
-                                           ifelse(inherits(vot, "SimpleVoting"),
-                                                  vot$getMetric() %in% metrics,
-                                                  all(vot$getMetrics() == metrics)),
-                                         final.voting.schemes)
-        }
-        if (!missing(cutoffs) && is.numeric(cutoffs)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which",
-                  " have this cutoffs: ", paste(cutoffs, collapse = " "))
-          final.voting.schemes <- Filter(function(vot) vot$getCutoff() %in% cutoffs,
-                                         final.voting.schemes)
-        }
-      }
-      performances <- list()
 
-      if (length(final.voting.schemes) == 0) {
-        message("[", class(self)[1], "][WARNING] There are no voting schemes ",
-                "that have metrics as '", paste(metrics, collapse = " "),
-                "' and as cutoff '", paste(cutoffs, collapse = " "), "'")
+      if(!is.character(cutoff.values)) cutoff.values <- as.character(cutoff.values)
+
+      if(length(cutoff.values) != 0){
+        if( any(cutoff.values %in% private$available$cutoffs) ){
+          aval.cutoffs <- intersect(private$available$cutoffs,cutoff.values)
+        }else{
+          message("[",class(self)[1],"][WARNING] Defined cutoffs are not",
+                  "available. Using all cutoffs")
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid.",
+                " Using all cutoffs")
+      }
+
+      if(!is.null(metric.names)){
+        if(any(metric.names %in% private$available$metrics) ){
+          aval.metrics <- intersect(metric.names,private$available$metrics)
+        }else {
+          message("[",class(self)[1],"][WARNING] Defined metrics are not available. ",
+                  "Using all metrics")
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Metrics are not defined. ",
+                "Using all metrics")
+      }
+
+      if(!is.null(private$available$votings)){
+        if(any(voting.names %in% private$available) ){
+          aval.votings <- intersect(voting.names,private$available$votings)
+        }else {
+          message("[",class(self)[1],"][WARNING] Defined votings are not available. ",
+                  "Using all votings")
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Votings are not defined. ",
+                "Using all votings")
+      }
+
+      valid.votings <- private$getVotings(aval.metrics,aval.cutoffs,aval.votings)
+
+      performances <- list()
+      if(length(valid.votings) == 0){
+        message("[",class(self)[1],"][ERROR] There are no voting schemes ",
+                "with '", paste0(metric.names, collapse = ", ")," metrics and ",
+                "'", paste0(aval.cutoffs, collapse = ", "), "' cutoffs.")
         return(performances)
       }
 
-      for (voting.scheme in final.voting.schemes) {
 
-        if (!(test.set$getPositiveClass() %in% voting.scheme$getClassValues())) {
-          stop("[", class(self)[1], "][FATAL] Positive class '",
-               test.set$getPositiveClass(), "' in test set does not match",
-               " with [", paste0(voting.scheme$getClassValues(), collapse = ", "), "]")
-        }
+      real.values <- test.set$getClassValues()
 
-        real.values <- test.set$getClassValues()
-        pred.values <- voting.scheme$getPrediction(type = "raw")
-
-        if (length(levels(real.values)) != length(unique(pred.values[,1])) ||
-            !(levels(real.values) %in% unique(pred.values[,1]))) {
-          stop("[",class(self)[1],"][FATAL] Class values missmatch. Aborting...")
-        }
-        real.values <- relevel(x = real.values,
+      if(!is.factor(real.values)){
+        real.values <- relevel(x = factor(real.values,
+                                          levels=c(private$positive.class,
+                                                   setdiff(voting.scheme$getClassValues(),
+                                                           private$positive.class))),
                                ref = private$positive.class)
-        pred.values <- factor(pred.values[,1],
-                              levels = c(private$positive.class,
-                                         setdiff(voting.scheme$getClassValues(),
-                                                 private$positive.class)))
+      }
+
+      for (voting.name in names(valid.votings)) {
+        voting <- valid.votings[[voting.name]]
+        if (!identical( test.set$getPositiveClass() %in%
+                        voting$getClassValues()) ) {
+          stop("[", class(self)[1], "][FATAL] Positive class mismatch '",
+               test.set$getPositiveClass(), "' vs [",
+               paste0(voting$getClassValues(), collapse = ", "), "]")
+        }
+
+        pred.values <- voting$getPrediction(type = "raw")[,1]
+
+        if ( !all(levels(real.values) %in% unique(pred.values)) ) {
+          stop("[",class(self)[1],"][FATAL] Real target values and predicted ",
+               "target values missmatch. Aborting...")
+        }
+
+        if(!is.factor(pred.values)){
+          pred.values <- relevel(x = factor(pred.values,
+                                            levels = c(private$positive.class,
+                                                       setdiff(voting.scheme$getClassValues(),
+                                                               private$positive.class))),
+                                 ref = private$positive.class)
+        }
 
         performance <- do.call(rbind, lapply(measures, function(entry, cf) {
           result <- entry$compute(cf)
@@ -105,23 +175,13 @@ ClassificationOutput <- R6::R6Class(
         }, cf = ConFMatrix$new(caret::confusionMatrix(data = pred.values,
                                                       reference = real.values,
                                                       positive = private$positive.class))))
-        performances <- append(performances, list(performance))
-        if (inherits(voting.scheme, "SimpleVoting")) {
-          names(performances)[length(performances)] <- paste(voting.scheme$getName(),
-                                                             voting.scheme$getMetric(),
-                                                             voting.scheme$getCutoff(),
-                                                             sep = "_")
-        } else {
-          names(performances)[length(performances)] <- paste(voting.scheme$getName(),
-                                                             paste0(voting.scheme$getMetrics(),
-                                                                   collapse = "-"),
-                                                             voting.scheme$getCutoff(),
-                                                             sep = "_")
-        }
+
+        performances[[voting.name]] <- performance
       }
       performances
     },
-    plot = function(dir.path, test.set, measures, voting.schemes = NULL, metrics = NULL, cutoffs = NULL){
+    plot = function(dir.path, test.set, measures, voting.names = NULL,
+                    metric.names = NULL, cutoff.values = NULL){
       if (missing(dir.path))
         stop("[", class(self)[1],"][FATAL] Path not defined. Aborting.")
 
@@ -136,74 +196,114 @@ ClassificationOutput <- R6::R6Class(
 
       performances <- self$getPerformances(test.set = test.set,
                                            measures = measures,
-                                           voting.schemes = voting.schemes,
-                                           metrics = metrics,
-                                           cutoffs = cutoffs)
+                                           voting.names = voting.names,
+                                           metric.names = metric.names,
+                                           cutoff.values = cutoff.values)
 
-      for (peformanceName in names(performances)) {
-        performance <- performances[[peformanceName]]
+      for (peformance.name in names(performances)) {
+        performance <- performances[[peformance.name]]
         plot <- ggplot(performance, aes(x = Measure,y = Value) ) + geom_bar(stat = "identity") +
           geom_point(aes(shape = 15,stroke = 1)) + scale_shape_identity() +
           ggtitle("Classifier performance Benchmarking") + guides(fill = FALSE) +
-          theme(plot.title = element_text(hjust = 0.5), legend.title = element_blank(), legend.position = "none" )
+          theme( plot.title = element_text(hjust = 0.5), legend.title = element_blank(),
+                 legend.position = "none" )
         plotly::ggplotly(plot)
 
-        ggsave( paste0(file.path(dir.path, peformanceName), ".pdf"), device = "pdf",
+        ggsave( paste0(file.path(dir.path, peformance.name), ".pdf"), device = "pdf",
                 plot = plot, limitsize = FALSE )
         message("[", class(self)[1],"][INFO] Plot has been succesfully saved at: ",
-                paste0(file.path(dir.path, peformanceName),".pdf"))
+                paste0(file.path(dir.path, peformance.name),".pdf"))
       }
     },
-    getPredictions = function(voting.schemes = NULL, metrics = NULL, cutoffs = NULL, type = NULL, target = NULL, filter = FALSE){
-      final.voting.schemes <- private$voting.schemes
-      if (all(missing(voting.schemes), missing(metrics), missing(cutoffs),
-              !is.character(voting.schemes), !is.character(metrics), !is.numeric(cutoffs))) {
-        message("[", class(self)[1], "][WARNING] Voting.schemes, metric and cutoff are not defined or invalid. ",
-                "Asuming all voting schemes to get its performance.")
-      } else {
-        if (!missing(voting.schemes) && is.character(voting.schemes)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which'",
-                  " inherit from :", paste(voting.schemes, collapse = " "))
-          final.voting.schemes <- Filter(function(vot) all(inherits(vot, voting.schemes)),
-                                         final.voting.schemes)
-        }
-        if (!missing(metrics) && is.character(metrics)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which'",
-                  " have this metrics: ", paste(metrics, collapse = " "))
-          final.voting.schemes <- Filter(function(vot)
-            ifelse(inherits(vot, "SimpleVoting"),
-                   vot$getMetric() %in% metrics,
-                   all(vot$getMetrics() == metrics)),
-            final.voting.schemes)
-        }
-        if (!missing(cutoffs) && is.numeric(cutoffs)) {
-          message("[", class(self)[1], "][INFO] Selecting cutoffs which'",
-                  " have this cutoffs: ", paste(cutoffs, collapse = " "))
-          final.voting.schemes <- Filter(function(vot) vot$getCutoff() %in% cutoffs,
-                                         final.voting.schemes)
-        }
+    getPredictions = function(voting.names = NULL, type = NULL, target = NULL,
+                              metric.names = NULL, cutoff.values = NULL,
+                              filter = FALSE ){
+
+      if(!is.null(type) && !type %in% c("raw","prob") ){
+        message("[",class(self)[1],"][WARNING] Type value is invalid. ",
+                "Must be 'raw' of 'prob'. Assuming 'raw'")
+        type <- "raw"
       }
-      if (length(final.voting.schemes) == 0) {
-        message("[", class(self)[1], "][WARNING] There are no voting schemes ",
-                "that have metrics as '", paste(metrics, collapse = " "), "' and as cutoff '", paste(cutoffs, collapse = " "), "'")
+
+      if(!is.null(target) && !target %in% private$positive.class ){
+        message("[",class(self)[1],"][WARNING] Target value does not match with",
+                " actual target values: '",paste0(private$positive.class,
+                                                private.negative.class,
+                                                collapse=", "),"', Assuming '",
+                private$positive.class,"' as default value")
+        target <- private$positive.class
+      }
+
+      if(!is.logical(filter)){
+        message("[",class(self)[1],"][WARNING] Filter parameter is invalid. ",
+                "Must include a logical value. Assuming 'FALSE' as default value")
+        filter <- FALSE
+      }
+
+      if(!is.character(cutoff.values)) cutoff.values <- as.character(cutoff.values)
+
+      if(length(cutoff.values) != 0){
+        if(any(cutoff.values %in% private$available$cutoffs ) ){
+          aval.cutoffs <- intersect(cutoff.values,private$available$cutoffs)
+        }else{
+          message("[",class(self)[1],"][WARNING] Defined cutoffs are not",
+                  "available. Using all cutoffs")
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid.",
+                " Using all cutoffs")
+        aval.cutoffs <- private$available$cutoffs
+      }
+
+      if(!is.null(metric.names)){
+        if(any(metric.names %in% private$available$metrics) ){
+          aval.metrics <- intersect(metric.names,private$available$metrics)
+        }else {
+          message("[",class(self)[1],"][WARNING] Defined metrics are not available. ",
+                  "Using all metrics")
+          aval.metrics <- private$available$metrics
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Metrics are not defined. ",
+                "Using all metrics")
+        aval.metrics <- private$available$metrics
+      }
+
+      if(!is.null(voting.names)){
+        if(any(voting.names %in% private$available$votings) ){
+          aval.votings <- intersect(voting.names,private$available$votings)
+        }else {
+          message("[",class(self)[1],"][WARNING] Defined votings are not available. ",
+                  "Using all votings")
+          aval.votings <- private$available$votings
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Votings are not defined. ",
+                "Using all votings")
+        aval.votings <- private$available$votings
+      }
+
+      valid.votings <- private$getVotings(aval.metrics,aval.cutoffs,aval.votings)
+
+      if( length(valid.votings) == 0 ){
+        message("[",class(self)[1],"][ERROR] There are no voting schemes ",
+                "with '", paste(metric.names, collapse = ", ")," metrics and ",
+                "'", paste(cutoff.values, collapse = " "), "' cutoffs.")
         return(NULL)
       }
-      names <- list()
-      predictions <- lapply(final.voting.schemes, function(voting.scheme, type, target)  {
-        voting.scheme$getPrediction(type = type, target = target, filter = filter)
-      }, type, target)
-      names(predictions) <- lapply(final.voting.schemes, function(voting.scheme){
-        paste(voting.scheme$getName(),
-              ifelse(inherits(voting.scheme, "SimpleVoting"),
-                     voting.scheme$getMetric(),
-                     paste(voting.scheme$getMetrics(), collapse = "-")),
-              voting.scheme$getCutoff())
-      })
-      PredictionOutput$new(predictions = predictions,
-                           type = type,
-                           target = target)
+
+      predictions <- list()
+
+      for (voting.name in names(valid.votings)) {
+        voting <- valid.votings[[voting.name]]
+        prediction <- voting$getPrediction( type = type, target = target,
+                                            filter = filter )
+        predictions[[voting.name]] <- prediction
+      }
+
+      PredictionOutput$new(predictions = predictions, type = type, target = target)
     },
-    getMetrics = function() { names(private$trained.models) },
+    getMetrics = function() { unique(names(private$trained.models)) },
     getPositiveClass = function() { private$positive.class },
     getModelInfo = function(metrics = NULL) {
       if (missing(metrics) ||
@@ -224,42 +324,10 @@ ClassificationOutput <- R6::R6Class(
       names(models.info) <- metrics
       models.info
     },
-    savePredictions = function(dir.path, type = NULL, target = NULL, voting.schemes = NULL, metrics = NULL, cutoffs = NULL){
-      final.voting.schemes <- private$voting.schemes
-      if (all(missing(voting.schemes), missing(metrics), missing(cutoffs),
-              !is.character(voting.schemes), !is.character(metrics), !is.numeric(cutoffs))) {
-        message("[", class(self)[1], "][WARNING] Voting.schemes, metric and cutoff are not defined or invalid. ",
-                "Asuming all voting schemes to get its performance.")
-      } else {
-        if (!missing(voting.schemes) && is.character(voting.schemes)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which",
-                  " inherit from: ", paste(voting.schemes, collapse = " "))
-          final.voting.schemes <- Filter(function(vot) all(inherits(vot, voting.schemes)),
-                                         final.voting.schemes)
-        }
-        if (!missing(metrics) && is.character(metrics)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which",
-                  " have this metrics: ", paste(metrics, collapse = " "))
-          final.voting.schemes <- Filter(function(vot)
-            ifelse(inherits(vot, "SimpleVoting"),
-                   vot$getMetric() %in% metrics,
-                   all(vot$getMetrics() == metrics)),
-            final.voting.schemes)
-        }
-        if (!missing(cutoffs) && is.numeric(cutoffs)) {
-          message("[", class(self)[1], "][INFO] Selecting voting.schemes which",
-                  " have this cutoffs: ", paste(cutoffs, collapse = " "))
-          final.voting.schemes <- Filter(function(vot) vot$getCutoff() %in% cutoffs,
-                                         final.voting.schemes)
-        }
-      }
-      if (length(final.voting.schemes) == 0) {
-        message("[", class(self)[1], "][WARNING] There are no voting schemes ",
-                "that have metrics as '", paste(metrics, collapse = " "), "' and as cutoff '", paste(cutoffs, collapse = " "), "'")
-        return(NULL)
-      }
-
-      if (missing(dir.path))
+    savePredictions = function(dir.path, voting.names = NULL, type = NULL,
+                               target = NULL, metric.names = NULL,
+                               cutoff.values = NULL ) {
+      if (is.null(dir.path))
         stop( "[",class(self)[1],"][FATAL] Save folder not set. Aborting...")
 
       dir.path <- gsub("\\/$", "", dir.path)
@@ -273,7 +341,62 @@ ClassificationOutput <- R6::R6Class(
                      dir.path, "'. Aborting... ") }
       } else { message("[", class(self)[1], "][INFO] Folder already exists") }
 
-      for (voting.scheme in final.voting.schemes) {
+      if(!is.character(cutoff.values)) cutoff.values <- as.character(cutoff.values)
+
+      if(length(cutoff.values) != 0){
+        if(any(cutoff.values %in% private$available$cutoffs ) ){
+          aval.cutoffs <- intersect(private$available$cutoffs,cutoff.values)
+        }else{
+          message("[",class(self)[1],"][WARNING] Defined cutoffs are not",
+                  "available. Using all cutoffs")
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid.",
+                " Using all cutoffs")
+      }
+
+      if(!is.null(metric.names)){
+        if(any(metric.names %in% private$available$metrics) ){
+          aval.metrics <- intersect(metric.names,private$available$metrics)
+        }else {
+          message("[",class(self)[1],"][WARNING] Defined metrics are not available. ",
+                  "Using all metrics")
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Metrics are not defined. ",
+                "Using all metrics")
+      }
+
+      if(!is.null(private$available$votings)){
+        if(any(voting.names %in% private$available$votings) ){
+          aval.votings <- intersect(voting.names,private$available$votings)
+        }else {
+          message("[",class(self)[1],"][WARNING] Defined votings are not available. ",
+                  "Using all votings")
+        }
+      }else{
+        message("[",class(self)[1],"][INFO] Votings are not defined. ",
+                "Using all votings")
+      }
+
+      valid.votings <- private$getVotings(aval.metrics,aval.cutoffs,aval.votings)
+
+      if( length(valid.votings)==0 ){
+        stop("[",class(self)[1],"][ERROR] There are no voting schemes ",
+                "with '", paste(metric.names, collapse = ", ")," metrics and ",
+                "'", paste(cutoff.values, collapse = " "), "' cutoffs. Aborting...")
+      }
+
+      predictions <- list()
+      for (voting.name in names(valid.votings)) {
+        voting <- valid.votings[[voting.name]]
+        prediction <- voting$getPrediction(type = type,target=target,filter=filter)
+        predictions[[voting.name]] <- prediction
+      }
+
+      for (voting.name in names(valid.votings)) {
+        voting.scheme <- valid.votings[[voting.name]]
+
         if (is.null(type) || (!type %in% c("prob","raw"))) {
           message("[", class(self)[1], "][INFO] Prediction type not set or invalid.")
           if (is.null(target) || !(target %in% c(private$positive.class,
@@ -281,15 +404,8 @@ ClassificationOutput <- R6::R6Class(
             message("[", class(self)[1], "][INFO] Target class not set or invalid. ",
                     "Saving all predictions with all target values")
             #SAVING PROB
-            path <- file.path(dir.path, paste0(voting.scheme$getName(), "_",
-                                               ifelse(inherits(voting.scheme, "SimpleVoting"),
-                                                      voting.scheme$getMetric(),
-                                                      paste(voting.scheme$getMetrics(),
-                                                            collapse = "-")),
-                                               "_",
-                                               voting.scheme$getCutoff(), "_",
-                                               "prob_", private$positive.class,
-                                               ".csv"))
+            path <- file.path(dir.path, paste0(voting.name, "_prob_",
+                                               private$positive.class,".csv"))
             df <- data.frame(voting.scheme$getPrediction("prob", private$positive.class),
                              voting.scheme$getPrediction("prob", private$negative.class))
             rownames <- rownames(df)
@@ -298,27 +414,15 @@ ClassificationOutput <- R6::R6Class(
             write.table(df, file = path, sep = ";", dec = ".", row.names = FALSE)
 
             #SAVING RAW
-            path <- file.path(dir.path, paste0(voting.scheme$getName(), "_",
-                                               ifelse(inherits(voting.scheme, "SimpleVoting"),
-                                                      voting.scheme$getMetric(),
-                                                      paste(voting.scheme$getMetrics(),
-                                                            collapse = "-")), "_",
-                                               voting.scheme$getCutoff(), "_",
-                                               "raw_Predictions.csv"))
+            path <- file.path(dir.path, paste0(voting.name, "_raw_Predictions.csv"))
             df <- data.frame(voting.scheme$getPrediction("raw"))
             rownames <- rownames(df)
             df <- cbind(rownames,df)
             names(df) <- c("ID","Predictions")
             write.table(df, file = path, sep = ";", dec = ".", row.names = FALSE)
+
             #SAVING COMBINED
-            path <- file.path(dir.path, paste0(voting.scheme$getName(), "_",
-                                               ifelse(inherits(voting.scheme, "SimpleVoting"),
-                                                      voting.scheme$getMetric(),
-                                                      paste(voting.scheme$getMetrics(),
-                                                            collapse = "-")), "_",
-                                               voting.scheme$getCutoff(), "_",
-                                               "comb_Predictions",
-                                               ".csv"))
+            path <- file.path(dir.path, paste0(voting.name, "_comb_Predictions.csv"))
             prob <- data.frame(voting.scheme$getPrediction("prob", private$positive.class),
                                voting.scheme$getPrediction("prob", private$negative.class))
             colnames(prob) <- c(private$positive.class, private$negative.class)
@@ -335,12 +439,7 @@ ClassificationOutput <- R6::R6Class(
             message("[",class(self)[1],"][INFO] Saving all predictions for target",
                     " value '",target,"'")
             for (i in c("prob","raw","bin")) {
-              path <- file.path(dir.path, paste0(voting.scheme$getName(), "_",
-                                                 ifelse(inherits(voting.scheme, "SimpleVoting"),
-                                                        voting.scheme$getMetric(),
-                                                        paste(voting.scheme$getMetrics(),
-                                                              collapse = "-")),
-                                                 voting.scheme$getCutoff(), "_",
+              path <- file.path(dir.path, paste0(voting.name, "_",
                                                  i, "_", private$positive.class,
                                                  ".csv"))
               df <- data.frame(voting.scheme$getPrediction(i, target))
@@ -354,13 +453,7 @@ ClassificationOutput <- R6::R6Class(
                                                   private$negative.class))) {
             message("[", class(self)[1], "][INFO] Target class not set or invalid. ",
                     "Saving '", type, "' predictions for all target values")
-            path <- file.path(dir.path, paste0(voting.scheme$getName(), "_",
-                                               ifelse(inherits(voting.scheme, "SimpleVoting"),
-                                                      voting.scheme$getMetric(),
-                                                      paste(voting.scheme$getMetrics(),
-                                                            collapse = "-")),
-                                               voting.scheme$getCutoff(), "_",
-                                               type, "_", private$positive.class,
+            path <- file.path(dir.path, paste0(voting.name,"_",private$positive.class,
                                                ".csv"))
             df <- data.frame(voting.scheme$getPrediction(type, private$positive.class),
                              voting.scheme$getPrediction(type, private$negative.class))
@@ -369,14 +462,7 @@ ClassificationOutput <- R6::R6Class(
           }else{
             message("[", class(self)[1], "][INFO] Saving '", type, "' predictions ",
                     "for '", target, "'target values")
-            path <- file.path(dir.path, paste0(voting.scheme$getName(), "_",
-                                               ifelse(inherits(voting.scheme, "SimpleVoting"),
-                                                      voting.scheme$getMetric(),
-                                                      paste(voting.scheme$getMetrics(),
-                                                            collapse = "-")),
-                                               voting.scheme$getCutoff(), "_",
-                                               type, "_", target,
-                                               ".csv"))
+            path <- file.path(dir.path, paste0(voting.name,"_",target,".csv"))
             df <- data.frame(voting.scheme$getPrediction(type, target))
             names(df) <- target
             write.table(df, file = path, sep = ";", dec = ".", row.names = FALSE)
@@ -389,6 +475,27 @@ ClassificationOutput <- R6::R6Class(
     positive.class = NULL,
     negative.class = NULL,
     voting.schemes = NULL,
-    trained.models = NULL
+    trained.models = NULL,
+    available = list(),
+    getVotings = function(metrics,cutoffs,votings){
+      valid.votings <- list()
+      for(voting.type in private$voting.schemes){
+        metrics <- intersect(names(voting.type),metrics)
+        for(metric in metrics){
+          voting.metric <- voting.type[[metric]]
+          cutoffs <- intersect(names(voting.metric),cutoffs)
+          for(cutoff in cutoffs){
+            voting.cutoff <- voting.metric[[cutoff]]
+            voting.names <- intersect(names(voting.cutoff),votings)
+            for(voting.name in voting.names){
+              voting.scheme <- voting.cutoff[[voting.name]]
+              entry.name <- paste(metric,cutoff,voting.name,sep = "_")
+              valid.votings[[entry.name]] <- voting.scheme
+            }
+          }
+        }
+      }
+      valid.votings
+    }
   )
 )
