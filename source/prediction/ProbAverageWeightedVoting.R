@@ -83,6 +83,7 @@ ProbAverageWeightedVoting <- R6::R6Class(
       names(final.prob) <- c( predictions$getPositiveClass(),
                               setdiff( predictions$getClassValues(),
                                        predictions$getPositiveClass()) )
+
       final.raw <- c()
 
       for (pos in seq_len(nrow(final.prob))){
@@ -114,6 +115,8 @@ ProbAverageWeightedVoting <- R6::R6Class(
       private$final.pred$set( final.prob, final.raw,
                               predictions$getClassValues(),
                               predictions$getPositiveClass() )
+
+      print(private$final.pred$getRaw()[1:15])
     }
   ),
   private = list(
