@@ -5,7 +5,7 @@ MinResult <- R6::R6Class(
     initialize = function (name, n.positive, n.negative){
       if (!is.numeric(n.positive) && !is.numeric(n.negative))
         stop("[MinResult][ERROR] Arguments 'n.positive' and 'n.negative' must be numeric\n")
-      
+
       private$name <- name
       private$n.positive <- n.positive
       private$n.negative <- n.negative
@@ -14,20 +14,25 @@ MinResult <- R6::R6Class(
     getNumPositives = function(){ private$n.positive },
     getNumNegatives = function(){ private$n.negative },
     getValues = function() {private$values },
-    getConfusionMatrix = function( pareto.distance = NULL) { 
-      stop("[MinResult][ERROR] Method 'getConfusionMatrix' is abstract. Must be implemented in inherited class\n")
+    getConfusionMatrix = function( pareto.distance = NULL) {
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getFP = function() {
-      stop("[MinResult][ERROR] Method 'getFP' is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getFN = function() {
-      stop("[MinResult][ERROR] Method 'getFN' is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getTN = function() {
-      stop("[MinResult][ERROR] Method 'getTN' is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getTP = function() {
-      stop("[MinResult][ERROR] Method 'getTP' is abstract. Must be implemented in inherited class\n")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getName = function(){ private$name }
   ),

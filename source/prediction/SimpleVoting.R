@@ -15,8 +15,8 @@ SimpleVoting <- R6::R6Class(
         private$final.pred
       }else{
         if(!is.logical(filter)){
-          message("[", class(self)[1], "][WARNING] Filter is invalid. ",
-                  "Must be a 'logical' type. Aborting...")
+          message("[", class(self)[1], "][WARNING] Filter parameter must be ",
+                  "defined as 'logical' type. Aborting...")
           filter <- FALSE
         }
         class.values <- private$final.pred$getClassValues()
@@ -47,8 +47,8 @@ SimpleVoting <- R6::R6Class(
       }
     },
     execute = function(predictions, metric = NULL) {
-      stop("[", class(self)[1], "][FATAL] Class is abstract.",
-           " Method should be defined in inherited class. Aborting...")
+      stop("[", class(self)[1], "][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     }
   ),
   private = list(

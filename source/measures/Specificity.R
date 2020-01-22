@@ -3,16 +3,20 @@ Specificity <- R6::R6Class(
   inherit = MeasureFunction,
   portable = TRUE,
   public = list(
-    initialize = function (performance.output = NULL){
-      super$initialize("Specificity",performance.output)
+    initialize = function(performance.output = NULL){
+      super$initialize(performance.output)
     },
     compute = function(performance.output = NULL){
-      if ( is.null(super$performance) && !inherits(performance.output,c("MinResult","Classifier","ModelPerformance","ConFMatrix") ) )
-        stop("[",private$name,"][FATAL] Classifier object not included or invalid")
+      if ( is.null(super$performance) && !inherits(performance.output, c("MinResult", "ConfMatrix") ) )
+        stop("[",class(self)[1],"][FATAL] Performance output parameter must be ",
+             "defined as 'MinResult' or 'ConfMatrix' type. Aborting...")
 
-      if( !is.null(performance.output) && inherits(performance.output,c("MinResult","Classifier","ModelPerformance","ConFMatrix")) )
-        performance.output$getConfusionMatrix()$byClass["Specificity"]
-      else super$performance$getConfusionMatrix()$byClass["Specificity"]
+      if( !is.null(performance.output) && inherits(performance.output, c("MinResult", "ConfMatrix")) )
+        output <- performance.output$getConfusionMatrix()$byClass["Specificity"]
+      else output <-super$performance$getConfusionMatrix()$byClass["Specificity"]
+
+      names(output) <- class(self)[1]
+      output
     }
   )
 )

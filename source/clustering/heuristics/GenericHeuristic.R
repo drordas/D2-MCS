@@ -3,9 +3,9 @@ GenericHeuristic <- R6::R6Class(
   portable = TRUE,
   public = list(
     initialize = function() { },
-    getName = function() { class(self)[1]},
     heuristic = function(col1, col2, column.names = NULL, ...) {
-      stop("[",class(self)[1],"][FATAL] Function 'heuristic must be implemented in inherited class'")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     }
   ),
   private = list(

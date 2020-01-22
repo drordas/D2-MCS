@@ -3,14 +3,17 @@ TrainOutput <- R6::R6Class(
   portable = TRUE,
   public = list(
     initialize = function(models, class.values, positive.class) {
-      if ( missing(models) && !is.list(models) ) {
-        stop("[", class(self)[1], "][FATAL] Models are incorrect. Must be a 'list' type. Aborting...")
+      if ( is.null(models) || !is.list(models) ) {
+        stop("[", class(self)[1], "][FATAL] Models parameter must be defined as ",
+             "'list' type. Aborting...")
       }
-      if ( missing(class.values) && !is.character(class.values) && length(class.values) < 2 ) {
-        stop("[", class(self)[1], "][FATAL] Class.values are incorrect. Must be a 'character' type. Aborting...")
+      if ( is.null(class.values) || !is.character(class.values) && length(class.values) < 2 ) {
+        stop("[", class(self)[1], "][FATAL] Class.values parameter must be defined as ",
+             "'list' character. Aborting...")
       }
-      if ( missing(positive.class) && !is.character(positive.class) && !positive.class %in% class.values ) {
-        stop("[", class(self)[1], "][FATAL] Positive.class are incorrect. Must be a 'character' type. Aborting...")
+      if ( is.null(positive.class) || !is.character(positive.class) || !positive.class %in% class.values ) {
+        stop("[", class(self)[1], "][FATAL] Positive.class parameter must be defined as ",
+             "'list' character. Aborting...")
       }
 
       private$models <- models
@@ -18,7 +21,7 @@ TrainOutput <- R6::R6Class(
       private$positive.class <- positive.class
     },
     getModels = function(metric) {
-      if ( missing(metric) || is.list(metric) || !metric %in% self$getMetrics() ) {
+      if ( is.null(metric) || is.list(metric) || !metric %in% self$getMetrics() ) {
         stop("[",class(self)[1],"][FATAL] Metric not defined of invalid. Aborting...")
       }
       private$models[[metric]]

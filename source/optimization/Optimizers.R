@@ -29,7 +29,7 @@ Optimizers <- R6::R6Class(
     getModels = function(){ private$cluster.models },
     computePerformance = function( pareto.distance=NULL) {
       sapply(self$getOptimizers(), function (x) { 
-        cf <- ConFMatrix$new(x$getConfusionMatrix(pareto.distance)) 
+        cf <- ConfMatrix$new(x$getConfusionMatrix(pareto.distance)) 
       })
     }
   ),

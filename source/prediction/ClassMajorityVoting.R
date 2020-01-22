@@ -24,13 +24,13 @@ ClassMajorityVoting <- R6::R6Class(
     getClassTie = function() { private$class.tie },
     execute = function(predictions, verbose = FALSE){
       if (!inherits(predictions, "ClusterPredictions")) {
-        stop("[", class(self)[1], "][FATAL] Invalid prediction type. Must be a ",
-             "ClusterPrediction object. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Predictions parameter must be defined ",
+             "as 'ClusterPrediction' type. Aborting...")
       }
 
       if (predictions$size() <= 0) {
-        stop("[",class(self)[1],"][FATAL] Cluster predictions were not ",
-             "computed. Aborting...")
+        stop("[",class(self)[1],"][FATAL] Cluster predictions were not computed. ",
+             "Aborting...")
       }
 
       if( is.null(private$majority.class) ||
@@ -69,8 +69,8 @@ ClassMajorityVoting <- R6::R6Class(
 
         if (length(max.values) > 1) {
           if (self$getMajorityClass() %in% max.values) {
-            message("[", class(self)[1], "][INFO] Resolving tie using ",
-                    "'majority class' solver")
+            message("[", class(self)[1], "][INFO] Found Tie. Resolving using",
+                    " 'majority class' solver")
             entry <- self$getMajorityClass()
           } else {
             entry <- self$getClassTie()

@@ -14,11 +14,11 @@ ClassificationOutput <- R6::R6Class(
       }
 
       if (!is.list(models)) {
-        stop("[", class(self)[1], "][FATAL] Models are incorrect.",
-             "Must be a 'list' type. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Models parameter must be defined ",
+             "as 'list' type. Aborting...")
       }
 
-      positive.class <- unique( as.vector(sapply(voting.schemes, function(metrics) {
+      positive.class <- unique( unlist(sapply(voting.schemes, function(metrics) {
                                 sapply(metrics, function(cutoffs) {
                                     sapply(cutoffs, function(voting.names) {
                                       sapply(voting.names, function(votings) {
@@ -27,7 +27,7 @@ ClassificationOutput <- R6::R6Class(
                                   } ) }
                                 )) )
 
-      class.values <- unique( as.vector(sapply(voting.schemes, function(metrics) {
+      class.values <- unique( unlist(sapply(voting.schemes, function(metrics) {
                               sapply(metrics, function(cutoffs) {
                                 sapply(cutoffs, function(voting.names) {
                                   sapply(voting.names, function(votings) {
@@ -65,8 +65,8 @@ ClassificationOutput <- R6::R6Class(
     getPerformances = function(test.set, measures, voting.names = NULL,
                                metric.names = NULL, cutoff.values = NULL){
       if (!inherits(test.set, "Subset"))
-        stop("[",class(self)[1],"][FATAL] Test set invalid.",
-             " Must be a Subset object. Aborting...")
+        stop("[",class(self)[1],"][FATAL] Testset parameter must be defined ",
+             "as 'Subset' type. Aborting...")
 
       if (test.set$getNrow() == 0)
         stop("[",class(self)[1],"][FATAL] Test set is empty. Aborting...")
@@ -79,7 +79,7 @@ ClassificationOutput <- R6::R6Class(
       if (private$positive.class != test.set$getPositiveClass()) {
         stop("[", class(self)[1], "][FATAL] Positive class values missmatch. ['",
              test.set$getPositiveClass(), "' vs '",
-             private$positive.class, "'] used in classification",
+             private$positive.class, "'] used in classification ",
              "and test respectively. Aborting... ")
       }
 
@@ -97,12 +97,13 @@ ClassificationOutput <- R6::R6Class(
         if( any(cutoff.values %in% private$available$cutoffs) ){
           aval.cutoffs <- intersect(private$available$cutoffs,cutoff.values)
         }else{
-          message("[",class(self)[1],"][WARNING] Defined cutoffs are not",
+          message("[",class(self)[1],"][WARNING] Defined cutoffs are not ",
                   "available. Using all cutoffs")
+          aval.cutoffs <- private$available$cutoffs
         }
       }else{
-        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid.",
-                " Using all cutoffs")
+        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid. ",
+                "Using all cutoffs")
         aval.cutoffs <- private$available$cutoffs
       }
 
@@ -112,6 +113,7 @@ ClassificationOutput <- R6::R6Class(
         }else {
           message("[",class(self)[1],"][WARNING] Defined metrics are not available. ",
                   "Using all metrics")
+          aval.metrics <- private$available$metrics
         }
       }else{
         message("[",class(self)[1],"][INFO] Metrics are not defined. ",
@@ -119,8 +121,8 @@ ClassificationOutput <- R6::R6Class(
         aval.metrics <- private$available$metrics
       }
 
-      if(!is.null(private$available$votings)){
-        if(any(voting.names %in% private$available) ){
+      if(!is.null(voting.names)){
+        if(any(voting.names %in% private$available$votings) ){
           aval.votings <- intersect(voting.names,private$available$votings)
         }else {
           message("[",class(self)[1],"][WARNING] Defined votings are not available. ",
@@ -177,11 +179,11 @@ ClassificationOutput <- R6::R6Class(
 
         performance <- do.call(rbind, lapply(measures, function(entry, cf) {
           result <- entry$compute(cf)
-          df <- data.frame(entry$getName(), result)
+          df <- data.frame(class(entry)[1], result)
           rownames(df) <- NULL
           names(df) <- c("Measure","Value")
           df
-        }, cf = ConFMatrix$new(caret::confusionMatrix(data = pred.values,
+        }, cf = ConfMatrix$new(caret::confusionMatrix(data = pred.values,
                                                       reference = real.values,
                                                       positive = private$positive.class))))
 
@@ -192,7 +194,7 @@ ClassificationOutput <- R6::R6Class(
     plot = function(dir.path, test.set, measures, voting.names = NULL,
                     metric.names = NULL, cutoff.values = NULL){
       if (missing(dir.path))
-        stop("[", class(self)[1],"][FATAL] Path not defined. Aborting.")
+        stop("[", class(self)[1],"][FATAL] Path not defined. Aborting...")
 
       if (!dir.exists(dir.path)) {
         dir.create(dir.path, recursive = TRUE)
@@ -200,7 +202,7 @@ ClassificationOutput <- R6::R6Class(
           message("[", class(self)[1], "][INFO] Folder '", dir.path,
                   "' has been succesfully created")
         } else { stop("[", class(self)[1], "][FATAL] Cannot create directory '",
-                      dir.path, "'. Aborting... ") }
+                      dir.path, "'. Aborting...") }
       } else { message("[", class(self)[1], "][INFO] Folder already exists") }
 
       performances <- self$getPerformances(test.set = test.set,
@@ -240,14 +242,14 @@ ClassificationOutput <- R6::R6Class(
         message("[",class(self)[1],"][WARNING] Target value does not match with",
                 " actual target values: '",paste0(private$positive.class,
                                                 private.negative.class,
-                                                collapse=", "),"', Assuming '",
+                                                collapse=", "),"'. Assuming '",
                 private$positive.class,"' as default value")
         target <- private$positive.class
       }
 
       if(!is.logical(filter)){
-        message("[",class(self)[1],"][WARNING] Filter parameter is invalid. ",
-                "Must include a logical value. Assuming 'FALSE' as default value")
+        message("[",class(self)[1],"][WARNING] Filter parameter must be defined ",
+                "as 'logical' type. Assuming 'FALSE' as default value")
         filter <- FALSE
       }
 
@@ -257,12 +259,13 @@ ClassificationOutput <- R6::R6Class(
         if(any(cutoff.values %in% private$available$cutoffs ) ){
           aval.cutoffs <- intersect(cutoff.values,private$available$cutoffs)
         }else{
-          message("[",class(self)[1],"][WARNING] Defined Cutoffs are not",
-                  "available. Using all available cutoffs.")
+          message("[",class(self)[1],"][WARNING] Defined Cutoffs are not ",
+                  "available. Using all available cutoffs")
+          aval.cutoffs <- private$available$cutoffs
         }
       }else{
-        message("[",class(self)[1],"][INFO] Cutoffs are not defined.",
-                " Using all available cutoffs.")
+        message("[",class(self)[1],"][INFO] Cutoffs are not defined. ",
+                "Using all available cutoffs")
         aval.cutoffs <- private$available$cutoffs
       }
 
@@ -271,12 +274,12 @@ ClassificationOutput <- R6::R6Class(
           aval.metrics <- intersect(metric.names,private$available$metrics)
         }else {
           message("[",class(self)[1],"][WARNING] Defined Metrics are not ",
-                  "available. Using all available metrics.")
+                  "available. Using all available metrics")
           aval.metrics <- private$available$metrics
         }
       }else{
         message("[",class(self)[1],"][INFO] Metrics are not defined. ",
-                "Using all available metrics.")
+                "Using all available metrics")
         aval.metrics <- private$available$metrics
       }
 
@@ -290,7 +293,7 @@ ClassificationOutput <- R6::R6Class(
         }
       }else{
         message("[",class(self)[1],"][INFO] Votings are not defined. ",
-                "Using all available votings.")
+                "Using all available votings")
         aval.votings <- private$available$votings
       }
 
@@ -358,11 +361,11 @@ ClassificationOutput <- R6::R6Class(
         if(any(cutoff.values %in% private$available$cutoffs ) ){
           aval.cutoffs <- intersect(private$available$cutoffs,cutoff.values)
         }else{
-          message("[",class(self)[1],"][WARNING] Defined cutoffs are not",
+          message("[",class(self)[1],"][WARNING] Defined cutoffs are not ",
                   "available. Using all cutoffs")
         }
       }else{
-        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid.",
+        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid. ",
                 " Using all cutoffs")
       }
 
@@ -448,8 +451,8 @@ ClassificationOutput <- R6::R6Class(
             names(df) <- c("ID", "Prediction", "Probability")
             write.table( df, file = path, sep = ";", dec = ".", row.names = FALSE)
           } else {
-            message("[",class(self)[1],"][INFO] Saving all predictions for target",
-                    " value '",target,"'")
+            message("[",class(self)[1],"][INFO] Saving all predictions for target ",
+                    "value '",target,"'")
             for (i in c("prob","raw","bin")) {
               path <- file.path(dir.path, paste0(voting.name, "_",
                                                  i, "_", private$positive.class,
@@ -492,8 +495,8 @@ ClassificationOutput <- R6::R6Class(
     getVotings = function(metrics,cutoffs,votings){
       valid.votings <- list()
       for(voting.type in private$voting.schemes){
-        metrics <- intersect(names(voting.type),metrics)
-        for(metric in metrics){
+        voting.metrics <- intersect(names(voting.type),metrics)
+        for(metric in voting.metrics){
           voting.metric <- voting.type[[metric]]
           cutoffs <- intersect(names(voting.metric),cutoffs)
           for(cutoff in cutoffs){

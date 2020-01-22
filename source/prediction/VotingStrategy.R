@@ -5,18 +5,16 @@ VotingStrategy <- R6::R6Class(
     initialize = function() {
       #private$final.pred <- FinalPred$new()
     },
-    getVotingSchemes = function(){
-      stop("[", class(self)[1], "][FATAL] Class is abstract.",
-           " Method should be implemented in inherited class. Aborting...")
-    },
-    getMetrics = function() {
-      stop("[", class(self)[1], "][FATAL] Class is abstract.",
-           " Method should be implemented in inherited class. Aborting...")
-    },
+    getVotingSchemes = function() { private$voting.schemes },
+    getMetrics = function() { private$metrics },
     execute = function(predictions, ...) {
-      stop("[", class(self)[1], "][FATAL] Class is abstract.",
-           " Method should be implemented in inherited class. Aborting...")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
-    getName = function() { class(self)[1] }#,
+    getName = function() { class(self)[1] }
+  ),
+  private = list(
+    voting.schemes = NULL,
+    metrics = NULL
   )
 )

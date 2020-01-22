@@ -19,8 +19,8 @@ TrainFunction <- R6::R6Class(
       }
     },
     create = function(summaryFunction, search.method = "grid", class.probs){
-      stop("[",class(self)[1],"][FATAL] create function is abstract. ",
-           "Must be implemented in inherited class")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getResamplingMethod = function(){ private$method },
     getNumberFolds = function(){ private$folds },
@@ -29,25 +29,25 @@ TrainFunction <- R6::R6Class(
     getAllowParallel = function(){ private$allowParallel },
     getVerboseIter = function(){ private$verboseIter },
     getTrFunction = function(){
-      stop("[",class(self)[1],"][FATAL] getTrFunction is abstract. ",
-           "Must be implemented in inherited class")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getMeasures = function(){
-      stop("[",class(self)[1],"][FATAL] getMeasures is abstract. ",
-           "Must be implemented in inherited class")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getType = function(){
-      stop("[",class(self)[1],"][FATAL] getType is abstract. ",
-           "Must be implemented in inherited class")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     getSeed = function(){ private$seed },
     setSummaryFunction = function (summaryFunction){
-      stop("[",class(self)[1],"][FATAL] setSummaryFunction is abstract. ",
-           "Must be implemented in inherited class")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     setClassProbs = function(class.probs){
-      stop("[",class(self)[1],"][FATAL] setClassProbs is abstract. ",
-           "Must be implemented in inherited class")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     }
   ),
   private = list(

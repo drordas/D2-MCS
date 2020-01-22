@@ -1,6 +1,6 @@
 ExecutedModels <- R6::R6Class(
   classname = "ExecutedModels",
-  portable = TRUE,                   
+  portable = TRUE,
   public = list(
     initialize = function(dir.path){
       private$dir.path <- gsub("\\/$","",dir.path)
@@ -9,26 +9,26 @@ ExecutedModels <- R6::R6Class(
         private$models <- NULL
         private$best.model <- NULL
       }
-      
-      if (!file.exists(file.path(private$dir.path,".executed")) || 
+
+      if (!file.exists(file.path(private$dir.path,".executed")) ||
           file.info(file.path(private$dir.path,".executed"))$size <= 0){
         file.create(file.path(private$dir.path,".executed"))
         private$models <- NULL
         private$best.model <- NULL
       }else{
-        private$models <- read.csv( file=file.path(private$dir.path,".executed"), 
+        private$models <- read.csv( file=file.path(private$dir.path,".executed"),
                                     header=TRUE,stringsAsFactors= FALSE, sep="," )
         best.perf <- private$models[which.max(private$models$performance),]
         best.path <- file.path(private$dir.path,paste0(best.perf$model,".rds"))
         if(file.exists(best.path)){
-          
+
           private$best.model <- list(model=best.perf$model,
                                      performance= best.perf$performance,
                                      exec.time= best.perf$exec.time,
                                      train= readRDS(best.path)
                                 )
-        }else{ 
-          message("[",class(self)[1],"][WARNING] Best model cannot be loaded")
+        }else{
+          message("[",class(self)[1],"][WARNING] Best model cannot be loaded.")
           private$best.model <- NULL
         }
       }
@@ -48,18 +48,17 @@ ExecutedModels <- R6::R6Class(
     },
     add = function(model, keep.best=TRUE){
       if(!inherits(model,"Model")){
-        message("[",class(self)[1],"][WARNING] ML model invalid. ",
-                "Must be an instance of Model class. ",
-                "Model not inserted")
+        message("[",class(self)[1],"][ERROR] Model parameter must be defined ",
+                "as 'Model' type. Model not inserted. Task not performed")
       }else{
-        
+
         private$models <- rbind(private$models,
                                 data.frame(model= model$getName(),
                                            performance= model$getPerformance(),
                                            exec.time= model$getExecutionTime()))
 
         if (isTRUE(keep.best)){ #SAVE ONLY BEST MODELS. REMOVE WORST
-          
+
           if(any( is.null(private$best.model), #IS BEST MODEL
                   model$getPerformance() > private$best.model$performance)){
             if(!is.null(private$best.model)){
@@ -87,11 +86,11 @@ ExecutedModels <- R6::R6Class(
     },
     save = function(){
       if(nrow(private$models) > 0){
-        write.table(private$models, file=file.path(private$dir.path,".executed"), 
+        write.table(private$models, file=file.path(private$dir.path,".executed"),
                     append= FALSE, sep= ",", row.names = FALSE)
       }else{
-        message("[",class(self)[1],"][WARNING] File is empty. ",
-                "Operation not done")
+        message("[",class(self)[1],"][ERROR] File is empty. ",
+                "Task not performed")
       }
     },
     delete = function(model.name){
@@ -100,12 +99,12 @@ ExecutedModels <- R6::R6Class(
         if(file.exists(object.path)){
           file.remove(object.path)
         }else {
-          message("[",class(self)[1],"][WARNING] Cannot delete model. ",
-                  "Path for model '",model.name,"' not found")
+          message("[",class(self)[1],"][ERROR] Cannot delete model. ",
+                  "Path for model '",model.name,"' not found. Task not performed")
         }
       }else{
-        message("[",class(self)[1],"][WARNING] Cannot delete model. ",
-                "Model '",model.name,"' has not been executed")
+        message("[",class(self)[1],"][ERROR] Cannot delete model. ",
+                "Model '",model.name,"' has not been executed. Task not performed")
       }
     }
   ),

@@ -2,15 +2,15 @@ D2MCS <- R6::R6Class(
   classname = "D2MCS",
   portable = TRUE,
   public = list(
-    initialize = function(dir.path, num.cores = NULL, socket.type="PSOCK", outfile,
+    initialize = function(dir.path, num.cores = NULL, socket.type="PSOCK", outfile = NULL,
                           serialize=FALSE){
 
-      if(missing(dir.path)) {
-        stop( "[",class(self)[1],"][ERROR] Path to store ML models should be defined" )
+      if(is.null(dir.path) || !is.character(dir.path)) {
+        stop( "[",class(self)[1],"][FALTAL] Path to store ML models should be defined" )
       }
       dir.path <- gsub("\\/$","",dir.path)
 
-      if(missing(outfile)) {
+      if(is.null(outfile)) {
         message("[",class(self)[1],"][INFO] Path for Log file not defined")
         outfile <- "/dev/null"
       }
@@ -18,7 +18,7 @@ D2MCS <- R6::R6Class(
         if (!file.exists(outfile)){
           dir.create(outfile, recursive = TRUE)
           message("[",class(self)[1],"][INFO] Logs path not definded '",
-                  outfile, "' does not exist. Creating ..." )
+                  outfile, "' does not exist. Creating..." )
         }
       }
 
@@ -27,7 +27,7 @@ D2MCS <- R6::R6Class(
         if(dir.exists(dir.path)) {
           message("[",class(self)[1],"][INFO] Directory '",dir.path,
                   "' has been succesfully created")
-        }else { stop("[",class(self)[1],"][ERROR] Cannot create directory '",
+        }else { stop("[",class(self)[1],"][FALTAL] Cannot create directory '",
                      dir.path,"'") }
       }
       else { message("[",class(self)[1],"][INFO] Directory already exists") }
@@ -73,16 +73,16 @@ D2MCS <- R6::R6Class(
 
       #CHECK IF TRAIN.SET IS VALID
       if (!"TrainSet" %in% class(train.set) ) {
-        stop( "[", class(self)[1], "][ERROR] Train set not defined of",
-              "incorrect (must be of type 'TrainSet')")
+        stop( "[", class(self)[1], "][FALTAL] Train set parameter must be ",
+              "defined as 'TrainSet' type. Aborting...")
       }
 
       if ( !"TrainFunction" %in% class(train.function) ) {
-        stop( "[", class(self)[1], "][ERROR] Train function not defined of",
-              "incorrect (must be of type 'TrainFunction')" )
+        stop( "[", class(self)[1], "][FALTAL] Train function parameter must be ",
+              "defined as 'TrainFunction' type. Aborting..." )
       }
 
-      if (any( missing(num.clusters),!is.numeric(num.clusters),
+      if (any( is.null(num.clusters),!is.numeric(num.clusters),
                !is.vector(num.clusters) )) {
         message("[",class(self)[1],"][WARNING] Number of clusters not set ",
                 "(must be numeric or vector). Using all clusters")
@@ -112,7 +112,7 @@ D2MCS <- R6::R6Class(
 
       #VERIFY IF METRIC PARAMETER IS DEFINED (AND VALID)
       if ( !all(is.character(metrics), length(metrics) > 0) ) {
-        stop("[",class(self)[1],"][INFO] Invalid values of metrics ")
+        stop("[",class(self)[1],"][FATAL] Invalid values of metrics ")
       }
 
       message("[",class(self)[1],"][INFO] Making parallel socket cluster with ",
@@ -222,7 +222,7 @@ D2MCS <- R6::R6Class(
         if ( loaded.packages && !is.null(current.model$model.libs) &&
              !is.na(current.model$model.libs) &&
              !current.model$model.libs %in% "NA" ) {
-          message("[", class(self)[1], "][INFO][", self$getName(), "] ",
+          message("[", class(self)[1], "][INFO][", current.model$name, "] ",
                   "Detaching required packages...")
           private$unloadPackages(len.init.packages, len.init.DLLs)
         }
@@ -246,15 +246,16 @@ D2MCS <- R6::R6Class(
     classify = function(train.output, subset, voting.types, positive.class = NULL) {
 
       if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][ERROR] Train output missing or invalid. ",
-             "Must be a TrainOutput object")
+        stop("[", class(self)[1], "][FALTAL] Train output parameter must be ",
+             "defined as 'TrainOutput' type. Aborting...")
 
       if ( !inherits(subset, c("Subset","HDSubset")) )
-        stop("[", class(self)[1], "][ERROR] Test dataset missing or invalid. ",
-             "Must inherit from 'Subset' or 'HDSubset' class")
+        stop("[", class(self)[1], "][FALTAL] Subset parameter must be defined as ",
+             "'Subset' or 'HDSubset' type. Aborting...")
 
       if ( missing(voting.types)) {
-        stop("[", class(self)[1], "][FATAL] Voting types are missing. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Voting types parameter are missing.",
+             "Aborting...")
       }
 
       if (!is.list(voting.types) || !is.vector(voting.types)) {
@@ -264,8 +265,8 @@ D2MCS <- R6::R6Class(
       if (!all(sapply(voting.types,  function(x) {
                        inherits(x, c("SingleVoting", "CombinedVoting"))
         }))){
-          stop("[", class(self)[1], "][ERROR] Voting Schemes missing or invalid. ",
-              "Must inherit from 'SingleVoting' or 'CombinedVoting' abstract classes.")
+          stop("[", class(self)[1], "][FALTAL] Voting Schemes parameter must be ",
+              "inherit from 'SingleVoting' or 'CombinedVoting' abstract classes.")
       }
 
       class.values <- unique(train.output$getClassValues())
@@ -273,13 +274,13 @@ D2MCS <- R6::R6Class(
 
       if(subset$isBlinded()){
         if ( is.null(positive.class) ) {
-          message("[", class(self)[1], "][WARNING] Positive class is not set ",
+          message("[", class(self)[1], "][WARNING] Positive class is not set. ",
                   "Asuming positive class value used during training stage '",
                   train.output$getPositiveClass(),"'")
           positive.class <- train.output$getPositiveClass()
         } else {
           if (!(positive.class %in% class.values)) {
-            stop("[", class(self)[1], "][ERROR] Positive class has ",
+            stop("[", class(self)[1], "][FALTAL] Positive class has ",
                  "not being defined during training stage. Aborting...")
           }
         }
@@ -301,8 +302,9 @@ D2MCS <- R6::R6Class(
       }
 
 
-      exec.metrics <- unique(as.vector(sapply(voting.types, function(voting) {
+      exec.metrics <- unique(unlist(sapply(voting.types, function(voting) {
                                                       voting$getMetrics() } )))
+
       cluster.predictions <- list()
       final.votings <- list()
       final.models <- list()
@@ -352,7 +354,7 @@ D2MCS <- R6::R6Class(
         valid.metrics <- intersect( voting.type$getMetrics(),
                                     names(cluster.predictions) )
         if(length(valid.metrics) == 0){
-          message("[D2MCS][INFO] Metrics for '",voting.type$getName(),"' were",
+          message("[D2MCS][INFO] Metrics for '",voting.type$getName(),"' were ",
                   "not computed. Ignoring voting type...")
           next
         }
@@ -369,8 +371,8 @@ D2MCS <- R6::R6Class(
       }
 
       if (length(final.votings) == 0) {
-        message("[", class(self)[1], "][WARNING] No voting system could be ",
-                "executed for the indicated metrics.")
+        message("[", class(self)[1], "][ERROR] No voting system could be ",
+                "executed for the indicated metrics. Task not performed")
         NULL
       } else {
 
@@ -388,41 +390,41 @@ D2MCS <- R6::R6Class(
     optimize = function(train.output, opt.set, voting.scheme, opt.algorithm, metric,
                         weights=NULL, positive.class=NULL){
       if ( !inherits(opt.set,c("Subset"))  )
-        stop("[", class(self)[1], "][ERROR] Test dataset missing or incorrect. ",
-             "Should inherit from 'Subset' class. Aborting...")
+        stop("[", class(self)[1], "][FALTAL] Opt.set parameter must defined as ",
+             "'Subset' type. Aborting...")
 
       if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][ERROR] Train output missing or invalid. ",
-             "Must be a TrainOutput object")
+        stop("[", class(self)[1], "][FALTAL] Train output parameter must be ",
+             "defined as 'TrainOutput' type. Aborting...")
 
       if ( !inherits(voting.scheme, "VotingScheme") )
-        stop("[", class(self)[1], "][ERROR] Voting Scheme missing or invalid. Aborting...")
+        stop("[", class(self)[1], "][FALTAL] Voting Scheme missing or invalid. Aborting...")
 
       if ( !is.list(opt.algorithm) ) opt.algorithm <- list(opt.algorithm)
 
       if ( all(!sapply(opt.algorithm,function(x) {inherits(x,"WeightsOptimizer")})) )
-        stop("[", class(self)[1], "][ERROR] Optimization algorithm is invalid. Must inherit",
-             " from 'WeightedOptimizer' Aborting...")
+        stop("[", class(self)[1], "][FATAL] Optimization algorithm is invalid. Must inherit ",
+             "from 'WeightedOptimizer' Aborting...")
 
       if ( is.list(opt.algorithm) && !all(sapply(opt.algorithm, inherits, "WeightsOptimizer")) )
-        stop("[", class(self)[1], "][ERROR] Optimization algorithms is invalid. List elements",
+        stop("[", class(self)[1], "][FALTAL] Optimization algorithms is invalid. List elements",
              " must inherit from 'WeightedOptimizer' object. Aborting...")
 
       if ( !is.null(metric) && !is.character(metric)) {
-        stop("[", class(self)[1], "][ERROR] Metric is invalid. Must be character type",
+        stop("[", class(self)[1], "][FALTAL] Metric is invalid. Must be character type",
              " Aborting...")
       }
 
       if( !identical(train.output$getPositiveClass(),
                      opt.set$getPositiveClass()) ){
-        stop("[",class(self)[1],"][ERROR] Positive class mismatch between",
+        stop("[",class(self)[1],"][FALTAL] Positive class mismatch between",
              "train.output and opt.set [",train.output$getPositiveClass(),"!=",
              opt.set$getPositiveClass(),"]. Aborting...")
       }
 
       if(!identical(levels(train.output$getClassValues()),
                     levels(opt.set$getClassValues()))){
-        stop("[",class(self)[1],"][ERROR] Class values mismatch between",
+        stop("[",class(self)[1],"][FALTAL] Class values mismatch between",
              "train.output and opt.set. Aborting...")
       }
 
@@ -445,7 +447,7 @@ D2MCS <- R6::R6Class(
       if ( any( is.null(train.output$getModels(metric)),
                 !is.list(train.output$getModels(metric)),
                 length(train.output$getModels(metric)) == 0) ) {
-        stop("[", class(self)[1], "][ERROR] Models were not trained. Aborting...")
+        stop("[", class(self)[1], "][FALTAL] Models were not trained. Aborting...")
       }
 
       if ( any(is.null(weights),length(weights) <
@@ -528,7 +530,7 @@ D2MCS <- R6::R6Class(
     },
     getBestPerformanceByCluster = function(train.output, metrics = NULL){
       if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][ERROR] Train output missing or invalid. ",
+        stop("[", class(self)[1], "][FALTAL] Train output missing or invalid. ",
              "Must be a TrainOutput object")
 
       if ( is.null(metrics) &&
@@ -549,7 +551,7 @@ D2MCS <- R6::R6Class(
     },
     plotTrain = function(train.output, metrics = NULL) {
       if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][ERROR] Train output missing or invalid. ",
+        stop("[", class(self)[1], "][FALTAL] Train output missing or invalid. ",
              "Must be a TrainOutput object")
 
       if ( is.null(metrics) &&
@@ -610,8 +612,8 @@ D2MCS <- R6::R6Class(
       model.list <- caret::getModelInfo()
 
       if(is.null(model.list)){
-        stop("[",class(self)[1],"][ERROR] Models not found in caret library.",
-             " Aborting...")
+        stop("[",class(self)[1],"][FALTAL] Models not found in caret library. ",
+             "Aborting...")
       }
       model.names <- names(model.list)
 
@@ -635,7 +637,7 @@ D2MCS <- R6::R6Class(
     loadPackages = function(pkgName){
       new.packages <- pkgName[!(pkgName %in% installed.packages()[,"Package"])]
       if ( length(new.packages) ) {
-        message("[", class(self)[1], "][INFO][", self$getName(), "] ",length(new.packages),
+        message("[", class(self)[1], "][INFO][", class(self)[1], "] ",length(new.packages),
                 " packages needed to execute aplication\n Installing packages ...")
         suppressMessages(install.packages( new.packages,
                                            repos ="https://ftp.cixug.es/CRAN/",
@@ -673,7 +675,6 @@ D2MCS <- R6::R6Class(
         # message("[", class(self)[1], "][INFO] There are not DLLs to unload\n")
       }
     },
-    getName = function(){ class(self)[1] },
     cluster.conf = NULL,
     cluster.obj = NULL,
     availableModels = NULL,

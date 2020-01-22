@@ -9,9 +9,10 @@ TwoClass <- R6::R6Class(
       super$initialize(method, number, savePredictions, classProbs,
                        allowParallel, verboseIter, seed)
     },
-    create = function(summaryFunction, search.method = "grid", class.probs){
+    create = function(summaryFunction, search.method = "grid", class.probs = NULL){
       if( is.null(summaryFunction) ||  !"SummaryFunction" %in% class(summaryFunction) )
-        stop("[",class(self)[1],"][FATAL] SummaryFunction must be defined as 'SummaryFunction' type")
+        stop("[",class(self)[1],"][FATAL] SummaryFunction parameter must be ",
+             "defined as 'SummaryFunction' type. Aborting...")
       else{
         private$summaryFunction <- summaryFunction$execute
         if ( search.method %in% c("grid","random") ){
@@ -22,7 +23,7 @@ TwoClass <- R6::R6Class(
                   "Assuming grid method")
 
         }
-        class.probability <- ifelse( ( !missing(class.probs) &&
+        class.probability <- ifelse( ( !is.null(class.probs) &&
                                        is.logical(class.probs)),
                                      class.probs,  super$getClassProbs() )
 
@@ -41,20 +42,20 @@ TwoClass <- R6::R6Class(
     getTrFunction = function(){
       if(is.null(private$trFunction) )
         message("[",class(self)[1],"][WARNING] TrainFunction is not created. ",
-                "Execute create method first. Returning 'NULL' value")
+                "Execute create method first. Task not performed")
       private$trFunction
     },
     setClassProbs = function(class.probs){
-      if(missing(class.probs) || !is.logical(class.probs))
-        message("[",class(self)[1],"][WARNING] Class probabilities not defined or ",
-            "erroneous. Ignoring operation")
+      if(is.null(class.probs) || !is.logical(class.probs))
+        message("[",class(self)[1],"][WARNING] Class probabilities parameter ",
+            "is null or erroneous. Task not performed")
       else{
         if ( is.null(private$trFunction) ){
           private$classProbs <- class.probs
           if( !is.null(private$summaryFunction) )
             self$create(summaryFunction,private$search)
-          else message("[",class(self)[1],"][WARNING] SummaryFunction is not defined.",
-                   " Unable to create TrainFunction")
+          else message("[",class(self)[1],"][WARNING] SummaryFunction parameter ",
+                   "is not defined. Unable to create TrainFunction. Task not performed")
         }else private$trFunction$classProbs <- class.probs
       }
     },
@@ -62,8 +63,8 @@ TwoClass <- R6::R6Class(
     getType = function(){ private$type },
     setSummaryFunction = function (summaryFunction){
       if(is.null(summaryFunction) || !inherit(summaryFunction,"SummaryFunction") ){
-        message("[",class(self)[1],"]][WARNING] SummaryFunction is null or ",
-                "incorrect type. Method ignored")
+        message("[",class(self)[1],"]][WARNING] SummaryFunction parameter ",
+                "is null or incorrect type. Task not performed")
       }else{
         if(is.null(private$trFunction)){
           self$create(private$summaryFunction, private$search)

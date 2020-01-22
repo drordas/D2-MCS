@@ -4,14 +4,14 @@ ModelPerformance <- R6::R6Class(
   public = list(
     initialize = function (model.name, conf.mat, weights){
       if(is.null(model.name) || !is.character(model.name))
-        stop("[ModelPerformance][ERROR] Model name missing or incorrect. Aborting... \n")
-      
+        stop("[",class(self)[1],"][FATAL] Model name missing or incorrect. Aborting...")
+
       #if (!inherits(conf.mat,"confusionMatrix"))
       # stop("[ModelPerformance][ERROR] Invalid confusionMatrix argument. Aborting... \n")
-      
-      if (!inherits(conf.mat,"ConFMatrix"))
-        stop("[ModelPerformance][ERROR] Invalid confusionMatrix argument. Aborting... \n")
-      
+
+      if (!inherits(conf.mat,"ConfMatrix"))
+        stop("[",class(self)[1],"][FATAL] Invalid confusionMatrix argument. Aborting...")
+
       private$weights <- weights
       private$name <- model.name
       private$conf.mat <- conf.mat

@@ -9,11 +9,11 @@ Model <- R6::R6Class(
         dir.create(private$dir.path, showWarnings= FALSE, recursive = TRUE)
         if(!dir.exists(private$dir.path))
           stop("[",class(self)[1],"][FATAL] Path '",private$dir.path,
-               "' cannot be created. Aborting execution...")
+               "' cannot be created. Aborting...")
       }
 
-      if( missing(model) ){
-        stop("[",class(self)[1],"][FATAL] Model is missing or incorrect. ",
+      if( is.null(model) ){
+        stop("[",class(self)[1],"][FATAL] Model was not defined. ",
              "Aborting...")
       }
 
@@ -31,7 +31,8 @@ Model <- R6::R6Class(
 
         if( is.null(private$model.train) ||
             any(sapply(private$model.train,is.null)) ){
-          message("[",class(self)[1],"][ERROR] Unable to load trained model.")
+          message("[",class(self)[1],"][ERROR] Unable to load trained model. ",
+                  "Task not performed")
         }else{
           message("[",class(self)[1],"][INFO] '",
                   paste(private$model.info[1:3], collapse="', "),
@@ -56,24 +57,26 @@ Model <- R6::R6Class(
         if( !inherits(train.set,"data.frame") ){
           stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
                "Cannot perform trainning stage. ",
-               "Train set must be a data.frame type")
+               "Train set must be defined as 'data.frame' type. Aborting...")
         }
 
         if( nrow(train.set) == 0 ){
           stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
-               "Cannot perform trainning stage. Train set is empty")
+               "Cannot perform trainning stage. Train set is empty. Aborting...")
         }
 
         if( !inherits(trFunction,"TrainFunction") ){
           stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
-               "TrainFunction invalid. Should inherit from TrainFunction class")
+               "TrainFunction must be inherits from 'TrainFunction' class. ",
+               "Aborting...")
         }
 
         valid.metrics <- trFunction$getMeasures()
         if(any(is.null(metric),!(metric %in% valid.metrics))){
           stop("[",class(self)[1],"][FATAL][",self$getName(),"] ",
                "Metric is not defined or unavailable ",
-               "Must be a [",paste(valid.metrics,collapse=", "),"] type")
+               "Must be a [",paste(valid.metrics,collapse=", "),"] type. ",
+               "Aborting...")
         }
 
         message("[",class(self)[1],"][INFO][",self$getName(),"] ",
@@ -94,24 +97,24 @@ Model <- R6::R6Class(
           private$model.train$exec.time <- (time$toc - time$tic)
         }else{
           message("[",class(self)[1],"][ERROR][",self$getName(),"] ",
-                  "Unable to train model. Skipping...")
+                  "Unable to train model. Task not performed")
         }
       }else{
-        message("[",class(self)[1],"][INFO][",self$getName(),"]",
-                " Model has already been trained")
+        message("[",class(self)[1],"][INFO][",self$getName(),"] ",
+                "Model has already been trained")
       }
     },
     getTrainedModel = function(){
       if ( !self$isTrained() ){
         message("[",class(self)[1],"][WARNING] Model '",private$model.info$name,
-            "' is not trained")
+            "' is not trained. Task not performed")
         NULL
       }else { private$model.train }
     },
     getExecutionTime = function(){
       if ( !self$isTrained() )
         message("[",class(self)[1],"][WARNING] Model '",private$model.info$name,
-                "' is not trained")
+                "' is not trained. Task not performed")
       private$model.train$exec.time
     },
     getPerformance = function(metric=private$metric){
@@ -123,15 +126,16 @@ Model <- R6::R6Class(
           model.result <- private$model.train$model.data$results
           model.result[best(model.result, metric=metric, maximize= TRUE), ][[metric]]
         }else {
-          stop("[",class(self)[1],"][FATAL] Metric is not defined or unavailable ",
-               "Must be a [",paste(self$getValidMetrics(),collapse=", "),"] type.")
+          stop("[",class(self)[1],"][FATAL] Metric is not defined or unavailable. ",
+               "Must be a [",paste(self$getValidMetrics(),collapse=", "),"] type. ",
+               "Aborting...")
         }
       }else{
         if (is.null(private$model.train$model.data))
-          message("[",class(self)[1],"][WARNING] Model '",
-                  private$model.info$name,"' is not trained")
+          message("[",class(self)[1],"][ERROR] Model '",
+                  private$model.info$name,"' is not trained. Task not performed")
         if (is.null(private$metric))
-          message("[",class(self)[1],"][WARNING] Metric is NULL")
+          message("[",class(self)[1],"][ERROR] Metric is NULL. Task not performed")
         NULL
       }
     },
@@ -140,17 +144,18 @@ Model <- R6::R6Class(
         private$model.train$model.data$bestTune
       }else{
         message("[",class(self)[1],"][WARNING] Model '",private$model.info$name,
-                "' is not trained")
+                "' is not trained. Task not performed")
         NULL
       }
     },
     save = function(replace=TRUE){
       if ( is.null(private$model.train$model.data) )
-        message("[",class(self)[1],"][ERROR] Cannot save untrained model. Aborting...")
+        message("[",class(self)[1],"][ERROR] Cannot save untrained model. ",
+                "Task not performed")
       else{
         if( file.exists( private$RDS.path ) ){
           if (replace){
-            message("[",class(self)[1],"][INFO][",private$method,
+            message("[",class(self)[1],"][WARNING][",private$method,
                     "] Model already exists. Replacing previous model")
             saveRDS (object = private$model.train, file=private$RDS.path )
             message("[",class(self)[1],"][INFO][",private$model.info$name,
@@ -170,7 +175,8 @@ Model <- R6::R6Class(
       if(file.exists(private$RDS.path) ){
         file.remove(private$RDS.path)
       }else{
-        message("[",class(self)[1],"][WARNING] Cannot remove unsaved model")
+        message("[",class(self)[1],"][ERROR] Cannot remove unsaved model. ",
+                "Task not performed")
       }
     }
   ),

@@ -24,7 +24,7 @@ InformationGainHeuristic <- R6::R6Class(
     heuristic = function(col1, col2, column.names = NULL) {
       col1 <- as.integer(col1[,1]) - 1
       if (!private$isBinary(col1)) {
-        warning("[", super$getName(), "][WARNING] Columns must to be binary. Return NA")
+        warning("[",class(self)[1],"][WARNING] Columns must to be binary. Return NA")
         NA
       } else {
         if (private$isBinary(col1)) {

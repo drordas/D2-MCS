@@ -3,25 +3,28 @@ Dataset <- R6::R6Class(
   portable = TRUE,
   public = list(
     initialize = function( filepath, header = TRUE, sep = ",", skip = 0,
-                           normalize.names = FALSE, ignore.columns = FALSE,
-                           class.index, positive.class ){
+                           normalize.names = FALSE,  class.index, positive.class,
+                           ignore.columns = NULL ){
+
+      if (is.null(filepath) || !file.exists(filepath)) {
+        stop("[",class(self)[1],"][FATAL] Corpus cannot be found at defined ",
+             "location. Aborting...")
+      }
 
       if (is.null(class.index) || is.null(positive.class)){
-        stop("[",class(self)[1],"][FATAL] Positive class was not defined")
+        stop("[",class(self)[1],"][FATAL] Positive class was not defined. ",
+             "Aborting...")
       }
 
       if( !is.numeric(class.index) || class.index < 0){
         stop("[",class(self)[1],"][FATAL] Class index is incorrect. ",
-             "Must be an integer greater than 0")
+             "Must be an integer greater than 0. Aborting...")
       }
 
       if( is.numeric(ignore.columns) && class.index %in% ignore.columns ){
-         message("[",class(self)[1],"][ERROR] Class cannot be ignored")
+        message("[",class(self)[1],"][ERROR] Class cannot be ignored. ",
+                "Task not performed")
         ignore.columns <- setdiff(ignore.columns,class.index)
-      }
-
-      if (!file.exists(filepath)) {
-        stop("[",class(self)[1],"][FATAL] Corpus cannot be found at defined location")
       }
 
       dt.size <- (file.info(filepath)$size / 2^30)
@@ -30,21 +33,22 @@ Dataset <- R6::R6Class(
               round(dt.size,digits = 4)," Gb.")
 
       if(dt.size > 1){
-        stop("[",class(self)[1],"][FATAL] High Dimensional Dataset is not compatible with ",
-             "Dataset class loader")
+        stop("[",class(self)[1],"][FATAL] High Dimensional Dataset is not ",
+             "compatible with Dataset class loader. Aborting...")
       }
 
       message("[",class(self)[1],"][INFO] Loading Dataset...")
 
-      if (header) {
+      if (isTRUE(header)) {
         private$corpus <- read.csv( filepath, header= header,
                                     skip= (skip + 1), sep= sep )
         if(! (class.index %in% 1:ncol(private$corpus)) ){
           stop("[",class(self)[1],"][FATAL] Class index exceeds dataset limits. ",
-               "Must be between 1 and ",ncol(private$corpus)," Aborting...")
+               "Must be between 1 and ",ncol(private$corpus),". Aborting...")
         }
         columnNames <- unlist(strsplit(scan(file = filepath, nlines = 1,
-                                            what = "character"), split = sep))
+                                            what = "character", quiet = TRUE),
+                                       split = sep))
         if (isTRUE(normalize.names)) {
           columnNames <- make.names(columnNames, unique = TRUE)
         }
@@ -53,19 +57,19 @@ Dataset <- R6::R6Class(
         private$corpus <- read.csv(filepath, header= header, skip= skip, sep= sep)
       }
 
-      if(!isFALSE(ignore.columns) && is.numeric(ignore.columns)){
-        self$removeColumns(ignore.columns)
-      }
-
       private$class.index <- class.index
       private$class.name <- names(private$corpus)[private$class.index]
 
-      if ( positive.class %in% private$corpus[,class.index] ){
+      if (is.numeric(ignore.columns)) {
+        self$removeColumns(ignore.columns)
+      }
+
+      if ( positive.class %in% private$corpus[,private$class.index] ){
         private$positive.class <- positive.class
-        private$class.values <- as.character(unique(private$corpus[,class.index]))
+        private$class.values <- as.character(unique(private$corpus[,private$class.index]))
       }else{
         stop("[",class(self)[1],"][FATAL] Positive class value not found. ",
-             "Aborting dataset loading...")
+             "Aborting...")
       }
 
       message("[",class(self)[1],"][INFO] Finish. Total: ",
@@ -86,7 +90,8 @@ Dataset <- R6::R6Class(
     setPositiveClass = function(positive.class) {
       if ( positive.class %in% private$class.values ){
         private$positive.class <- positive.class
-      }else{ stop("[",class(self)[1],"][FATAL] Positive class value not found. Task not done") }
+      }else{ message("[",class(self)[1],"][ERROR] Positive class value not found. ",
+                     "Task not performed") }
     },
     setClassIndex = function(class.index, positive.class) {
       if ( class.index %in% 1:ncol(private$corpus) ) {
@@ -95,118 +100,161 @@ Dataset <- R6::R6Class(
           private$class.index <- class.index
           private$class.name  <- names(private$corpus)[class.index]
           private$positive.class <- positive.class
-        }else{ message("[",class(self)[1],"][ERROR] Positive class value not found. Task not done")}
+        }else{ message("[",class(self)[1],"][ERROR] Positive class value not found. ",
+                       "Task not performed")}
       }else {
-        message("[",class(self)[1],"][ERROR] Class index exceeds dataset limits. Must be between 1 and ",ncol(private$corpus),". Task not done")
+        message("[",class(self)[1],"][ERROR] Class index exceeds dataset limits. ",
+                "Must be between 1 and ",ncol(private$corpus),". Task not performed")
       }
     },
     setClassName = function(class.name, positive.class) {
       if( (length(which(self$getColumnNames() == class.name )) == 0) ){
-        message("[",class(self)[1],"][ERROR] Class name not found. Task not done") }
+        message("[",class(self)[1],"][ERROR] Class name not found. ",
+               "Task not performed") }
       else { self$setClassIndex(which(names(private$corpus) == class.name),positive.class) }
     },
-    createPartitions = function( num.folds, percent.folds, class.balance = TRUE ){
-      if( (missing(num.folds) && missing(percent.folds)) ||
-          ((!is.numeric(num.folds) || length(num.folds) != 1) &&
-           !is.numeric(percent.folds)) ) {
+    createPartitions = function( num.folds = NULL, percent.folds = NULL, class.balance = TRUE ){
+      if (((!is.numeric(num.folds) || length(num.folds) != 1) &&
+           !is.numeric(percent.folds))) {
         message("[",class(self)[1],"][WARNING] Parameters are invalid. ",
                 "Assuming division with default k=10 folds")
-        private$partitions <- createFolds( private$corpus[,private$class.index],
-                                           k = 10, list = TRUE )
-      }else{
-        if ( is.numeric(num.folds) && length(num.folds) == 1 && missing(percent.folds) ) {
+        private$partitions <- caret::createFolds( private$corpus[,private$class.index],
+                                                  k = 10, list = TRUE )
+      } else {
+        if (is.numeric(num.folds) && length(num.folds) == 1 && !is.numeric(percent.folds)) {
           message( "[",class(self)[1],"][INFO] Perfoming dataset partitioning into ",
                    num.folds," groups" )
-          private$partitions <- createFolds( private$corpus[,private$class.index],
-                                             k = num.folds, list = TRUE )
-        }else{
+          private$partitions <- caret::createFolds( private$corpus[,private$class.index],
+                                                    k = num.folds, list = TRUE )
+        } else {
           if (!is.logical(class.balance)) {
-            stop("[",class(self)[1],"][FATAL] class.balance not defined")
+            stop("[",class(self)[1],"][FATAL] class.balance not defined. ",
+                 "Aborting...")
           }
-          if ( is.numeric(num.folds) && length(num.folds) == 1 && is.vector(percent.folds) ) {
-            if ( length(percent.folds) == num.folds && is.numeric(percent.folds) &&
-                 ( sum(percent.folds) == 100 || sum(percent.folds) == 1 ) ) {
-              if ( sum(percent.folds) == 100 ) {
-                percent.folds <- percent.folds * 100
+          if (is.numeric(num.folds) && length(num.folds) == 1 && is.numeric(percent.folds)) {
+            if (length(percent.folds) == num.folds &&
+                (sum(percent.folds) == 100 || sum(percent.folds) == 1)) {
+              if (sum(percent.folds) == 100) {
+                percent.folds <- percent.folds / 100
               }
               message("[",class(self)[1],"][INFO] Perfoming dataset ",
                       "partitioning into ",length(percent.folds)," groups")
               remaining <- private$corpus
 
+              numElemFolds <- round(percent.folds * nrow(private$corpus))
+              class.percents <- table(private$corpus[,self$getClassIndex()])/nrow(private$corpus)
               for (index in 1:(num.folds - 1)) {
                 message("===============================================================")
                 message("[",class(self)[1],"][INFO] Spliting ",index,
                         " group with ", percent.folds[index])
                 message("===============================================================")
-                if (class.balance) {
-                  split <- createDataPartition(remaining[[self$getClassIndex()]],
-                                               p = percent.folds[index],list = FALSE)
+                if (isTRUE(class.balance)) {
+                  if (length(self$getClassValues()) != 2) {
+                    stop("[",class(self)[1],"][ERROR] Create partitions with ",
+                         "option of class.balance for multiclass data is not ",
+                         "still available. Aborting...")
+                  }
+                  split1 <- sample(which(remaining[,self$getClassIndex()] == names(class.percents)[1]),
+                                   round(numElemFolds[[index]] * class.percents[[1]]),
+                                   replace = FALSE)
+                  split2 <- sample(which(remaining[,self$getClassIndex()] == names(class.percents)[2]),
+                                   round(numElemFolds[[index]] * class.percents[[2]]),
+                                   replace = FALSE)
+                  split <- c(split1, split2)
                 } else {
-                  split <- createDataPartition(remaining,
-                                               p = percent.folds[index],list = FALSE)
+                  split <- sample(1:nrow(remaining), numElemFolds[[index]], replace = FALSE )
                 }
-                private$partitions <- append( private$partitions, split)
+                private$partitions <- append(private$partitions,
+                                             list(which(rownames(private$corpus) %in% rownames(remaining)[split])))
                 remaining <- remaining[-split,]
               }
-              private$partitions <-  append( private$partitions, remaining)
-
-              if( ( num.folds < 10 ) ) {
-                names(private$partitions) <- paste0("Fold0",which(1:num.folds < 10))
-              } else {
-                names(private$partitions) <- paste0("Fold",which(1:num.folds >= 10))
+              message("===============================================================")
+              message("[",class(self)[1],"][INFO] Spliting ",index + 1,
+                      " group with ", percent.folds[index + 1])
+              message("===============================================================")
+              private$partitions <-  append(private$partitions,
+                                            list(which(rownames(private$corpus) %in% rownames(remaining))))
+              names(private$partitions) <- paste0("Fold0",
+                                                  which(1:num.folds < 10))
+              if( ( num.folds >= 10 ) ) {
+                names(private$partitions)[10:num.folds] <- paste0("Fold",
+                                                                  which(1:num.folds >= 10))
               }
-            }else{ message("[",class(self)[1],"][ERROR] Fold partition and/or ",
-                           "probability mismatch. Task not performed") }
-          }else{
-            if( ( missing(num.folds) || !is.numeric(num.folds) || length(num.folds) != 1 )
-                && is.numeric(percent.folds) && ( sum(percent.folds) == 100 ||
-                                                  sum(percent.folds) == 1 ) ) {
-              if (sum(percent.folds) == 1 ) {
-                percent.folds <- percent.folds * 100
+            } else { message("[",class(self)[1],"][ERROR] Fold partition and/or ",
+                             "probability mismatch. Task not performed") }
+          } else {
+            if ((!is.numeric(num.folds) || length(num.folds) != 1) &&
+                is.numeric(percent.folds) && (sum(percent.folds) == 100 ||
+                                              sum(percent.folds) == 1)) {
+              if (sum(percent.folds) == 100) {
+                percent.folds <- percent.folds / 100
               }
               message("[",class(self)[1],"][INFO] Perfoming dataset partitioning into ",
                       length(percent.folds)," groups")
               remaining <- private$corpus
+
+              numElemFolds <- round(percent.folds * nrow(private$corpus))
+              class.percents <- table(private$corpus[,self$getClassIndex()])/nrow(private$corpus)
               for (index in 1:(length(percent.folds) - 1)) {
-                message("===============================================================\n")
-                message("[",class(self)[1],"][INFO] Spliting ",index," group with ",percent.folds[index])
                 message("===============================================================")
-                if (class.balance) {
-                  split <- createDataPartition(remaining[[self$getClassIndex()]], p = percent.folds[index],list = FALSE)
+                message("[",class(self)[1],"][INFO] Spliting ",index,
+                        " group with ", percent.folds[index])
+                message("===============================================================")
+                if (isTRUE(class.balance)) {
+                  if (length(self$getClassValues()) != 2) {
+                    stop("[",class(self)[1],"][ERROR] Create partitions with ",
+                         "option of class.balance for multiclass data is not ",
+                         "still available. Aborting...")
+                  }
+                  split1 <- sample(which(remaining[,self$getClassIndex()] == names(class.percents)[1]),
+                                   round(numElemFolds[[index]] * class.percents[[1]]),
+                                   replace = FALSE)
+                  split2 <- sample(which(remaining[,self$getClassIndex()] == names(class.percents)[2]),
+                                   round(numElemFolds[[index]] * class.percents[[2]]),
+                                   replace = FALSE)
+                  split <- c(split1, split2)
                 } else {
-                  split <- createDataPartition(remaining, p = percent.folds[index],list = FALSE)
+                  split <- sample(1:nrow(remaining), numElemFolds[[index]], replace = FALSE )
                 }
-                private$partitions <- append( private$partitions, split )
+                private$partitions <- append(private$partitions,
+                                             list(which(rownames(private$corpus) %in% rownames(remaining)[split])))
                 remaining <- remaining[-split,]
               }
-              private$partitions <- append( private$partitions, remaining )
-              if( ( num.folds < 10 ) ) {
-                names(private$partitions) <- paste0("Fold0",which(1:num.folds < 10))
-              } else {
-                names(private$partitions) <- paste0("Fold",which(1:num.folds >= 10))
+              message("===============================================================")
+              message("[",class(self)[1],"][INFO] Spliting ",index + 1,
+                      " group with ", percent.folds[index + 1])
+              message("===============================================================")
+              private$partitions <-  append(private$partitions,
+                                            list(which(rownames(private$corpus) %in% rownames(remaining))))
+              names(private$partitions) <- paste0("Fold0",
+                                                  which(1:length(percent.folds) < 10))
+              if ((length(percent.folds) >= 10)) {
+                names(private$partitions)[10:length(percent.folds)] <- paste0("Fold",
+                                                                              which(1:length(percent.folds) >= 10))
               }
-            }else{
+            } else {
               message("[",class(self)[1],"][ERROR] Cannot perform ",
-                      "partition process. Aborted")
+                      "partition process. Task not performed")
             }
           }
         }
       }
     },
-    createSubset = function( num.folds = NULL, column.id=NULL,
+    createSubset = function( num.folds, column.id=NULL,
                              opts = list(remove.na=TRUE, remove.const=FALSE)){
       subset <- NULL
       if (is.null(private$partitions)) {
-        message("[",class(self)[1],"][ERROR] Dataset distribution is null. Task not performed")
+        message("[",class(self)[1],"][ERROR] Dataset distribution is null. ",
+                "Task not performed")
         return(NULL)
       }
-      if ( missing(num.folds) || is.null(num.folds) || !is.numeric(num.folds) ||
+      if ( is.null(num.folds) || !is.numeric(num.folds) ||
            !(max(num.folds) %in% c(1:length(private$partitions)) ) )
       {
-        message("[",class(self)[1],"][ERROR] Incorrect number of folds. ",
+        message("[",class(self)[1],"][WARNING] Incorrect number of folds. ",
                 "Must be between 1 and ",length(private$partitions),
-                ". Task not performed")
-        return(NULL)
+                ". Assuming whole dataset")
+        num.folds <- length(private$partitions)
       }
 
       if ( !is.null(column.id) && !(column.id %in% 1:ncol(private$corpus)) ){
@@ -226,13 +274,13 @@ Dataset <- R6::R6Class(
         if(exists("remove.na",opts) && isTRUE(opts$remove.na) ) {
           filtered <- Filter(function(col) !all(is.na(col)), filtered)
           na.remov <- ( (ncol(subset)-1) - ncol(filtered) )
-          message("[Dataset][INFO] Removed columns containing NA values (total of ",na.remov,").")
+          message("[",class(self)[1],"][INFO] Removed columns containing NA values (total of ",na.remov,")")
         }
 
         if(exists("remove.const",opts) && isTRUE(opts$remove.const) ) {
-          filtered <- Filter(function(col) sd(col, na.rm = TRUE) != 0, filtered)
+          filtered <- Filter(function(col) all(duplicated(col)[-1]) != 0, filtered)
           const.remov <- ( (ncol(subset)-1) - ncol(filtered) ) + na.remov
-          message("[Dataset][INFO] Removed columns containing constant values (total of ",const.remov,").")
+          message("[",class(self)[1],"][INFO] Removed columns containing constant values (total of ",const.remov,")")
         }
 
         if( private$class.index >= ncol(filtered) ){
@@ -258,17 +306,17 @@ Dataset <- R6::R6Class(
                            opts = list(remove.na= TRUE, remove.const = FALSE)) {
       trainSet <- NULL
       if (is.null(private$partitions)) {
-        message("[",class(self)[1],"][ERROR] Dataset distribution is null.",
+        message("[",class(self)[1],"][ERROR] Dataset distribution is null. ",
                 "Task not performed")
         return(NULL)
       }
-      if ( missing(num.folds) || is.null(num.folds) || !is.numeric(num.folds) ||
+      if ( is.null(num.folds) || !is.numeric(num.folds) ||
            !(max(num.folds) %in% c(1:length(private$partitions)) ) )
       {
-        message("[",class(self)[1],"][ERROR] Incorrect number of folds.",
+        message("[",class(self)[1],"][WARNING] Incorrect number of folds. ",
                 "Must be between 1 and ",length(private$partitions),
-                ". Task not performed")
-        return(NULL)
+                ". Assuming whole dataset")
+        num.folds <- length(private$partitions)
       }
 
       trainSet <- private$corpus[ sort(Reduce(union,private$partitions[num.folds])), ]
@@ -282,13 +330,13 @@ Dataset <- R6::R6Class(
           filtered <- Filter(function(col) !all(is.na(col)), filtered)
           na.remov <- ( (ncol(trainSet)-1) - ncol(filtered) )
           message("[",class(self)[1],"][INFO] Removed columns containing NA ",
-                  "values (total of ",na.remov,").")
+                  "values (total of ",na.remov,")")
         }
         if( exists("remove.const",opts) && isTRUE(opts$remove.const) ) {
-          filtered <- Filter(function(col) sd(col, na.rm = TRUE) != 0, filtered)
+          filtered <- Filter(function(col) all(duplicated(col)[-1]) != 0, filtered)
           const.remov <- ( (ncol(trainSet)-1) - ncol(filtered) ) + na.remov
           message("[",class(self)[1],"][INFO] Removed columns containing ",
-                  "constant values (total of ",const.remov,").")
+                  "constant values (total of ",const.remov,")")
         }
 
         if ( private$class.index >= ncol(filtered) ) {
@@ -306,17 +354,17 @@ Dataset <- R6::R6Class(
         names(trainSet)[class.index] <- private$class.name
       }
 
-      TrainSet$new( clusters = list(trainSet), class.name = self$getClassName(),
-                    class.values = self$getClassValues(),
+      TrainSet$new( cluster.dist = list(trainSet), class.name = self$getClassName(),
+                    class.values = trainSet[,class.index],
                     positive.class = self$getPositiveClass() )
     },
     removeColumns = function(index) {
       if(!is.null(index) && all(dplyr::between(index,1,ncol(private$corpus)))){
         private$corpus <- private$corpus[,-index]
-        private$class.index <- which(private$corpus %in% private$class.name)
+        private$class.index <- which(names(private$corpus) == private$class.name)
       }else{
         message("[",class(self)[1],"][ERROR] Class index out of bounds. ",
-                "Must be between [1-",ncol(private$corpus),"]")
+                "Must be between [1-",ncol(private$corpus),"]. Task not performed")
       }
     }
   ),
@@ -326,6 +374,6 @@ Dataset <- R6::R6Class(
     class.index = NULL,
     class.name = NULL,
     class.values = NULL,
-    partitions = list()
+    partitions = NULL
   )
 )

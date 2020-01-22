@@ -10,13 +10,12 @@ data <- data.loader$load(filepath ="<path_to_dataset_file>.csv",
 
 data$createPartitions(num.folds = 4)
 
-subset.1_2 <- data1$createSubset( num.folds = 1:2,
+subset.1_2 <- data$createSubset( num.folds = 1:2,
                                   opts = list(remove.na=TRUE, remove.const=TRUE) )
 subset.2_3 <- data$createSubset( num.folds = c(2:3),
                                  opts = list(remove.na=TRUE, remove.const=FALSE) )
 subset.4 <- data$createSubset( num.folds = 4,
                                opts = list(remove.na=TRUE, remove.const=FALSE) )
-
 
 ignore.classifiers <- c( "awnb","awtan","manb","nbDiscrete","nbSearch","tan",
                          "tanSearch","vbmpRadial","lssvmPoly", "polr",

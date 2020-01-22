@@ -1,6 +1,6 @@
 SimpleStrategy <- R6::R6Class(
   classname = "SimpleStrategy",
-  inherit = GenericStrategy,
+  inherit = ClusteringStrategy,
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new()) {
@@ -8,7 +8,7 @@ SimpleStrategy <- R6::R6Class(
       super$initialize( subset = subset, heuristic = heuristic,
                         description = description, configuration = configuration )
     },
-    execute = function(verbose=FALSE, ...) {
+    execute = function(verbose = FALSE, ...) {
       private$all.distribution <- data.frame(k = integer(), deltha = numeric(), dist = I(list()))
       class <- private$subset$getClassValues()
 
@@ -29,10 +29,10 @@ SimpleStrategy <- R6::R6Class(
       notHeuristic <- setdiff(names(heuristic.values), names(heuristic.valid))
       sorted.values <- heuristic.valid[order(heuristic.valid, decreasing = TRUE)]
 
-      ##DISTRIBUTE FEATURES IN CLUSTERS (2 >= k <= maxClusters)
+      ##DISTRIBUTE FEATURES IN CLUSTERS (2 <= k <= maxClusters)
       if(isTRUE(verbose)){
-        message( "[",self$getName(),"][INFO] Performing feature clustering using '",
-                 private$heuristic[[1]]$getName(),"' heuristic" )
+        message( "[",class(self)[1],"][INFO] Performing feature clustering using '",
+                 class(private$heuristic[[1]])[1],"' heuristic" )
         pb <- txtProgressBar(min = 0, max = (maxClusters-1), style = 3 )
       }
 
@@ -75,9 +75,9 @@ SimpleStrategy <- R6::R6Class(
         }
       }
       if (length(notHeuristic) > 0) {
-        message( "[", super$getName(), "][WARNING] ",
+        message( "[", class(self)[1], "][WARNING] ",
                  length(notHeuristic)," features were incompatible with '",
-                 private$heuristic[[1]]$getName(), "' heuristic." )
+                 class(private$heuristic[[1]])[1], "' heuristic" )
         private$not.distribution <- data.frame( cluster = 1,
                                                 dist = I(list(notHeuristic)))
       }else private$not.distribution <- data.frame()
@@ -91,8 +91,8 @@ SimpleStrategy <- R6::R6Class(
     getDistribution = function( num.clusters= NULL, num.groups=NULL,
                                 include.unclustered = FALSE){
       if (is.null(private$best.distribution) || is.null(private$all.distribution)) {
-        message("[", super$getName(), "][ERROR] Clustering not done or errorneous. Returning NULL")
-        return(NULL)
+        stop("[",class(self)[1],"][FATAL] Clustering not done or errorneous. ",
+             "Aborting...")
       }
 
       if(is.null(num.clusters)){
@@ -101,17 +101,17 @@ SimpleStrategy <- R6::R6Class(
         if( is.numeric(num.clusters) && (num.clusters %in% c(2:tail(private$all.distribution$k,n=1))) ){
           distribution <- unlist(private$all.distribution[which(num.clusters==private$all.distribution$k), ]$dist,recursive = FALSE)
         }else{
-          message("[",super$getName(),"][INFO] Number of clusters not found. ",
-                  "Assuming best cluster distribution.")
+          message("[",class(self)[1],"][WARNING] Number of clusters not found. ",
+                  "Assuming best cluster distribution")
           distribution <- unlist(private$all.distribution[which.min(private$all.distribution$deltha), ]$dist,recursive = FALSE)
         }
       }
 
-      if ( !missing(num.groups) && is.numeric(num.groups) &&
+      if ( !is.null(num.groups) && is.numeric(num.groups) &&
            num.groups %in% c(1:length(distribution)) ){
           distribution <- distribution[num.groups]
       }
-      dd <<- private$not.distribution
+
       if( isTRUE(include.unclustered) && nrow(private$not.distribution) ){
         distribution <- append(distribution,lapply(private$not.distribution$dist,
                                                    function(x) {x} ))
@@ -121,11 +121,13 @@ SimpleStrategy <- R6::R6Class(
     createTrain = function( subset, num.clusters= NULL, num.groups=NULL,
                             include.unclustered= FALSE) {
       if ( !inherits(subset,"Subset") ) {
-        stop("[",super$getName(),"][FATAL] Subset parameter must be a 'Subset' object")
+        stop("[",class(self)[1],"][FATAL] Subset parameter must be defined as ",
+             "'Subset' type. Aborting...")
       }
 
       if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
-        stop("[",super$getName(),"][FATAL] Clustering not done or errorneous. Aborting...")
+        stop("[",class(self)[1],"][FATAL] Clustering not done or errorneous. ",
+             "Aborting...")
       }
       distribution <- self$getDistribution( num.clusters = num.clusters,
                                             num.groups = num.groups,
@@ -150,53 +152,64 @@ SimpleStrategy <- R6::R6Class(
       if (!is.null(dir.path)) {
         if (!dir.exists(dir.path)) {
           dir.create(dir.path, recursive = TRUE)
+          if ( dir.exists(dir.path) ) {
+            message("[",class(self)[1],"][INFO] Directory '", dir.path,
+                    "'has been succesfully created")
+          } else {
+            stop("[",class(self)[1],"][FATAL] Cannot create directory '", dir.path,
+                 "'. Aborting...")
+          }
         }
         ggsave( paste0(file.path(dir.path, file.name), ".pdf"), device = "pdf",
                 plot = plot, limitsize = FALSE )
-        message("[",super$getName(),"][INFO] Plot has been succesfully saved",
+        message("[",class(self)[1],"][INFO] Plot has been succesfully saved ",
                 "at: ",file.path(dir.path,file.name,".pdf"))
       } else {  invisible(show(plot)) }
     },
-    saveCSV = function(dir.path, name = NULL, num.clusters = NULL) {
-      if ( missing(dir.path) )
-        stop("[", super$getName(), "][FATAL] Path not defined. Aborting")
+    saveCSV = function(dir.path = NULL, name = NULL, num.clusters = NULL) {
+      if ( is.null(dir.path) )
+        stop("[",class(self)[1],"][FATAL] Path not defined. Aborting...")
 
       if ( is.null(name) ) {
-        name <- private$heuristic[[1]]$getName()
-        message("[", super$getName(), "][FATAL] File name not defined. Using '", name, ".csv'. Aborting")
+        name <- class(private$heuristic[[1]])[1]
+        message("[",class(self)[1],"][WARNING] File name not defined. Using '",
+                 name, ".csv'")
       }
-      
+
       if ( is.null(private$all.distribution) || nrow(private$all.distribution) == 0 ) {
-        stop("[", super$getName(), "][FATAL] Clustering method not performed. Aborting")
+        stop("[",class(self)[1],"][FATAL] Clustering not done or errorneous. ",
+             "Aborting...")
       }
-      
-      if ( !dir.exists(dir.path) ) { 
-        dir.create(dir.path, recursive = TRUE) 
+
+      if ( !dir.exists(dir.path) ) {
+        dir.create(dir.path, recursive = TRUE)
         if ( dir.exists(dir.path) ) {
-          message("[", super$getName(), "][INFO] Directory has been succesfully created")
-        } else { 
-          stop("[", super$getName(), "][FATAL] Cannot create directory. Aborting")
+          message("[",class(self)[1],"][INFO] Directory '", dir.path,
+                  "'has been succesfully created")
+        } else {
+          stop("[",class(self)[1],"][FATAL] Cannot create directory '", dir.path,
+               "'. Aborting...")
         }
       }
 
       if ( is.null(num.clusters) ) {
-        message( "[", super$getName(), "][WARNING] Number of clusters not defined.",
-                 " Saving all cluster configurations." )
+        message( "[",class(self)[1],"][WARNING] Number of clusters not defined. ",
+                 "Saving all cluster configurations" )
         num.clusters <- list(2:max(private$all.distribution$k))
       } else {
         if ( !is.list(num.clusters)) {
-          message( "[", super$getName(), "][WARNING] Type of num.clusters not valid (must be NULL or list type)",
-                   " Saving all cluster configurations." )
+          message( "[",class(self)[1],"][WARNING] Type of num.clusters not valid ",
+                   "(must be NULL or list type). Saving all cluster configurations" )
           num.clusters <- list(2:max(private$all.distribution$k))
         } else {
           if (length(num.clusters[[1]]) > max(private$all.distribution$k)) {
-            message( "[",super$getName(), "][WARNING] Number of clusters exceeds ",
-                     "maximum number of clusters. Saving all cluster configurations." )
+            message( "[",class(self)[1],"][WARNING] Number of clusters exceeds ",
+                     "maximum number of clusters. Saving all cluster configurations" )
             num.clusters <- list(2:max(private$all.distribution$k))
           } else {
             if ( !all(unlist(num.clusters) <= max(private$all.distribution$k) && unlist(num.clusters) >= min(private$all.distribution$k)) ) {
-              message( "[",super$getName(), "][WARNING] Number of clusters outsides the range of ",
-                       "minimum and maximum number of clusters. Saving all cluster configurations." )
+              message( "[",class(self)[1],"][WARNING] Number of clusters outsides the range of ",
+                       "minimum and maximum number of clusters. Saving all cluster configurations" )
               num.clusters <- list(2:max(private$all.distribution$k))
             }
           }
@@ -204,10 +217,10 @@ SimpleStrategy <- R6::R6Class(
       }
       write.table( data.frame( k = private$all.distribution[private$all.distribution$k %in% unlist(num.clusters), "k"],
                                dispersion = private$all.distribution[private$all.distribution$k %in% unlist(num.clusters), "deltha"],
-                               row.names = NULL), 
-                   file = file.path(dir.path, paste0(name,".csv")), 
-                   row.names = FALSE, 
-                   col.names = TRUE, 
+                               row.names = NULL),
+                   file = file.path(dir.path, paste0(name,".csv")),
+                   row.names = FALSE,
+                   col.names = TRUE,
                    sep = ";" )
     }
   )

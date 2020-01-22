@@ -2,27 +2,29 @@ Subset <- R6::R6Class(
   classname = "Subset",
   portable = TRUE,
   public = list(
-    initialize = function(dataset, feature.id=NULL, class.index,
-                          class.values, positive.class){
+    initialize = function(dataset, class.index, class.values,
+                          positive.class, feature.id=NULL){
       if ( any(is.null(dataset), nrow(dataset) == 0, !is.data.frame(dataset)) ) {
         stop("[",class(self)[1],"][FATAL] Dataset empty or incorrect ",
-             "(must be a data.frame). Aborting.")
+             "(must be a data.frame). Aborting...")
       }
 
-      if( missing(class.index) || is.null(class.index) ||
+      if( is.null(class.index) ||
           !(class.index %in% c(1:nrow(dataset))) ){
-        stop("[",class(self)[1],"][FATAL] Class index missing or incorrect. Must be between 1 and",
-              nrow(dataset)," Aborting.")
+        stop("[",class(self)[1],"][FATAL] Class index paramenter is incorrect. ",
+             "Must be between 1 and ", nrow(dataset),". Aborting...")
       }
 
       if (!(positive.class %in% as.character(unique(dataset[,class.index])) ) ) {
-        stop("[",class(self)[1],"][FATAL] Positive Class is incorrect. Must be '",
-             paste0(as.character(unique(dataset[,class.index]))))
+        stop("[",class(self)[1],"][FATAL] Positive Class parameter is incorrect. ",
+             "Must be '", paste(as.character(unique(dataset[,class.index])), collapse = "' '"),
+             "'. Aborting...")
       }
 
       if (! all(class.values %in% as.character(unique(dataset[,class.index])) ) ) {
-        stop("[",class(self)[1],"][FATAL] Class values missmatch. Must be '",
-             paste0(as.character(unique(dataset[,class.index]))))
+        stop("[",class(self)[1],"][FATAL] Class values parameter is incorrect. ",
+             "Must be '", paste(as.character(unique(dataset[,class.index])), collapse = "' '"),
+             "'. Aborting...")
       }
 
       private$data <- dataset
@@ -52,7 +54,7 @@ Subset <- R6::R6Class(
       }
 
       if(!is.logical(verbose)){
-        message("[",class(self)[1],"][WARNING] Verbose type is not valid ",
+        message("[",class(self)[1],"][WARNING] Verbose type is not valid. ",
                 "Assuming 'FALSE' as default value")
         verbose <- FALSE
       }

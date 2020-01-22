@@ -2,26 +2,26 @@ PerformanceComparator <- R6::R6Class(
   classname = "PerformanceComparator",
   portable = TRUE,
   public = list(
-    initialize = function (test.set, op.results, pareto.optimal= NULL, measures){
-      
+    initialize = function (test.set, op.results, pareto.optimal = NULL, measures){
+
       if ( !is.list(op.results) ) op.results <- list(op.results)
       if ( !is.list(measures) ) measures <- list(measures)
-      
+
       if ( !inherits(test.set,"Subset")  )
-        stop("[",class(self)[1],"][FATAL] Test dataset missing or incorrect.",
-             " Should inherit from 'Subset' class. Aborting...")
+        stop("[",class(self)[1],"][FATAL] Test dataset parameter must be inherit ",
+             "from 'Subset' class. Aborting...")
 
       if ( !all(sapply(op.results, inherits,"Optimizers")) )
-        stop("[",class(self)[1],"][FATAL] Optimizers must inherit from ",
-             "'Optimizers' class. Aborting...")
-      
+        stop("[",class(self)[1],"][FATAL] Optimizers results parameter must ",
+             "inherit from 'Optimizers' class. Aborting...")
+
       if ( !all(sapply(measures, inherits,"MeasureFunction")) )
         stop("[",class(self)[1],"][FATAL] Measures should be a list comprised ",
              "of 'MeasureFunction' objects. Aborting...")
-      
+
       if ( !inherits(pareto.optimal,"ParetoDistance") ){
         private$distance <- EuclideanDistance$new()
-        message("[",class(self)[1],"][WARNING] Pareto distance function should ",
+        message("[",class(self)[1],"][WARNING] Pareto distance function must be ",
             "inherit from 'ParetoDistance' class. Assuming '",
             private$distance$getName(),"' method")
       }else private$distance <- pareto.optimal
@@ -32,60 +32,60 @@ PerformanceComparator <- R6::R6Class(
       message("[",class(self)[1],"][INFO] Computing predictions")
       message("[",class(self)[1],"][INFO] ----------------------------------",
               "---------------------")
-      
+
       prediction.cluster <- PredictionList$new( d2mcs.models$getMetric() )
-      invisible(sapply ( 1:op.results$getModels()$size(), 
+      invisible(sapply ( 1:op.results$getModels()$size(),
         function(pos, models, pred.cluster, set, instances){
           message("[",class(self)[1],"][INFO] Computing predictions for cluster",
                   " '",pos,"' of '",models$size(),"'\n",sep="")
           message("[",class(self)[1],"][INFO] ------------------------------",
                   "-------------------------\n",sep="")
-          pred <- Prediction$new( model = models$getAt(pos)$getObject(), 
-                                  class.values = levels(set$getClass()), 
+          pred <- Prediction$new( model = models$getAt(pos)$getObject(),
+                                  class.values = levels(set$getClass()),
                                   positive.class = op.results$getPositiveClass() )
           pred$execute(instances)
           pred.cluster$addPrediction(pred)
-        }, models= op.results$getModels(), pred.cluster= prediction.cluster, set= test.set, 
+        }, models= op.results$getModels(), pred.cluster= prediction.cluster, set= test.set,
         instances = test.set$getInstances(ignore.class = TRUE) ) )
-      
+
       real.class <- test.set$getClass()
       negative.class <- levels(real.class)[ which(levels(real.class) != op.results$getPositiveClass()) ]
 
-      opt.models <- do.call(c,lapply(op.results$getOptimizers(), 
+      opt.models <- do.call(c,lapply(op.results$getOptimizers(),
         function(opt, predictions, pareto.distance, real, pos.class, neg.class){
-          ifelse( inherits(opt,"MOOData"), 
-                  weights <- as.numeric(opt$getValues(pareto.distance)[1,]), 
+          ifelse( inherits(opt,"MOOData"),
+                  weights <- as.numeric(opt$getValues(pareto.distance)[1,]),
                   weights <- as.numeric(opt$getValues()) )
           preds <- voting$execute( predictions, weights )
-        ModelPerformance$new( model.name = opt$getName(), 
-                              ConFMatrix$new( caret::confusionMatrix( factor(preds,levels=c(0,1), 
-                                                                             labels=c(neg.class,pos.class)), 
+        ModelPerformance$new( model.name = opt$getName(),
+                              ConfMatrix$new( caret::confusionMatrix( factor(preds,levels=c(0,1),
+                                                                             labels=c(neg.class,pos.class)),
                                                                       relevel(real,ref=neg.class), positive=pos.class) ), weights)
-      }, pareto.distance = private$distance, predictions= prediction.cluster, real = real.class, 
+      }, pareto.distance = private$distance, predictions= prediction.cluster, real = real.class,
          pos.class = op.results$getPositiveClass(), neg.class= negative.class ) )
 
       preds <- voting$execute(prediction.cluster, weights=d2mcs.models$getWeights() )
-      
-      cl <- ModelPerformance$new( model.name = "Classifier", 
-                                  conf.mat = ConFMatrix$new(caret::confusionMatrix( factor(preds,levels=c(0,1), labels=c(negative.class,op.results$getPositiveClass())), 
-                                                                                    relevel(real.class,ref=negative.class), 
-                                                                                    positive=op.results$getPositiveClass())), 
+
+      cl <- ModelPerformance$new( model.name = "Classifier",
+                                  conf.mat = ConfMatrix$new(caret::confusionMatrix( factor(preds,levels=c(0,1), labels=c(negative.class,op.results$getPositiveClass())),
+                                                                                    relevel(real.class,ref=negative.class),
+                                                                                    positive=op.results$getPositiveClass())),
                                   weights = d2mcs.models$getWeights() )
       private$results <- c( opt.models, cl )
-      
+
       df <- as.data.frame( do.call(rbind,lapply(private$results, function(model, measures){
         lapply(measures, function(measure,model){
           measure$compute(model)
         }, model=model)
       }, measures = measures )) )
-      
+
       private$performance <- cbind( df[!sapply(df, is.list)], (t(apply( df[sapply( df, is.list)], 1, unlist))) )
       private$performance <- cbind( sapply(results, function(x) {x$getName() } ), private$performance )
       colnames(private$performance) <- c("Models",sapply(measures, function(m) {m$getName() } ) )
     },
     plotResults = function(){
       plot <- reshape2::melt(private$performance,id="Models")
-      ggplotly(ggplot(plot, aes(x=variable,y=value, fill=Models)) + 
+      ggplotly(ggplot(plot, aes(x=variable,y=value, fill=Models)) +
                geom_bar(position = "dodge", stat="identity") + theme(legend.position = "top") )
     },
     showResults = function(){  private$performance }

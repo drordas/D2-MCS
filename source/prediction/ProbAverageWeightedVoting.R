@@ -19,7 +19,7 @@ ProbAverageWeightedVoting <- R6::R6Class(
     getWeights = function() { private$weights },
     setWeights = function(weights) {
       if (missing(weights) || is.null(weights)) {
-        message("[", super$getName(), "][WARNING] Weights values not changed due",
+        message("[", super$getName(), "][WARNING] Weights values not changed due ",
                 "to inconsistency error")
       } else {
         private$weights <- data.frame(matrix(NA, nrow = 1, ncol = 0),
@@ -36,12 +36,12 @@ ProbAverageWeightedVoting <- R6::R6Class(
     },
     execute = function(predictions, verbose = FALSE ) {
       if (!inherits(predictions, "ClusterPredictions")) {
-        stop("[", class(self)[1], "][FATAL] Invalid prediction type. Must be a ",
-             "ClusterPrediction object. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Predictions parameter must be defined",
+             "as 'ClusterPrediction' type. Aborting...")
       }
 
       if (predictions$size() <= 0) {
-        stop("[",class(self)[1],"][FATAL] Cluster predictions were not computed",
+        stop("[",class(self)[1],"][FATAL] Cluster predictions were not computed. ",
              "Aborting...")
       }
 
@@ -50,8 +50,8 @@ ProbAverageWeightedVoting <- R6::R6Class(
                 length(private$weights) != predictions$size() ) )
       {
         if (isTRUE(verbose)) {
-          message( "[", class(self)[1], "][WARNING] Weight values are missing or",
-                   " incorrect. Assuming default model performance values" )
+          message( "[", class(self)[1], "][WARNING] Weight values are missing or ",
+                   "incorrect. Assuming default model performance values" )
         }
         private$weights <- sapply(predictions$getAll(), function(x) {
           x$getModelPerformance()
@@ -120,7 +120,6 @@ ProbAverageWeightedVoting <- R6::R6Class(
     }
   ),
   private = list(
-    final.prediction = NULL,
     weights = NULL
   )
 )

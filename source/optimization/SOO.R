@@ -19,25 +19,25 @@ SOO <- R6::R6Class(
         stop("[",private$name,"][FATAL] Initial weights should be previously defined")
 
       if(!is.null(init.weights)) private$init.weights <- init.weights
-      
+
       private$init.weights <- as.vector(private$parse.population(init.weights))
-      
-      cat("[",private$name,"][INFO] Executing ",private$name," Algorithm with ",private$generations,
-          " generation\n",sep="")
-      
+
+      message("[",private$name,"][INFO] Executing ",private$name," Algorithm with ",private$generations,
+              " generation")
+
       lower <- rep( 0, length(private$init.weights) )
       upper <- rep( as.numeric(length(private$init.weights)), length(private$init.weights) )
-      
+
       private$optimize <- optimx(par = private$init.weights,
-                                 fn = fitness, 
+                                 fn = fitness,
                                  gr = NULL,
                                  method = c("BFGS","CG","Nelder-Mead","L-BFGS-B","nlm","nlminb","Rcgmin",
                                             "Rvmmin","newuoa","bobyqa"),
                                  lower = lower, upper = upper,
                                  control = list(maximize=private$maximize, follow.on= FALSE, kkt=FALSE),
                                  min.function = private$min.function$computeMeasure )
-      cat("[",private$name,"][INFO] Finish execution of ",private$name," Algorithm with ",private$generations,
-          " generations\n",sep="")
+      message("[",private$name,"][INFO] Finish execution of ",private$name," Algorithm with ",private$generations,
+              " generations")
     },
     getResult = function(n.positive, n.negative){
       private$min.function$pack(private$optimize,n.positive,n.negative)
@@ -46,7 +46,7 @@ SOO <- R6::R6Class(
   private = list(
     parse.population = function(init.population){
       if( !"matrix" %in% class(init.population) ){
-        if(is.vector(init.population)) 
+        if(is.vector(init.population))
           init.population <- matrix( as.numeric(init.population), nrow = 1, ncol= length(init.population) )
         else init.population <- matrix( as.numeric(init.population), nrow = nrow(init.population), ncol= ncol(init.population) )
       }

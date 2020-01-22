@@ -3,72 +3,94 @@ CombinedVoting <- R6::R6Class(
   portable = TRUE,
   inherit = VotingStrategy,
   public = list(
-    initialize = function(voting.scheme, combined.metrics, methodology, metrics, cutoff = NULL) {
-      if (!inherits(voting.scheme, "SimpleVoting")) {
-        stop("[", class(self)[1], "][FATAL] Invalid voting.scheme type. Must be a ",
-             "SimpleVoting object. Aborting...")
+    initialize = function(voting.schemes, combined.metrics, methodology, metrics) {
+      if (!inherits(voting.schemes, "SimpleVoting")) {
+        stop("[", class(self)[1], "][FATAL] Voting.schemes parameter must be ",
+             "defined as 'SimpleVoting' type. Aborting...")
       }
       if (!inherits(combined.metrics, "CombinedMetrics")) {
-        stop("[", class(self)[1], "][FATAL] Invalid combined.metrics type. Must be a ",
-             "CombinedMetrics object. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Combined.metrics parameter must be ",
+             "defined as 'CombinedMetrics' type. Aborting...")
       }
       if (!inherits(methodology, "Methodology")) {
-        stop("[", class(self)[1], "][FATAL] Invalid methodology type. Must be a ",
-             "SimpleVoting object. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Methodology parameter must be ",
+             "defined as 'SimpleVoting' type. Aborting...")
       }
 
       if ( !all(is.character(metrics), length(metrics) >= 2) ) {
-        stop("[", class(self)[1], "][FATAL] Invalid values of metrics ")
-      }
-
-      if (!is.null(cutoff) && !is.numeric(cutoff)) {
-        stop("[", class(self)[1], "][FATAL] Invalid values of cutoff. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Invalid values of metrics")
       }
 
       super$initialize()
-      private$voting.scheme <- voting.scheme
+      private$voting.schemes <- voting.schemes
       private$combined.metrics <- combined.metrics
       private$methodology <- methodology
       private$metrics <- metrics
-      private$cutoff <- cutoff
+      private$final.pred <- FinalPred$new()
     },
-    getVotingScheme = function() { private$voting.scheme },
     getCombinedMetrics = function() { private$combined.metrics },
     getMethodology = function() { private$methodology },
-    getMetrics = function() { private$metrics },
-    getCutoff = function() { private$cutoff },
+    getFinalPred = function(type= NULL, target = NULL, filter = NULL) {
+      if( any(is.null(type), !(type %in% c("raw","prob")) )){
+        private$final.pred
+      }else{
+        if(!is.logical(filter)){
+          message("[", class(self)[1], "][WARNING] Filter parameter must be ",
+                  "defined as 'logical' type. Aborting...")
+          filter <- FALSE
+        }
+        class.values <- private$final.pred$getClassValues()
+
+        switch(type,
+               "prob" = {
+                 if (is.null(target) || !(target %in% class.values )) {
+                   message("[", class(self)[1], "][WARNING] Target not ",
+                           "specified or invalid. Using '",
+                           private$final.pred$getPositiveClass(),
+                           "' as default value")
+                   target <- private$final.pred$getPositiveClass()
+                 }
+                 if (filter) {
+                   private$final.pred$getProb()[private$final.pred$getRaw() == target,
+                                                target, drop = FALSE]
+                 } else {
+                   private$final.pred$getProb()[, target, drop = FALSE]
+                 }
+               },
+               "raw" = {
+                 if (filter) {
+                   private$final.pred$getRaw()[private$final.pred$getRaw() == target,
+                                               ,drop = FALSE]
+                 } else { private$final.pred$getRaw() }
+               }
+        )
+      }
+    },
     execute = function(predictions, verbose = FALSE) {
 
       if ( !all(sapply(predictions, function(pred) {
-                                    !inherits(pred, "ClusterPrediction") } )) )
-      {
-        stop("[", class(self)[1], "][FATAL] Invalid prediction type. Must be a ",
-             "ClusterPrediction object. Aborting...")
+        !inherits(pred, "ClusterPrediction") } )) ) {
+        stop("[", class(self)[1], "][FATAL] Predictions parameter must be a ",
+             "list comprised of 'ClusterPrediction' objects. Aborting...")
       }
 
       if ( any(sapply(predictions, function(pred) { pred$size() <= 0 } ))) {
-        stop("[", class(self)[1], "][FATAL] Cluster predictions were not",
-             " computed. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Cluster predictions were not ",
+             "computed. Aborting...")
       }
 
-      if (!all(self$getMetrics() %in% names(predictions))) {
-        stop("[", class(self)[1], "][FATAL] predictions are incorrect. ",
-             "Must have the required metrics: ",
-             paste(self$getMetrics(), collapse = ", "), ". Aborting...")
+      if (!any(self$getMetrics() %in% names(predictions))) {
+        stop("[", class(self)[1], "][FATAL] metrics are incorrect. ",
+             "Must be: [",paste(names(predictions), collapse = ", "),
+             "]. Aborting...")
       }
-
-      if (isTRUE(verbose)) {
-        message("[", class(self)[1], "][INFO] Refresh final predictions.")
-      }
-
-      private$final.pred <- list(prob = data.frame(), raw = c())
 
       predictions <- predictions[self$getMetrics()]
 
-      private$positive.class <- predictions[[1]]$getPositiveClass()
-      private$class.values <- predictions[[1]]$getClassValues()
-      negative.class <- setdiff(self$getClassValues(),
-                                self$getPositiveClass())
+      positive.class <- predictions[[1]]$getPositiveClass()
+      class.values <- predictions[[1]]$getClassValues()
+      negative.class <- setdiff(class.values,
+                                positive.class)
 
       all.raw.pred <- data.frame(matrix(nrow = length(predictions[[1]]$getAll()[[1]]$getPrediction(type = "raw")),
                                         ncol = 0))
@@ -78,11 +100,10 @@ CombinedVoting <- R6::R6Class(
       for (pos in seq_len(length(predictions))) {
         metric <- names(predictions)[[pos]]
         predictions.metric <- predictions[[pos]]
-        private$voting.scheme$execute(predictions = predictions.metric,
-                                      metric = metric,
-                                      cutoff = self$getCutoff(), verbose = verbose)
+        private$voting.schemes$execute(predictions = predictions.metric,
+                                      verbose = verbose)
         all.raw.pred <- cbind(all.raw.pred,
-                              private$voting.scheme$getPrediction("raw"))
+                              self$getVotingSchemes()$getFinalPred(type = "raw"))
         names(all.raw.pred)[length(all.raw.pred)] <- metric
 
         clusterPredictions <- sapply(predictions.metric$getAll(), function(x) {
@@ -93,6 +114,7 @@ CombinedVoting <- R6::R6Class(
         all.prob.pred <- cbind(all.prob.pred,
                                clusterPredictions)
       }
+
       final.raw.pred <- c()
       final.prob.pred <- data.frame()
 
@@ -103,42 +125,37 @@ CombinedVoting <- R6::R6Class(
         names(row.prob.pred) <- names(all.prob.pred)
         if (self$getCombinedMetrics()$getFinalPrediction(raw.pred = row.raw.pred,
                                                          prob.pred = row.prob.pred,
-                                                         positive.class = self$getPositiveClass(),
-                                                         negative.class = negative.class,
-                                                         cutoff = self$getCutoff())) {
-          final.raw.pred <- c(final.raw.pred, self$getPositiveClass())
+                                                         positive.class = positive.class,
+                                                         negative.class = negative.class)) {
+          final.raw.pred <- c(final.raw.pred, positive.class)
 
         } else { final.raw.pred <- c(final.raw.pred, negative.class) }
 
         prob.pred <- self$getMethodology()$compute(raw.pred = row.raw.pred,
                                                    prob.pred = row.prob.pred,
-                                                   positive.class = self$getPositiveClass(),
-                                                   negative.class = negative.class,
-                                                   cutoff = self$getCutoff())
+                                                   positive.class = positive.class,
+                                                   negative.class = negative.class)
 
         final.prob.pred <- rbind(final.prob.pred, data.frame(prob.pred, abs(1 - prob.pred)))
       }
 
-      private$final.pred$raw <- factor(final.raw.pred,
-                                       levels = self$getClassValues())
-      private$final.pred$raw  <- relevel(self$getFinalPred()$raw,
-                                         ref = self$getPositiveClass())
+      private$final.pred$set( prob = final.prob.pred, raw = final.raw.pred,
+                              class.values = class.values,
+                              positive.class = positive.class )
 
-      private$final.pred$raw <- as.data.frame(self$getFinalPred()$raw,
-                                              row.names = row.names(final.prob.pred))
-
-      colnames(private$final.pred$raw) <- c("Target Value")
-
-      private$final.pred$prob <- final.prob.pred
-      names(private$final.pred$prob) <- c(self$getPositiveClass(), setdiff(self$getClassValues(),
-                                                                           self$getPositiveClass()))
+      combined.voting <- list(self)
+      names(combined.voting) <- class(self$getMethodology())[1]
+      combined.voting <- list(combined.voting)
+      names(combined.voting) <- as.character(self$getVotingSchemes()$getCutoff())
+      combined.voting <- list(combined.voting)
+      names(combined.voting) <-  paste0(self$getMetrics(),
+                                        collapse = "-")
+      combined.voting
     }
   ),
   private = list(
-    voting.scheme = NULL,
     combined.metrics = NULL,
     methodology = NULL,
-    metrics = NULL,
-    cutoff = NULL
+    final.pred = NULL
   )
 )

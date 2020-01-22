@@ -17,7 +17,7 @@ FinalPred <- R6::R6Class(
 
       if(any(is.null(prob), is.null(raw), nrow(prob)==0,
              ncol(row)==0, length(raw)==0) ){
-        stop("[",class(self)[1],"][FATAL] Predictions were not computed ",
+        stop("[",class(self)[1],"][FATAL] Predictions were not computed. ",
              "Aborting...")
       }
 

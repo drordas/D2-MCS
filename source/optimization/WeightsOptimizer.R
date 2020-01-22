@@ -16,8 +16,8 @@ WeightsOptimizer <- R6::R6Class(
       loadPackages(private$dependences)
     },
     execute = function(fitness = NULL){
-      stop("[",class(self)[1],"][FATAL] Method 'execute' is abstract.",
-           "Should be implemented in inherited class")
+      stop("[",class(self)[1],"][FATAL] Class is abstract. ",
+           "Method should be defined in inherited class. Aborting...")
     },
     #plot = function(){
     #  stop("[WeightsOptimizer][ERROR] Method 'plot' is abstract. Should be implemented in inherited class\n")

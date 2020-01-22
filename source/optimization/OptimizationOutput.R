@@ -26,12 +26,12 @@ OptimizationOutput <- R6::R6Class(
     getBestSolution = function(pareto.distance = NULL){
       if( !is.null(pareto.distance) ){
         if( !inherits(pareto.distance,"ParetoDistance") ){
-           cat("[OptimizationOutput][WARNING] Input parameter must inherit from ParetoDistance class. Using default method\n")
-           method <- EuclideanDistance$new()   
+           message("[OptimizationOutput][WARNING] Input parameter must inherit from ParetoDistance class. Using default method")
+           method <- EuclideanDistance$new()
         }else method <- pareto.distance
       }else method <- EuclideanDistance$new()
-      
-      cat("[OptimizationOutput][INFO] Executing method '",method$getName(),"'\n", sep="")
+
+      message("[OptimizationOutput][INFO] Executing method '",method$getName(),"'")
       method$compute(private$pareto.front[,-which(colnames(private$pareto.front)=="p.front")])
       method$solve.ties()
     },
@@ -44,10 +44,10 @@ OptimizationOutput <- R6::R6Class(
     plotPareto = function(reference.values){
       if( ( ncol(private$pareto.front) - 1  ) == 2 ){
         colnames <-  names(private$pareto.front)
-        ggplot(private$pareto.front, aes_string(x=colnames[1], y=colnames[2] ) ) + labs(color = "Pareto Nº") + 
+        ggplot(private$pareto.front, aes_string(x=colnames[1], y=colnames[2] ) ) + labs(color = "Pareto Nº") +
           geom_point(aes_string(color=as.factor(private$pareto.front[,3]))) +
-          stat_smooth(aes_string( x=colnames[1], y=colnames[2], color=as.factor(private$pareto.front[,3]) ), method="lm", se=FALSE ) 
-      }else cat("[OptimizationOutput][ERROR] 3D plot not implemented yet\n")
+          stat_smooth(aes_string( x=colnames[1], y=colnames[2], color=as.factor(private$pareto.front[,3]) ), method="lm", se=FALSE )
+      }else message("[",class(self)[1],"][ERROR] 3D plot not implemented yet")
     }
   ),
   private = list(
@@ -56,6 +56,6 @@ OptimizationOutput <- R6::R6Class(
     pareto.front = NULL,
     opt.values = NULL,
     n.positive = NULL,
-    n.negative = NULL 
+    n.negative = NULL
   )
 )

@@ -11,7 +11,9 @@ ClassWeightedVoting <- R6::R6Class(
                   "the interval between 0 and 1. Assuming 0.5.")
           cutoff <- 0.5
       } else {
-        message("[", class(self)[1], "][WARNING] Cut-off method has not been implemented")
+        message("[", class(self)[1], "][WARNING] Cut-off method has not been ",
+                "implemented. Assuming 0.5.")
+        cutoff <- 0.5
       }
       super$initialize(cutoff = cutoff)
       private$weights <- weights
@@ -19,7 +21,7 @@ ClassWeightedVoting <- R6::R6Class(
     getWeights = function() { private$weights },
     setWeights = function(weights) {
       if (missing(weights) || is.null(weights)) {
-        message("[", super$getName(), "][WARNING] Weights values not changed due",
+        message("[", super$getName(), "][WARNING] Weights values not changed due ",
                 "to inconsistency error")
       } else {
         private$weights <- data.frame(matrix(NA, nrow = 1, ncol = 0),
@@ -36,8 +38,8 @@ ClassWeightedVoting <- R6::R6Class(
     },
     execute = function(predictions, verbose = FALSE ) {
       if (!inherits(predictions, "ClusterPredictions")) {
-        stop("[", class(self)[1], "][FATAL] Invalid prediction type. Must be a ",
-             "ClusterPrediction object. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Predictions parameter must be defined ",
+             "as 'ClusterPrediction' type. Aborting...")
       }
 
       if (predictions$size() <= 0) {
@@ -55,8 +57,8 @@ ClassWeightedVoting <- R6::R6Class(
                 length(private$weights) != predictions$size() ) )
       {
         if (isTRUE(verbose)) {
-          message( "[", class(self)[1], "][WARNING] Weight values are missing or",
-                   " incorrect. Assuming default model performance values" )
+          message( "[", class(self)[1], "][WARNING] Weight values are missing or ",
+                   "incorrect. Assuming default model performance values" )
         }
         private$weights <- sapply(predictions$getAll(), function(x) {
           x$getModelPerformance()

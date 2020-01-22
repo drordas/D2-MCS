@@ -3,7 +3,6 @@ StrategyConfiguration <- R6::R6Class(
   portable = TRUE,
   public = list(
     initialize = function(){ },
-    getName = function() { class(self)[1] },
     minNumClusters = function(...){
       message("[",class(self)[1],"][INFO] Using default configuration: 2 clusters minimun")
       2

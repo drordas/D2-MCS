@@ -10,10 +10,10 @@ FisherTestHeuristic <- R6::R6Class(
         fisher.test(table(col1, col2))$p.value
       } else {
         if(!private$isBinary(col1))
-          message( "[", super$getName(), "][WARNING] Feature '",
-                   column.names[1],"' is not binary. Returning NA")
-        else message( "[", super$getName(), "][WARNING] Class '",
-                      column.names[2],"' is not binary. Returning NA")
+          message("[",class(self)[1],"][WARNING] Column '",
+                  column.names[1],"' is not binary. Returning NA")
+        else message("[", class(self)[1],"][WARNING] Column '",
+                     column.names[2],"' is not binary. Returning NA")
         NA
       }
     }
