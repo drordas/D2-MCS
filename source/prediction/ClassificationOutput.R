@@ -22,7 +22,7 @@ ClassificationOutput <- R6::R6Class(
                                 sapply(metrics, function(cutoffs) {
                                     sapply(cutoffs, function(voting.names) {
                                       sapply(voting.names, function(votings) {
-                                        votings$getPositiveClass() } )
+                                        votings$getFinalPred()$getPositiveClass() } )
                                       } )
                                   } ) }
                                 )) )
@@ -31,7 +31,7 @@ ClassificationOutput <- R6::R6Class(
                               sapply(metrics, function(cutoffs) {
                                 sapply(cutoffs, function(voting.names) {
                                   sapply(voting.names, function(votings) {
-                                    votings$getClassValues() } )
+                                    votings$getFinalPred()$getClassValues() } )
                                 } )
                               } ) }
                             )) )
@@ -83,6 +83,14 @@ ClassificationOutput <- R6::R6Class(
              "and test respectively. Aborting... ")
       }
 
+      real.values <- test.set$getClassValues()
+
+      if(!all(unique(real.values) %in% union(private$positive.class,
+                                             private$negative.class) )){
+        stop("[",class(self)[1],"][FATAL] Predicted values and Real values ",
+             "missmatch, Aborting... ")
+      }
+
       if(!is.character(cutoff.values)) cutoff.values <- as.character(cutoff.values)
 
       if(length(cutoff.values) != 0){
@@ -95,6 +103,7 @@ ClassificationOutput <- R6::R6Class(
       }else{
         message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid.",
                 " Using all cutoffs")
+        aval.cutoffs <- private$available$cutoffs
       }
 
       if(!is.null(metric.names)){
@@ -107,6 +116,7 @@ ClassificationOutput <- R6::R6Class(
       }else{
         message("[",class(self)[1],"][INFO] Metrics are not defined. ",
                 "Using all metrics")
+        aval.metrics <- private$available$metrics
       }
 
       if(!is.null(private$available$votings)){
@@ -115,10 +125,12 @@ ClassificationOutput <- R6::R6Class(
         }else {
           message("[",class(self)[1],"][WARNING] Defined votings are not available. ",
                   "Using all votings")
+          aval.votings <- private$available$votings
         }
       }else{
         message("[",class(self)[1],"][INFO] Votings are not defined. ",
                 "Using all votings")
+        aval.votings <- private$available$votings
       }
 
       valid.votings <- private$getVotings(aval.metrics,aval.cutoffs,aval.votings)
@@ -131,27 +143,25 @@ ClassificationOutput <- R6::R6Class(
         return(performances)
       }
 
-
-      real.values <- test.set$getClassValues()
-
       if(!is.factor(real.values)){
         real.values <- relevel(x = factor(real.values,
                                           levels=c(private$positive.class,
-                                                   setdiff(voting.scheme$getClassValues(),
-                                                           private$positive.class))),
+                                                   private$negative.class)),
                                ref = private$positive.class)
       }
 
       for (voting.name in names(valid.votings)) {
         voting <- valid.votings[[voting.name]]
-        if (!identical( test.set$getPositiveClass() %in%
-                        voting$getClassValues()) ) {
+        if ( !(test.set$getPositiveClass() %in% voting$getFinalPred()$getClassValues() )) {
           stop("[", class(self)[1], "][FATAL] Positive class mismatch '",
                test.set$getPositiveClass(), "' vs [",
-               paste0(voting$getClassValues(), collapse = ", "), "]")
+               paste0(voting$getFinalPred()$getClassValues(),
+                      collapse = ", "), "]")
         }
 
-        pred.values <- voting$getPrediction(type = "raw")[,1]
+        pred.values <- voting$getFinalPred()$getRaw()
+        voting.positive <- voting$getFinalPred()$getPositiveClass()
+        voting.negative <- voting$getFinalPred()$getNegativeClass()
 
         if ( !all(levels(real.values) %in% unique(pred.values)) ) {
           stop("[",class(self)[1],"][FATAL] Real target values and predicted ",
@@ -160,10 +170,9 @@ ClassificationOutput <- R6::R6Class(
 
         if(!is.factor(pred.values)){
           pred.values <- relevel(x = factor(pred.values,
-                                            levels = c(private$positive.class,
-                                                       setdiff(voting.scheme$getClassValues(),
-                                                               private$positive.class))),
-                                 ref = private$positive.class)
+                                            levels = c(voting.positive,
+                                                       voting.negative)),
+                                 ref = voting.positive)
         }
 
         performance <- do.call(rbind, lapply(measures, function(entry, cf) {
@@ -215,17 +224,19 @@ ClassificationOutput <- R6::R6Class(
                 paste0(file.path(dir.path, peformance.name),".pdf"))
       }
     },
-    getPredictions = function(voting.names = NULL, type = NULL, target = NULL,
-                              metric.names = NULL, cutoff.values = NULL,
+    getPredictions = function(voting.names = NULL, metric.names = NULL,
+                              cutoff.values = NULL, type = NULL, target = NULL,
                               filter = FALSE ){
 
-      if(!is.null(type) && !type %in% c("raw","prob") ){
+      if(is.null(type) || !type %in% c("raw","prob") ){
         message("[",class(self)[1],"][WARNING] Type value is invalid. ",
                 "Must be 'raw' of 'prob'. Assuming 'raw'")
         type <- "raw"
       }
 
-      if(!is.null(target) && !target %in% private$positive.class ){
+      if( !(match(type,"raw")) &&
+          (is.null(target) || !target %in% private$positive.class ))
+      {
         message("[",class(self)[1],"][WARNING] Target value does not match with",
                 " actual target values: '",paste0(private$positive.class,
                                                 private.negative.class,
@@ -246,12 +257,12 @@ ClassificationOutput <- R6::R6Class(
         if(any(cutoff.values %in% private$available$cutoffs ) ){
           aval.cutoffs <- intersect(cutoff.values,private$available$cutoffs)
         }else{
-          message("[",class(self)[1],"][WARNING] Defined cutoffs are not",
-                  "available. Using all cutoffs")
+          message("[",class(self)[1],"][WARNING] Defined Cutoffs are not",
+                  "available. Using all available cutoffs.")
         }
       }else{
-        message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid.",
-                " Using all cutoffs")
+        message("[",class(self)[1],"][INFO] Cutoffs are not defined.",
+                " Using all available cutoffs.")
         aval.cutoffs <- private$available$cutoffs
       }
 
@@ -259,13 +270,13 @@ ClassificationOutput <- R6::R6Class(
         if(any(metric.names %in% private$available$metrics) ){
           aval.metrics <- intersect(metric.names,private$available$metrics)
         }else {
-          message("[",class(self)[1],"][WARNING] Defined metrics are not available. ",
-                  "Using all metrics")
+          message("[",class(self)[1],"][WARNING] Defined Metrics are not ",
+                  "available. Using all available metrics.")
           aval.metrics <- private$available$metrics
         }
       }else{
         message("[",class(self)[1],"][INFO] Metrics are not defined. ",
-                "Using all metrics")
+                "Using all available metrics.")
         aval.metrics <- private$available$metrics
       }
 
@@ -273,13 +284,13 @@ ClassificationOutput <- R6::R6Class(
         if(any(voting.names %in% private$available$votings) ){
           aval.votings <- intersect(voting.names,private$available$votings)
         }else {
-          message("[",class(self)[1],"][WARNING] Defined votings are not available. ",
-                  "Using all votings")
+          message("[",class(self)[1],"][WARNING] Defined Votings are not ",
+                  "available. Using all available votings")
           aval.votings <- private$available$votings
         }
       }else{
         message("[",class(self)[1],"][INFO] Votings are not defined. ",
-                "Using all votings")
+                "Using all available votings.")
         aval.votings <- private$available$votings
       }
 
@@ -296,8 +307,8 @@ ClassificationOutput <- R6::R6Class(
 
       for (voting.name in names(valid.votings)) {
         voting <- valid.votings[[voting.name]]
-        prediction <- voting$getPrediction( type = type, target = target,
-                                            filter = filter )
+        prediction <- voting$getFinalPred( type = type, target = target,
+                                           filter = filter )
         predictions[[voting.name]] <- prediction
       }
 
@@ -390,7 +401,8 @@ ClassificationOutput <- R6::R6Class(
       predictions <- list()
       for (voting.name in names(valid.votings)) {
         voting <- valid.votings[[voting.name]]
-        prediction <- voting$getPrediction(type = type,target=target,filter=filter)
+        prediction <- voting$getFinalPred(type = type, target = target,
+                                          filter = filter)
         predictions[[voting.name]] <- prediction
       }
 
@@ -406,8 +418,8 @@ ClassificationOutput <- R6::R6Class(
             #SAVING PROB
             path <- file.path(dir.path, paste0(voting.name, "_prob_",
                                                private$positive.class,".csv"))
-            df <- data.frame(voting.scheme$getPrediction("prob", private$positive.class),
-                             voting.scheme$getPrediction("prob", private$negative.class))
+            df <- data.frame(voting.scheme$getFinalPred("prob", private$positive.class),
+                             voting.scheme$getFinalPred("prob", private$negative.class))
             rownames <- rownames(df)
             df <- cbind(rownames,df)
             names(df) <- c("ID", private$positive.class,private$negative.class)
@@ -415,7 +427,7 @@ ClassificationOutput <- R6::R6Class(
 
             #SAVING RAW
             path <- file.path(dir.path, paste0(voting.name, "_raw_Predictions.csv"))
-            df <- data.frame(voting.scheme$getPrediction("raw"))
+            df <- data.frame(voting.scheme$getFinalPred("raw"))
             rownames <- rownames(df)
             df <- cbind(rownames,df)
             names(df) <- c("ID","Predictions")
@@ -423,11 +435,11 @@ ClassificationOutput <- R6::R6Class(
 
             #SAVING COMBINED
             path <- file.path(dir.path, paste0(voting.name, "_comb_Predictions.csv"))
-            prob <- data.frame(voting.scheme$getPrediction("prob", private$positive.class),
-                               voting.scheme$getPrediction("prob", private$negative.class))
+            prob <- data.frame(voting.scheme$getFinalPred("prob", private$positive.class),
+                               voting.scheme$getFinalPred("prob", private$negative.class))
             colnames(prob) <- c(private$positive.class, private$negative.class)
             rownames <- rownames(prob)
-            raw <- as.vector(t(voting.scheme$getPrediction("raw")))
+            raw <- as.vector(t(voting.scheme$getFinalPred("raw")))
             df <- data.frame(matrix(ncol = 2, nrow = 0))
             for (row in 1:length(raw)) {
               df <- rbind(df, data.frame(raw[row], prob[row, raw[row]]))
@@ -442,7 +454,7 @@ ClassificationOutput <- R6::R6Class(
               path <- file.path(dir.path, paste0(voting.name, "_",
                                                  i, "_", private$positive.class,
                                                  ".csv"))
-              df <- data.frame(voting.scheme$getPrediction(i, target))
+              df <- data.frame(voting.scheme$getFinalPred(i, target))
               names(df) <- target
               write.table(df, file = path, sep = ";", dec = ".", row.names = FALSE)
             }
@@ -455,15 +467,15 @@ ClassificationOutput <- R6::R6Class(
                     "Saving '", type, "' predictions for all target values")
             path <- file.path(dir.path, paste0(voting.name,"_",private$positive.class,
                                                ".csv"))
-            df <- data.frame(voting.scheme$getPrediction(type, private$positive.class),
-                             voting.scheme$getPrediction(type, private$negative.class))
+            df <- data.frame(voting.scheme$getFinalPred(type, private$positive.class),
+                             voting.scheme$getFinalPred(type, private$negative.class))
             names(df) <- c(private$positive.class, private$negative.class)
             write.table(df, file = path, sep = ";", dec = ".", row.names = FALSE)
           }else{
             message("[", class(self)[1], "][INFO] Saving '", type, "' predictions ",
                     "for '", target, "'target values")
             path <- file.path(dir.path, paste0(voting.name,"_",target,".csv"))
-            df <- data.frame(voting.scheme$getPrediction(type, target))
+            df <- data.frame(voting.scheme$getFinalPred(type, target))
             names(df) <- target
             write.table(df, file = path, sep = ";", dec = ".", row.names = FALSE)
           }

@@ -51,7 +51,8 @@ SingleVoting <- R6::R6Class(
           message("[", class(self)[1], "][INFO] ------------------------------",
                   "-------------------------")
           message("[", class(self)[1], "][INFO] Executing '",voting.name,
-                  "' for '",metric,"' metric")
+                  "' for '",metric,"' metric with '",
+                  voting.scheme$getCutoff(),"' cutoff")
           message("[", class(self)[1], "][INFO] ------------------------------",
                   "-------------------------")
           voting.scheme$execute(predictions[[preds]])

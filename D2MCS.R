@@ -379,6 +379,7 @@ D2MCS <- R6::R6Class(
         message("[",class(self)[1],"][INFO] Finished")
         message("[",class(self)[1],"][INFO] ----------------------------------",
                 "---------------------")
+
         classify.output <- ClassificationOutput$new(voting.schemes = final.votings,
                                                     models = final.models)
         classify.output

@@ -3,87 +3,58 @@ ClassMajorityVoting <- R6::R6Class(
   portable = TRUE,
   inherit = SimpleVoting,
   public = list(
-    initialize = function(metric = NULL, cutoff = NULL, class.tie = "first") {
-      if (!is.null(metric) && (!is.character(metric) || length(metric) != 1)) {
-        stop("[", class(self)[1], "][FATAL] Invalid values of metric. Aborting...")
-      } else {
-        message("[", class(self)[1], "][WARNING] Metric value has not been implemented")
-      }
+    initialize = function(cutoff = NULL, class.tie = NULL, majority.class=NULL) {
       if (!is.null(cutoff) && !dplyr::between(cutoff, 0, 1)) {
         if (!dplyr::between(cutoff, 0, 1) )
           message("[", class(self)[1], "][WARNING] Cutoff value should be in ",
                   "the interval between 0 and 1")
-        cutoff <- .5
+        cutoff <- 0.5
       } else {
-        message("[", class(self)[1], "][WARNING] Cut-off method has not been implemented")
+        message("[", class(self)[1], "][WARNING] Cut-off method has not ",
+                "been assigned")
       }
-      if (is.null(class.tie) && !is.character(class.tie)) {
-        stop("[", class(self)[1], "][FATAL] Invalid values of class.tie. Aborting...")
+      if (all(!is.null(class.tie),!is.character(class.tie))) {
+        stop("[", class(self)[1], "][FATAL] Invalid class tie value. Aborting...")
       }
-      super$initialize(metric = metric, cutoff = cutoff)
+      super$initialize(cutoff = cutoff)
       private$class.tie <- class.tie
-      private$majority.class <- NULL
+      private$majority.class <- majority.class
     },
     getMajorityClass = function() { private$majority.class },
     getClassTie = function() { private$class.tie },
-    execute = function(predictions, metric = NULL, cutoff = NULL,
-                       majority.class = NULL, verbose = FALSE){
+    execute = function(predictions, verbose = FALSE){
       if (!inherits(predictions, "ClusterPredictions")) {
         stop("[", class(self)[1], "][FATAL] Invalid prediction type. Must be a ",
              "ClusterPrediction object. Aborting...")
       }
 
       if (predictions$size() <= 0) {
-        stop("[",class(self)[1],"][FATAL] Cluster predictions were not computed",
-             "Aborting...")
+        stop("[",class(self)[1],"][FATAL] Cluster predictions were not ",
+             "computed. Aborting...")
       }
 
-      if (is.null(metric) || !is.character(metric)) {
-        if (is.null(self$getMetric())) {
-          stop("[", class(self)[1], "][FATAL] Metric attribute not set or invalid.")
-        }
-      } else {
-        message("[", class(self)[1], "][INFO] Metric attribute was set on ",
-                "execute method. Assigning the value of metric: ", metric)
-        private$metric <- metric
+      if( is.null(private$majority.class) ||
+          ! (private$majority.class %in% predictions$getClassValues()) ){
+        message("[",class(self)[1],"][WARNING] Majority class unset or invalid.",
+                " Assuming '",predictions$getPositiveClass(),"' by default")
+        private$majority.class <- predictions$getPositiveClass()
       }
 
-      if (is.null(cutoff) || !dplyr::between(cutoff, 0, 1)) {
-        if (is.null(self$getCutoff())) {
-          message("[", class(self)[1], "][WARNING] Cutoff value should be in ",
-                  "the interval between 0 and 1. Assuming 0.5.")
-          private$cutoff <- .5
-        }
-      } else {
-        if (is.null(self$getCutoff())) {
-          message("[", class(self)[1], "][INFO] Cutoff attribute set on execute method.",
-                  " Assigning the value of cutoff: ", cutoff)
-          private$cutoff <- cutoff
-        } else {
-          message("[", class(self)[1], "][WARNING] Cutoff has been previously assigned.",
-                  " Keeping initial cutoff value: ", self$getCutoff())
-        }
+      if(any(is.null(private$class.tie),
+             !(private$class.tie %in% predictions$getClassValues()))) {
+        message("[",class(self)[1],"][INFO] Class tie unset or invalid")
+        private$class.tie <- NULL
       }
-
-      private$majority.class <- predictions$getPositiveClass()
-      if (is.null(majority.class) || !(majority.class %in% predictions$getClassValues())) {
-        if (isTRUE(verbose)) {
-          message("[", class(self)[1], "][WARNING] Majority class not set or invalid.",
-                  " Assuming default value: ", predictions$getPositiveClass())
-        }
-      } else { private$majority.class <- majority.class }
 
       if (isTRUE(verbose)) {
         message("[", class(self)[1], "][INFO] Performing voting using '",
                 self$getMajorityClass(), "' as majority class")
       }
 
-      if (isTRUE(verbose)) {
-        message("[", class(self)[1], "][INFO] Refresh final predictions.")
-      }
-      private$final.pred <- list(prob = data.frame(), raw = c())
+      final.raw <- c()
+      final.prob <- data.frame()
 
-      raw.pred <- do.call(cbind, lapply(predictions$getAll(),function(x) {
+      raw.pred <- do.call(cbind, lapply(predictions$getAll(), function(x) {
         pred <- x$getPrediction("raw")
         data.frame(pred, row.names = row.names(pred) )
       }))
@@ -92,52 +63,40 @@ ClassMajorityVoting <- R6::R6Class(
         pred <- x$getPrediction("prob", predictions$getPositiveClass())
         data.frame(pred, row.names = row.names(pred))
       }))
-
-      private$class.values <- predictions$getClassValues()
-      private$positive.class <- predictions$getPositiveClass()
-
       for (row in 1:nrow(prob.pred)) {
         row.summary <- table(as.matrix(raw.pred[row, ]))
         max.values <- names(which(row.summary == max(row.summary)))
 
         if (length(max.values) > 1) {
           if (self$getMajorityClass() %in% max.values) {
-            message("[", class(self)[1], "][INFO] Found Tie. Resolving using ",
+            message("[", class(self)[1], "][INFO] Resolving tie using ",
                     "'majority class' solver")
             entry <- self$getMajorityClass()
-            private$final.pred$raw <- c(self$getFinalPred()$raw, entry)
           } else {
-            message("[", class(self)[1], "][INFO] Found Tie. Resolving using '",
-                    self$getClassTie(), "' tie solver")
-            entry <- which.max(rank(x = row.summary, ties.method = self$getClassTie())==1)
-            private$final.pred$raw <- c(self$getFinalPred()$raw, entry)
+            entry <- self$getClassTie()
+            if( any(is.null(self$getClassTie()),
+                    !(self$getClassTie() %in% max.values))){
+              message("[", class(self)[1], "][INFO] Resolving tie using first",
+                      "occurrence.")
+              entry <- max.values[1]
+            }
           }
-        } else {
-          entry <- max.values
-          private$final.pred$raw <- c(self$getFinalPred()$raw, entry)
+        } else { entry <- max.values }
+
+        mean.row <- rowMeans(prob.pred[row, which(raw.pred[row,]==entry)])
+        if( identical(entry,predictions$getPositiveClass()) &&
+            mean.row < self$getCutoff() )
+        {
+          entry <- setdiff(predictions$getClassValues(), predictions$getPositiveClass())
         }
 
-        mean.row <- rowMeans(prob.pred[row, ])
-        private$final.pred$prob <- rbind(self$getFinalPred()$prob,
-                                         data.frame(mean.row, abs(mean.row - 1)))
+        final.prob <- rbind(final.prob,data.frame(mean.row, abs(mean.row - 1)))
+        final.raw <- c(final.raw, entry)
       }
-      private$final.pred$raw <- factor(self$getFinalPred()$raw,
-                                       levels = predictions$getClassValues())
 
-      private$final.pred$raw  <- relevel(self$getFinalPred()$raw,
-                                         ref = predictions$getPositiveClass())
-      private$final.pred$raw <- as.data.frame(self$getFinalPred()$raw,
-                                              row.names = row.names(raw.pred))
-      colnames(private$final.pred$raw) <- c("Target Value")
-
-      names(private$final.pred$prob) <- c(predictions$getPositiveClass(),
-                                          setdiff(predictions$getClassValues(),
-                                                  predictions$getPositiveClass()))
-      private$final.pred$prob <- as.data.frame(self$getFinalPred()$prob,
-                                               row.names = row.names(prob.pred))
-
-      #classMaj.pred.prob <<- private$final.pred$prob
-      #classMaj.pred.raw <<- private$final.pred$raw
+      private$final.pred$set( final.prob, final.raw,
+                              predictions$getClassValues(),
+                              predictions$getPositiveClass() )
     }
   ),
   private = list(
