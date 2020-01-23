@@ -452,7 +452,7 @@ D2MCS <- R6::R6Class(
 
       if ( any(is.null(weights),length(weights) <
                length(train.output$getModels(metric)),!is.numeric(weights)) ) {
-        perf <- self$getBestPerformanceByCluster(train.output,metrics= metric)
+        perf <- train.output$getPerformance(metrics= metric)
         message("[", class(self)[1], "][WARNING] Weights not defined.",
                 "Assuming default weigths: [",
                 paste0(round(perf[[metric]],digits = 3),collapse = ", "), "].")
@@ -527,83 +527,6 @@ D2MCS <- R6::R6Class(
                              optimizers = opt.data,
                              positive.class = positive.class,
                              negative.class = negative.class))
-    },
-    getBestPerformanceByCluster = function(train.output, metrics = NULL){
-      if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][FALTAL] Train output missing or invalid. ",
-             "Must be a TrainOutput object")
-
-      if ( is.null(metrics) &&
-           !is.character(metrics) &&
-           !any(metrics %in% train.output$getMetrics()) ) {
-        message("[", class(self)[1], "][WARNING] Metrics are NULL. ",
-                "Asuming all metrics of train.output", train.output$getMetrics())
-        metrics <- train.output$getMetrics()
-      }
-      performance.clusters <- lapply(metrics,
-                                     function(metric, train.output)
-                                       sapply(train.output$getModels(metric),
-                                              function(model)
-                                                model$model.performance),
-                                              train.output)
-      names(performance.clusters) <- metrics
-      performance.clusters
-    },
-    plotTrain = function(train.output, metrics = NULL) {
-      if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][FALTAL] Train output missing or invalid. ",
-             "Must be a TrainOutput object")
-
-      if ( is.null(metrics) &&
-           !is.character(metrics) &&
-           !any(metrics %in% train.output$getMetrics()) ) {
-        message("[", class(self)[1], "][WARNING] Metrics are NULL. ",
-                "Asuming all metrics of train.output", train.output$getMetrics())
-        metrics <- train.output$getMetrics()
-      }
-      sapply(metrics, function(metric, train.output) {
-        plot.path <- file.path(private$path, metric, "train_plots")
-        if (!dir.exists(plot.path)) dir.create(plot.path, recursive = TRUE)
-
-
-        summary <- do.call(rbind, lapply(train.output$getModels(metric), function(model) {
-          df <- data.frame(model$model.name, model$model.performance,
-                           stringsAsFactors = FALSE)
-        } ))
-        summary <- cbind(data.frame(sprintf("[Cluster %s]", seq(1,nrow(summary)))),
-                        summary)
-        names(summary) <- c("clusters", "models", "measure")
-
-        min.pos <- which.min(summary$measure)
-        min <- data.frame( x = summary[min.pos, ]$clusters, y = min(summary[,3]) )
-        max.pos <- which.max(summary$measure)
-        max <- data.frame( x = summary[max.pos, ]$clusters, y= max(summary[,3]) )
-        avg <- round(mean(summary$measure), digits = 2)
-        measure <- metric
-
-        ggplot(summary, aes(clusters, measure, group = 1)) + geom_line() + geom_point() +
-          geom_point(aes(x,y), min, fill = "transparent", color = "red",
-                     shape = 21, size = 3, stroke = 1) +
-          geom_text(aes(x, y, label = sprintf("%.3f", y)), min, size = 3,
-                    hjust = -.4, vjust = 1.5, color = 'red' ) +
-          geom_text(aes(x, y, label = sprintf("%.3f",y)), max, size = 3,
-                    hjust = -.4, vjust = 1.5, color = 'blue' ) +
-          geom_point(aes(x, y), max, fill = "transparent", color = "blue",
-                     shape = 21, size = 3,stroke = 1) +
-          geom_hline(aes(yintercept = avg), linetype = "twodash",
-                     color = "#696969", show.legend = TRUE) +
-          geom_text(aes(0, avg, label = "Average"), hjust = -.2, vjust = -1) +
-          geom_text(aes(label = models), hjust = -.2, vjust = 0) +
-          labs(x = "Model name", y = paste0(measure," value"),
-               title = paste0("Performance benchmarking plot during training")) +
-          theme(axis.text.x = element_text(angle = 75, hjust = 1),
-                plot.title = element_text(hjust = 0.5))
-
-        save.path <- file.path(plot.path, paste0("Performance_Train_Plot_", metric,".pdf") )
-        message("[D2MCS][INFO] Plot saved has been succesfully saved at : '",
-                save.path, "'")
-        ggsave(filename = save.path, device = "pdf")
-      }, train.output)
     },
     getAvailableModels = function(){ private$availableModels[,c(1,2)] }
   ),
