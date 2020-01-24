@@ -37,14 +37,14 @@ TrainOutput <- R6::R6Class(
       performance <- list()
       for(metric in metrics) {
         models.performance <- data.frame(matrix(ncol = 0, nrow = 1))
-        models.name <- c()
-        for(model in self$getModels(metric)){
+        for( model in self$getModels(metric) ){
           models.performance <- cbind(models.performance,model$model.performance)
-          models.name <- c(models.name,model$model.name)
         }
-        names(models.performance) <- models.name
+        models.performance <- cbind(models.performance,rowMeans(models.performance))
+        names(models.performance) <- c(sprintf("[Cluster %d]",seq_len(ncol(models.performance)-1))," ~Mean")
         performance[[metric]] <- models.performance
       }
+
       performance
     },
     savePerformance = function(dir.path, metrics = NULL){

@@ -2,11 +2,15 @@ SimpleVoting <- R6::R6Class(
   classname = "SimpleVoting",
   portable = TRUE,
   public = list(
-    initialize = function(cutoff = NULL) {
+    initialize = function(cutoff=NULL) {
       if (!is.null(cutoff) && !is.numeric(cutoff)) {
         stop("[", class(self)[1], "][FATAL] Invalid values of cutoff. Aborting...")
       }
-      private$cutoff <- cutoff
+
+      if(any(is.null(cutoff),!is.numeric(cutoff),!(dplyr::between(cutoff,0,1)))){
+        private$cutoff <- 0.5
+      }else private$cutoff <- cutoff
+
       private$final.pred <- FinalPred$new()
     },
     getCutoff = function() { private$cutoff },
@@ -26,9 +30,9 @@ SimpleVoting <- R6::R6Class(
              if (is.null(target) || !(target %in% class.values )) {
                message("[", class(self)[1], "][WARNING] Target not ",
                        "specified or invalid. Using '",
-                       private$final.pred$getPositiveClass(),
-                       "' as default value")
-               target <- private$final.pred$getPositiveClass()
+                       paste0( private$final.pred$getClassValues(),
+                               collapse = ", " ),"'")
+               target <- private$final.pred$getClassValues()
              }
              if (filter) {
                private$final.pred$getProb()[private$final.pred$getRaw() == target,

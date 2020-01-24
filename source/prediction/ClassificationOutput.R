@@ -8,7 +8,7 @@ ClassificationOutput <- R6::R6Class(
              "Aborting...")
       }
 
-      if (! (names(voting.schemes) %in% c("SingleVoting", "CombinedVoting") )) {
+      if (!all(names(voting.schemes) %in% c("SingleVoting", "CombinedVoting") )) {
         stop("[", class(self)[1], "][FATAL] Voting Schemes must inherit from ",
              "'SimpleVoting' or 'CombinedVoting' classes. Aborting...")
       }
@@ -18,23 +18,23 @@ ClassificationOutput <- R6::R6Class(
              "as 'list' type. Aborting...")
       }
 
-      positive.class <- unique( unlist(sapply(voting.schemes, function(metrics) {
+      positive.class <- unique( as.vector(unlist(sapply(voting.schemes, function(metrics) {
                                 sapply(metrics, function(cutoffs) {
                                     sapply(cutoffs, function(voting.names) {
                                       sapply(voting.names, function(votings) {
                                         votings$getFinalPred()$getPositiveClass() } )
                                       } )
                                   } ) }
-                                )) )
+                                )) ))
 
-      class.values <- unique( unlist(sapply(voting.schemes, function(metrics) {
+      class.values <- unique( as.vector(unlist(sapply(voting.schemes, function(metrics) {
                               sapply(metrics, function(cutoffs) {
                                 sapply(cutoffs, function(voting.names) {
                                   sapply(voting.names, function(votings) {
                                     votings$getFinalPred()$getClassValues() } )
                                 } )
                               } ) }
-                            )) )
+                            )) ) )
 
       if (length(positive.class) != 1 ){
         stop("[",class(self)[1],"][FATAL] Defined positive class does ",
@@ -45,22 +45,21 @@ ClassificationOutput <- R6::R6Class(
       private$trained.models <- models
       private$positive.class <- positive.class
       private$negative.class <- setdiff(class.values,positive.class)
-
-      private$available$cutoffs <- unique( as.vector(sapply(private$voting.schemes,
+      private$available$cutoffs <- unique( as.vector(unlist(sapply(private$voting.schemes,
                                            function(metrics) {
                                              sapply(metrics, function(cutoff) {
                                                names(cutoff) })
-                                           })))
+                                           }))))
 
-      private$available$metrics <- unique( as.vector(sapply(private$voting.schemes,
-                                           function(metrics) { names(metrics) })))
+      private$available$metrics <- unique( as.vector(unlist(sapply(private$voting.schemes,
+                                           function(metrics) { names(metrics) }))))
 
-      private$available$votings <- unique( as.vector(sapply(private$voting.schemes,
+      private$available$votings <- unique( as.vector(unlist(sapply(private$voting.schemes,
                                            function(metrics) {
                                               sapply(metrics, function(cutoff) {
                                                 sapply(cutoff, function(voting) {
                                                   names(voting) } ) } )
-                                            })) )
+                                            })) ))
     },
     getPerformances = function(test.set, measures, voting.names = NULL,
                                metric.names = NULL, cutoff.values = NULL){
@@ -186,7 +185,6 @@ ClassificationOutput <- R6::R6Class(
         }, cf = ConfMatrix$new(caret::confusionMatrix(data = pred.values,
                                                       reference = real.values,
                                                       positive = private$positive.class))))
-
         performances[[voting.name]] <- performance
       }
       performances
@@ -236,8 +234,8 @@ ClassificationOutput <- R6::R6Class(
         type <- "raw"
       }
 
-      if( !(match(type,"raw")) &&
-          (is.null(target) || !target %in% private$positive.class ))
+      if( isFALSE(all.equal(type,"raw")) &&
+          (is.null(target) || !(target %in% private$positive.class )))
       {
         message("[",class(self)[1],"][WARNING] Target value does not match with",
                 " actual target values: '",paste0(private$positive.class,
@@ -492,14 +490,14 @@ ClassificationOutput <- R6::R6Class(
     voting.schemes = NULL,
     trained.models = NULL,
     available = list(),
-    getVotings = function(metrics,cutoffs,votings){
+    getVotings = function(metrics,cutoffs,votings) {
       valid.votings <- list()
       for(voting.type in private$voting.schemes){
         voting.metrics <- intersect(names(voting.type),metrics)
         for(metric in voting.metrics){
           voting.metric <- voting.type[[metric]]
-          cutoffs <- intersect(names(voting.metric),cutoffs)
-          for(cutoff in cutoffs){
+          voting.cutoffs <- intersect(names(voting.metric),cutoffs)
+          for(cutoff in voting.cutoffs){
             voting.cutoff <- voting.metric[[cutoff]]
             voting.names <- intersect(names(voting.cutoff),votings)
             for(voting.name in voting.names){

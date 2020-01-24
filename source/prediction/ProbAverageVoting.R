@@ -3,17 +3,7 @@ ProbAverageVoting <- R6::R6Class(
   portable = TRUE,
   inherit = SimpleVoting,
   public = list(
-    initialize = function(cutoff = NULL, class.tie = NULL, majority.class=NULL) {
-      if (!is.null(cutoff) && !dplyr::between(cutoff, 0, 1)) {
-        if (!dplyr::between(cutoff, 0, 1) )
-          message("[", class(self)[1], "][WARNING] Cutoff value should be in ",
-                  "the interval between 0 and 1")
-        cutoff <- 0.5
-      } else {
-        message("[", class(self)[1], "][WARNING] Cutoff method has not been ",
-                "defined")
-      }
-
+    initialize = function(cutoff = 0.5, class.tie = NULL, majority.class=NULL) {
       if (all(!is.null(class.tie),!is.character(class.tie))) {
         stop("[", class(self)[1], "][FATAL] Invalid class tie value. Aborting...")
       }

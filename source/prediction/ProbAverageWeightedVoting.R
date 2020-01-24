@@ -3,16 +3,7 @@ ProbAverageWeightedVoting <- R6::R6Class(
   portable = TRUE,
   inherit = SimpleVoting,
   public = list(
-    initialize = function(cutoff = NULL, weights = NULL) {
-      if (!is.null(cutoff) && !dplyr::between(cutoff, 0, 1)) {
-        if (!dplyr::between(cutoff, 0, 1) )
-          message("[", class(self)[1], "][WARNING] Cutoff value should be in ",
-                  "the interval between 0 and 1")
-        cutoff <- 0.5
-      } else {
-        message("[", class(self)[1], "][WARNING] Cutoff method has not been implemented")
-      }
-
+    initialize = function(cutoff = 0.5, weights = NULL) {
       super$initialize(cutoff = cutoff)
       private$weights <- weights
     },
@@ -115,8 +106,6 @@ ProbAverageWeightedVoting <- R6::R6Class(
       private$final.pred$set( final.prob, final.raw,
                               predictions$getClassValues(),
                               predictions$getPositiveClass() )
-
-      print(private$final.pred$getRaw()[1:15])
     }
   ),
   private = list(

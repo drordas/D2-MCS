@@ -16,7 +16,7 @@ MaximizeFN <- R6::R6Class(
         stop("[", class(self)[1], "][FATAL] Raw.pred parameter must be defined ",
              "as 'list' type. Aborting...")
       }
-      if (!self$getRequiredMetrics() %in% names(raw.pred)) {
+      if (!all(self$getRequiredMetrics() %in% names(raw.pred))) {
         stop("[", class(self)[1], "][FATAL] Raw.pred parameter must have required metrics. ",
              paste(self$getRequiredMetrics(), collapse = " "), ". Aborting...")
       }
@@ -25,7 +25,7 @@ MaximizeFN <- R6::R6Class(
         stop("[", class(self)[1], "][FATAL] Prob.pred parameter must be defined ",
              "as 'list' type. Aborting...")
       }
-      if (!self$getRequiredMetrics() %in% names(prob.pred)) {
+      if (!all(self$getRequiredMetrics() %in% names(prob.pred))) {
         stop("[", class(self)[1], "][FATAL] Prob.pred parameter must have required metrics. ",
              paste(self$getRequiredMetrics(), collapse = " "), ". Aborting...")
       }

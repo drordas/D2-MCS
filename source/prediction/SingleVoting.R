@@ -54,7 +54,9 @@ SingleVoting <- R6::R6Class(
           voting.scheme$execute(predictions[[preds]])
           list.element <- list(voting.scheme)
           names(list.element) <- paste0(voting.name)
-          votings.list[[as.character(voting.scheme$getCutoff())]] <- list.element
+          entry.name <- as.character(voting.scheme$getCutoff())
+          votings.list[[entry.name]] <- append(votings.list[[entry.name]],
+                                               list.element)
         }
         single.votings[[metric]] <- votings.list
       }
