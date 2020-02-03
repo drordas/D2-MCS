@@ -19,9 +19,9 @@ Model <- R6::R6Class(
 
       private$RDS.path <- file.path(private$dir.path, paste0(model$name,".rds"))
       private$model.info <- model
-      private$model.train <- list( model.name=model$name, exec.time=NULL,
-                                   model.performance= NULL, model.data=NULL,
-                                   model.libs = model$library)
+      private$model.train <- list( model.name = model$name, exec.time = NULL,
+                                   model.performance = NULL, model.data = NULL,
+                                   model.libs = model$library )
       private$metric <- NULL
 
       if( file.exists( private$RDS.path ) ){
@@ -41,8 +41,7 @@ Model <- R6::R6Class(
       }
     },
     isTrained = function(){
-      ifelse(is.null(private$model.train$model.data),
-             FALSE,TRUE)
+      ifelse(is.null(private$model.train$model.data),FALSE,TRUE)
     },
     getDir = function(){ private$dir.path },
     getName = function(){ private$model.info$name },
@@ -82,23 +81,36 @@ Model <- R6::R6Class(
         message("[",class(self)[1],"][INFO][",self$getName(),"] ",
                 "Performing training and hyperparameter optimization stage...")
 
-        private$metric <- metric
-        tictoc::tic(quiet = TRUE)
-        set.seed(trFunction$getSeed())
-        private$model.train$model.data <- caret::train( x=fitting, data=train.set,
-                                                        method= private$model.info$name,
-                                                        trControl= trFunction$getTrFunction(),
-                                                        metric= metric )
-        time <- tictoc::toc(quiet=TRUE)
-        private$model.train$model.performance <- self$getPerformance()
-        if (!is.null(private$model.train$model.data) ){
-          message("[",class(self)[1],"][INFO][",self$getName(),"] ",
-                  "Finished in [",round(time$toc - time$tic,digits= 2)," segs]")
-          private$model.train$exec.time <- (time$toc - time$tic)
-        }else{
-          message("[",class(self)[1],"][ERROR][",self$getName(),"] ",
-                  "Unable to train model. Task not performed")
-        }
+        tryCatch({
+          private$metric <- metric
+          tictoc::tic(quiet = TRUE)
+          set.seed(trFunction$getSeed())
+          private$model.train$model.data <- caret::train( x=fitting, data=train.set,
+                                                          method= private$model.info$name,
+                                                          trControl= trFunction$getTrFunction(),
+                                                          metric= metric )
+          time <- tictoc::toc(quiet=TRUE)
+          private$model.train$model.performance <- self$getPerformance()
+
+          if (!is.null(private$model.train$model.data) ){
+            message("[",class(self)[1],"][INFO][",self$getName(),"] ",
+                    "Finished in [",round(time$toc - time$tic,digits= 2)," segs]")
+            private$model.train$exec.time <- (time$toc - time$tic)
+          }else{
+            message("[",class(self)[1],"][ERROR][",self$getName(),"] ",
+                    "Unable to train model. Task not performed")
+          }
+
+        # }, warning = function(warn){
+        #   message("[",class(self)[1],"][WARNING][",self$getName(),"] ",
+        #           "Some errors occurs during training.",
+        #           "Model could be inconsistent")
+        }, error = function(err){
+          message("[",class(self)[1],"][ERROR][",self$getName(),"] Model ",
+                  "could not be trained for current data.")
+          private$model.train$model.performance <- 0.0
+          private$model.train$exec.time <- 0.0
+        })
       }else{
         message("[",class(self)[1],"][INFO][",self$getName(),"] ",
                 "Model has already been trained")
@@ -112,7 +124,7 @@ Model <- R6::R6Class(
       }else { private$model.train }
     },
     getExecutionTime = function(){
-      if ( !self$isTrained() )
+      if ( is.null(private$model.train) || is.null(private$model.train) )
         message("[",class(self)[1],"][WARNING] Model '",private$model.info$name,
                 "' is not trained. Task not performed")
       private$model.train$exec.time
@@ -124,19 +136,19 @@ Model <- R6::R6Class(
         model.result <- private$model.train$model.data
         if( metric %in% model.result$perfNames ){
           model.result <- private$model.train$model.data$results
-          model.result[best(model.result, metric=metric, maximize= TRUE), ][[metric]]
+          model.result[best(model.result, metric = metric, maximize = TRUE), ][[metric]]
         }else {
           stop("[",class(self)[1],"][FATAL] Metric is not defined or unavailable. ",
                "Must be a [",paste(self$getValidMetrics(),collapse=", "),"] type. ",
                "Aborting...")
         }
       }else{
-        if (is.null(private$model.train$model.data))
-          message("[",class(self)[1],"][ERROR] Model '",
-                  private$model.info$name,"' is not trained. Task not performed")
-        if (is.null(private$metric))
-          message("[",class(self)[1],"][ERROR] Metric is NULL. Task not performed")
-        NULL
+        #if (is.null(private$model.train$model.data))
+        #  message("[",class(self)[1],"][ERROR] Model '",
+        #          private$model.info$name,"' is not trained. Task not performed")
+        #if (is.null(private$metric))
+        #  message("[",class(self)[1],"][ERROR] Metric is NULL. Task not performed")
+        private$model.train$model.performance
       }
     },
     getConfiguration = function(){

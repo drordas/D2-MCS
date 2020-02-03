@@ -10,7 +10,7 @@ SimpleStrategy <- R6::R6Class(
     },
     execute = function(verbose = FALSE, ...) {
       private$all.distribution <- data.frame(k = integer(), deltha = numeric(), dist = I(list()))
-      class <- private$subset$getClassValues()
+      #class <- private$subset$getClassValues()
 
       colIndex <- which( levels(private$subset$getClassValues()) == private$subset$getPositiveClass() )
       class <- varhandle::to.dummy( private$subset$getClassValues(), private$subset$getPositiveClass() )[, colIndex]
@@ -207,9 +207,11 @@ SimpleStrategy <- R6::R6Class(
                      "maximum number of clusters. Saving all cluster configurations" )
             num.clusters <- list(2:max(private$all.distribution$k))
           } else {
-            if ( !all(unlist(num.clusters) <= max(private$all.distribution$k) && unlist(num.clusters) >= min(private$all.distribution$k)) ) {
-              message( "[",class(self)[1],"][WARNING] Number of clusters outsides the range of ",
-                       "minimum and maximum number of clusters. Saving all cluster configurations" )
+            if ( !all(unlist(num.clusters) <= max(private$all.distribution$k) &&
+                      unlist(num.clusters) >= min(private$all.distribution$k)) ) {
+              message( "[",class(self)[1],"][WARNING] Number of clusters ",
+                       "exceeds the range of minimum and maximum number of ",
+                       "clusters. Saving all cluster configurations" )
               num.clusters <- list(2:max(private$all.distribution$k))
             }
           }

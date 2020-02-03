@@ -40,9 +40,8 @@ Prediction <- R6::R6Class(
         private$results$raw <- rbind(private$results$raw, data.frame(raw.aux))
 
       }else{
-        message("[",class(self)[1],"][WARNING] Model '",
-                private$model$model.name,"' is not able to compute a-posteriori ",
-                "probabilities")
+        message("[",class(self)[1],"][WARNING] Model '",private$model$model.name,
+                "' is not able to compute a-posteriori probabilities")
 
         raw.aux <- data.frame(predict(object = private$model$model.data,
                                       newdata=pred.values,

@@ -61,6 +61,27 @@ ClassificationOutput <- R6::R6Class(
                                                   names(voting) } ) } )
                                             })) ))
     },
+    getMetrics = function() { unique(names(private$trained.models)) },
+    getPositiveClass = function() { private$positive.class },
+    getModelInfo = function(metrics = NULL) {
+      if (missing(metrics) ||
+          !is.character(metrics) ||
+          !all(metrics %in% self$getMetrics())) {
+        message("[", class(self)[1], "][WARNING] Metrics are not defined or invalid. ",
+                "Asuming all metrics of clasification.output", self$getMetrics())
+        metrics <- self$getMetrics()
+      }
+      models.info <- lapply(metrics, function(metric) {
+        do.call(rbind, lapply(private$trained.models[[metric]], function(model) {
+          aux <- data.frame(model$model.name, model$model.performance)
+          rownames(aux) <- NULL
+          names(aux) <- c("Model Name", "Performance")
+          aux
+        }))
+      })
+      names(models.info) <- metrics
+      models.info
+    },
     getPerformances = function(test.set, measures, voting.names = NULL,
                                metric.names = NULL, cutoff.values = NULL){
       if (!inherits(test.set, "Subset"))
@@ -189,8 +210,40 @@ ClassificationOutput <- R6::R6Class(
       }
       performances
     },
-    plot = function(dir.path, test.set, measures, voting.names = NULL,
-                    metric.names = NULL, cutoff.values = NULL){
+    savePerformances = function(dir.path, test.set, measures, voting.names = NULL,
+                                metric.names = NULL, cutoff.values = NULL){
+      if (is.null(dir.path))
+        stop( "[",class(self)[1],"][FATAL] Save folder not set. Aborting...")
+
+      dir.path <- gsub("\\/$", "", dir.path)
+
+      if (!dir.exists(dir.path)) {
+        dir.create(dir.path, recursive = TRUE)
+        if (dir.exists(dir.path)) {
+          message("[", class(self)[1], "][INFO] Folder '", dir.path,
+                  "' has been succesfully created")
+        } else { stop("[", class(self)[1], "][FATAL] Cannot create directory '",
+                      dir.path, "'. Aborting... ") }
+      } else { message("[", class(self)[1], "][INFO] Folder already exists") }
+
+      performances <- self$getPerformances(test.set, measures, voting.names = NULL,
+                                           metric.names = NULL, cutoff.values = NULL)
+
+      summary <- data.frame()
+      for(pos in seq_len(length(performances))){
+        path <- names(p)[pos]
+        split <- unlist(strsplit(path,"_"))
+        df <- data.frame("Voting"= split[3],"Cutoff"=split[2],p[[pos]])
+        summary <- rbind(summary,df)
+      }
+      save.path <- file.path(dir.path,"Classification_Performances.csv")
+      write.table( summary, file = save.path, sep = ";",
+                   dec = ".", row.names = FALSE )
+      message("[", class(self)[1], "][INFO] Classification performance saved at: ",save.path)
+
+    },
+    plotPerformances = function(dir.path, test.set, measures, voting.names = NULL,
+                                metric.names = NULL, cutoff.values = NULL){
       if (missing(dir.path))
         stop("[", class(self)[1],"][FATAL] Path not defined. Aborting...")
 
@@ -314,27 +367,6 @@ ClassificationOutput <- R6::R6Class(
       }
 
       PredictionOutput$new(predictions = predictions, type = type, target = target)
-    },
-    getMetrics = function() { unique(names(private$trained.models)) },
-    getPositiveClass = function() { private$positive.class },
-    getModelInfo = function(metrics = NULL) {
-      if (missing(metrics) ||
-          !is.character(metrics) ||
-          !all(metrics %in% self$getMetrics())) {
-        message("[", class(self)[1], "][WARNING] Metrics are not defined or invalid. ",
-                "Asuming all metrics of clasification.output", self$getMetrics())
-        metrics <- self$getMetrics()
-      }
-      models.info <- lapply(metrics, function(metric) {
-        do.call(rbind, lapply(private$trained.models[[metric]], function(model) {
-          aux <- data.frame(model$model.name, model$model.performance)
-          rownames(aux) <- NULL
-          names(aux) <- c("Model Name", "Performance")
-          aux
-        }))
-      })
-      names(models.info) <- metrics
-      models.info
     },
     savePredictions = function(dir.path, voting.names = NULL, type = NULL,
                                target = NULL, metric.names = NULL,

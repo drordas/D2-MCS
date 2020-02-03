@@ -10,15 +10,15 @@ Subset <- R6::R6Class(
       }
 
       if( is.null(class.index) ||
-          !(class.index %in% c(1:nrow(dataset))) ){
+          !(class.index %in% c(1:ncol(dataset))) ){
         stop("[",class(self)[1],"][FATAL] Class index paramenter is incorrect. ",
              "Must be between 1 and ", nrow(dataset),". Aborting...")
       }
 
       if (!(positive.class %in% as.character(unique(dataset[,class.index])) ) ) {
         stop("[",class(self)[1],"][FATAL] Positive Class parameter is incorrect. ",
-             "Must be '", paste(as.character(unique(dataset[,class.index])), collapse = "' '"),
-             "'. Aborting...")
+             "Must be '", paste(as.character(unique(dataset[,class.index])),
+                                collapse = "' '"),"'. Aborting...")
       }
 
       if (! all(class.values %in% as.character(unique(dataset[,class.index])) ) ) {
@@ -26,16 +26,15 @@ Subset <- R6::R6Class(
              "Must be '", paste(as.character(unique(dataset[,class.index])), collapse = "' '"),
              "'. Aborting...")
       }
-
       private$data <- dataset
       private$class.index <- class.index
       private$feature.id <- feature.id
       private$positive.class <- positive.class
       private$class.name <- names(private$data)[private$class.index]
       private$class.values <- class.values
-      private$feature.names <- -(private$class.index)
+      private$feature.names <- names(private$data[,-private$class.index])
     },
-    getFeatureNames = function() { names(private$data[,-private$class.index]) },
+    getFeatureNames = function() { private$feature.names },
     getFeatures = function (feature.names=NULL){
       if(is.vector(feature.names) && length(feature.names) > 0){
         private$data[,intersect(names(private$data[,-private$class.index]), feature.names)]
@@ -46,7 +45,7 @@ Subset <- R6::R6Class(
         private$feature.names[private$feature.id]
       else private$feature.id
     },
-    getIterator = function(chunk.size=private$chunk.size, verbose=FALSE) {
+    getIterator = function(chunk.size = private$chunk.size, verbose = FALSE) {
       if(!is.numeric(chunk.size)){
         message("[",class(self)[1],"][WARNING] Chunk size is not valid. ",
                 "Assuming default value")
@@ -62,6 +61,19 @@ Subset <- R6::R6Class(
                     verbose = verbose)
     },
     getClassValues = function() { private$data[, private$class.index] },
+    getClassBalance = function(target.value = NULL) {
+      if(is.null(target.value)){
+        target.value <- private$positive.class
+      }else{
+        if( !(target.value %in% class.values) ){
+          message("[",class(self)[1],"][WARNING] Target class not found. ",
+                  "Assuming default '",private$positive.class,"' value")
+          target.value <- private$positive.class
+        }
+      }
+      count <- as.data.frame(t(as.matrix(table(private$data[,private$class.index]))))
+      round(count[,target.value]/sum(count[,which(names(count)!=target.value)]), digits = 3)
+    },
     getClassIndex = function() { private$class.index },
     getClassName = function() { private$class.name },
     getNcol = function() { ncol(private$data) },

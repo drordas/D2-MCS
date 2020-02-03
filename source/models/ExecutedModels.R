@@ -19,17 +19,19 @@ ExecutedModels <- R6::R6Class(
         private$models <- read.csv( file=file.path(private$dir.path,".executed"),
                                     header=TRUE,stringsAsFactors= FALSE, sep="," )
         best.perf <- private$models[which.max(private$models$performance),]
-        best.path <- file.path(private$dir.path,paste0(best.perf$model,".rds"))
-        if(file.exists(best.path)){
 
-          private$best.model <- list(model=best.perf$model,
-                                     performance= best.perf$performance,
-                                     exec.time= best.perf$exec.time,
-                                     train= readRDS(best.path)
-                                )
-        }else{
-          message("[",class(self)[1],"][WARNING] Best model cannot be loaded.")
-          private$best.model <- NULL
+        if(length(which(best.perf$performance !=0 ))!=0) {
+          best.path <- file.path(private$dir.path,paste0(best.perf$model,".rds"))
+          if(file.exists(best.path) ) {
+            private$best.model <- list(model=best.perf$model,
+                                       performance= best.perf$performance,
+                                       exec.time= best.perf$exec.time,
+                                       train= readRDS(best.path)
+                                  )
+          }else{
+            message("[",class(self)[1],"][WARNING] Best model cannot be loaded.")
+            private$best.model <- NULL
+          }
         }
       }
     },

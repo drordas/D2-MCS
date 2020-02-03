@@ -7,7 +7,10 @@ FisherTestHeuristic <- R6::R6Class(
     # Heuristic valid for discrete variables
     heuristic = function(col1, col2, column.names = NULL) {
       if ( private$isBinary(col1) && private$isBinary(col2) ) {
-        fisher.test(table(col1, col2))$p.value
+        col2.factor <- factor(col2)
+        col1.factor <- factor(col1, levels =  levels(col2.factor) )
+        stats::fisher.test(col1.factor, col2.factor)$p.value
+        #stats::fisher.test(table(col1.factor, col2.factor))$p.value
       } else {
         if(!private$isBinary(col1))
           message("[",class(self)[1],"][WARNING] Column '",

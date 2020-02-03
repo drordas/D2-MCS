@@ -10,22 +10,15 @@ DependencyBasedStrategyConfiguration <- R6::R6Class(
     },
     maxNumClusters = function(...) {
       features <- eval.parent(substitute(alist(...))[["features"]])
-      
       max <- max(lengths(features))
-      if (is.infinite(max)) {
-        3
-      } else{
-        max
-      }
+      if (is.infinite(max)) { 3 } else{ max }
     },
-    getBinaryCutoff = function() {
-      0.6
-    },
-    getRealCutoff = function() {
-      0.7
-    },
-    tiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic, class, class.name) {
-      private$lfdcTiebreak(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic)
+    getBinaryCutoff = function() { 0.6 },
+    getRealCutoff = function() { 0.7 },
+    tiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus,
+                        heuristic, class, class.name) {
+      private$lfdcTiebreak(feature, clus.candidates, fea.dep.dist.clus,
+                           corpus, heuristic)
       # private$ltdcTiebreak(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic, class, class.name)
     },
     qualityOfCluster = function(clusters, metrics) {
@@ -33,11 +26,11 @@ DependencyBasedStrategyConfiguration <- R6::R6Class(
     },
     isImprovingClustering = function(clusters.deltha) {
       clusters.deltha <- clusters.deltha * 100
-      
+
       diff <- clusters.deltha[[length(clusters.deltha)]] - min(clusters.deltha)
       #If it does not worsen more than 0.01 %
       ifelse( 0.01 > diff, TRUE, FALSE )
-      
+
     }
   ),
   private = list(
@@ -68,7 +61,8 @@ DependencyBasedStrategyConfiguration <- R6::R6Class(
       }
       append(fea.dep.dist.clus[[feature]], clus.candidates[[which.min(means.cluster)]])
     },
-    ltdcTiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus, heuristic, class, class.name) {
+    ltdcTiebreak = function(feature, clus.candidates, fea.dep.dist.clus, corpus,
+                            heuristic, class, class.name) {
       #Search for the cluster set with less dependence with the target
       means.cluster <- list()
       for (clus in clus.candidates) {

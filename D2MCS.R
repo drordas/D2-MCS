@@ -147,17 +147,17 @@ D2MCS <- R6::R6Class(
 
           for ( current.cluster in 1:train.set$getNumClusters() ) {
             #DELETE IMCOMPATIBLE MODELS
-            if ( abs(mean(cor(train.set$getFeatureValues(current.cluster),
-                              as.numeric(train.set$getClassValues()) ),
-                          na.rm = TRUE) ) < 0.3 &
-                 grepl("Linea[l|r]|Discriminant",
-                       paste(current.model$description,
-                             current.model$family, sep = " "))) {  ##CORRELATION
-              message("[", class(self)[1], "][WARNING] High-Correlated Data (< 0.3). ",
-                      "Incompatible M.L. model '", current.model$name,"' on the cluster '", current.cluster, "'")
-              next
-            }
-
+            # if ( abs(mean(cor(train.set$getFeatureValues(current.cluster),
+            #                   as.numeric(train.set$getClassValues()) ),
+            #               na.rm = TRUE) ) < 0.3 &
+            #      grepl("Linea[l|r]|Discriminant",
+            #            paste(current.model$description,
+            #                  current.model$family, sep = " "))) {  ##CORRELATION
+            #   message("[", class(self)[1], "][WARNING] Correlated Data (< 0.3).",
+            #           " Incompatible M.L. model '", current.model$name,
+            #           "' on the cluster '", current.cluster, "'")
+            #   next
+            # }
             model.path <- file.path( private$path, current.metric,
                                      paste0("C[", current.cluster, "-",
                                             train.set$getNumClusters(), "]") )
@@ -197,7 +197,6 @@ D2MCS <- R6::R6Class(
               model.instances <- train.set$getInstances(current.cluster)
               model.recipe <- DefaultModelFit$new(model.instances,
                                                   train.set$getClassName())$createRecipe()
-
               model.type <- Model$new(dir = model.path, model = current.model)
               model.type$train(train.set = model.instances, fitting = model.recipe,
                                trFunction = train.function, metric = current.metric)
@@ -209,6 +208,8 @@ D2MCS <- R6::R6Class(
               } else {
                 message("[", class(self)[1], "][WARNING] Unable to train model '",
                         current.model$name, "'. Skipping...")
+                executed.models$add(model.type, keep.best = !isTRUE(saveAllModels))
+                executed.models$save()
               }
             } else {
               message("[", class(self)[1], "][INFO][", current.model$name, "] ",
@@ -363,9 +364,10 @@ D2MCS <- R6::R6Class(
                 "***********************")
         message("[D2MCS][INFO] Computing final prediction values using '",
                 voting.type$getName(), "' schemes")
-        voting.result <- voting.type$execute(cluster.predictions[valid.metrics])
         message("[", class(self)[1], "][INFO] ********************************",
                 "***********************")
+        voting.result <- voting.type$execute(cluster.predictions[valid.metrics])
+
         final.votings[[voting.name]] <- append(final.votings[[voting.name]],
                                                voting.result)
       }
@@ -556,22 +558,28 @@ D2MCS <- R6::R6Class(
       models
     },
     loadPackages = function(pkgName){
-      new.packages <- pkgName[!(pkgName %in% installed.packages()[,"Package"])]
-      if ( length(new.packages) ) {
-        message("[", class(self)[1], "][INFO][", class(self)[1], "] ",length(new.packages),
-                " packages needed to execute aplication\n Installing packages ...")
-        suppressMessages(install.packages( new.packages,
-                                           repos ="https://ftp.cixug.es/CRAN/",
-                                           dependencies = TRUE,
-                                           quiet = TRUE, verbose = FALSE))
-      }
-      lapply(pkgName, function(pkg) {
-        if ( !pkg %in% loaded_packages() ) {
-          suppressMessages(library(pkg, character.only = TRUE, warn.conflicts = FALSE,
-                                   verbose = FALSE, quietly = TRUE,
-                                   attach.required = TRUE))
+      pkgName <- pkgName[pkgName %in% available.packages()[,1] ]
+      if( length(pkgName) > 0 ) {
+        new.packages <- pkgName[!(pkgName %in% installed.packages()[,"Package"])]
+        if ( length(new.packages) > 0 ) {
+          message("[", class(self)[1], "][INFO]",length(new.packages),
+                  " packages needed. Installing packages ...")
+          suppressMessages(install.packages( new.packages,
+                                             repos ="https://ftp.cixug.es/CRAN/",
+                                             dependencies = TRUE,
+                                             quiet = TRUE, verbose = FALSE))
         }
-      })
+        lapply(pkgName, function(pkg) {
+          if ( !pkg %in% loaded_packages() ) {
+            suppressMessages(library(pkg, character.only = TRUE, warn.conflicts = FALSE,
+                                     verbose = FALSE, quietly = TRUE,
+                                     attach.required = TRUE))
+          }
+        })
+      }else {
+        message("[",class(self)[1],"][ERROR] Packages are not available ",
+                "on CRAN...")
+      }
     },
     unloadPackages = function(len.init.packages, len.init.DLLs) {
       pkgs <- paste0("package:", head(x = .packages(), n = length(.packages()) - len.init.packages))
