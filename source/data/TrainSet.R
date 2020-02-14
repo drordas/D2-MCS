@@ -4,7 +4,7 @@ TrainSet <- R6::R6Class(
   public = list(
     initialize = function(cluster.dist, class.name, class.values, positive.class) {
 
-      if ( !is.list(cluster.dist) && length(cluster.dist) == 0 ) {
+      if ( !is.vector(cluster.dist) || length(cluster.dist) == 0 ) {
         stop("[",class(self)[1],"][FATAL] Clusters empty or incorrect (must be a list). ",
              "Aborting...")
       }
