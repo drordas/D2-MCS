@@ -12,7 +12,7 @@ Subset <- R6::R6Class(
       if( is.null(class.index) ||
           !(class.index %in% c(1:ncol(dataset))) ){
         stop("[",class(self)[1],"][FATAL] Class index paramenter is incorrect. ",
-             "Must be between 1 and ", nrow(dataset),". Aborting...")
+             "Must be between 1 and ", ncol(dataset),". Aborting...")
       }
 
       if (!(positive.class %in% as.character(unique(dataset[,class.index])) ) ) {
@@ -65,7 +65,7 @@ Subset <- R6::R6Class(
       if(is.null(target.value)){
         target.value <- private$positive.class
       }else{
-        if( !(target.value %in% class.values) ){
+        if( !(target.value %in% private$class.values) ){
           message("[",class(self)[1],"][WARNING] Target class not found. ",
                   "Assuming default '",private$positive.class,"' value")
           target.value <- private$positive.class

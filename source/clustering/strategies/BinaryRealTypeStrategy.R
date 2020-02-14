@@ -5,13 +5,13 @@ BinaryRealTypeStrategy <- R6::R6Class(
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new() ) {
       if ( !inherits(subset,"Subset" ) ) {
-        stop("[",class(self)[1],"][FATAL] Subset parameter must be defined as",
+        stop("[",class(self)[1],"][FATAL] Subset parameter must be defined as ",
              "'Subset' type. Aborting...")
       }
 
       if ( !is.list(heuristic) || length(heuristic) != 2 ) {
         stop("[",class(self)[1],"][FATAL] Heuristic parameter is not defined ",
-             " or incorrect. Must contain two elements. Aborting...")
+             "or incorrect. Must contain two elements. Aborting...")
       }
 
       if(!any(sapply(heuristic, inherits, "GenericHeuristic"))){
@@ -22,15 +22,15 @@ BinaryRealTypeStrategy <- R6::R6Class(
       if( is.null(heuristic[[1]]) ){
         message("[",class(self)[1],"][WARNING] Heuristic for binary data not defined")
       }else {
-        message("[",class(self)[1],"][INFO] Heuristic for binary data defined",
-                " as '",class(heuristic[[1]])[1],"'")
+        message("[",class(self)[1],"][INFO] Heuristic for binary data defined ",
+                "as '",class(heuristic[[1]])[1],"'")
       }
 
       if (is.null(heuristic[[2]])){
         message("[",class(self)[1],"][WARNING] Heuristic for real data not defined")
       }else{
-          message("[",class(self)[1],"][INFO] Heuristic for real data defined",
-                  " as '",class(heuristic[[2]])[1],"'")
+          message("[",class(self)[1],"][INFO] Heuristic for real data defined ",
+                  "as '",class(heuristic[[2]])[1],"'")
       }
       description <- "<<Pending>>"
       super$initialize( subset= subset, heuristic= heuristic,

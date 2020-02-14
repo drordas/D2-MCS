@@ -39,7 +39,7 @@ ProbBasedMethodology <- R6::R6Class(
              "as 'character' type. Aborting...")
       }
 
-      prod(prob.pred[, which(names(prob.pred) %in% self$getRequiredMetrics())])
+      Reduce(prod, prob.pred[which(names(prob.pred) %in% self$getRequiredMetrics())])
     }
   )
 )

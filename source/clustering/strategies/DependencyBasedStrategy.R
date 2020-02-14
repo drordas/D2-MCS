@@ -770,9 +770,9 @@ DependencyBasedStrategy <- R6::R6Class(
           not.clus.fea <- append( not.clus.fea,
                                   names.corpus[i] )
           if ( isTRUE(verbose) ) {
-            message("[",class(self)[1],"][INFO] Column ",
+            message("[",class(self)[1],"][INFO] Column name: '",
                     names.corpus[[i]],
-                    " no clustering ",
+                    "' is no clustering ",
                     "(Actual column: ", i, ")")
           }
           next
@@ -782,16 +782,16 @@ DependencyBasedStrategy <- R6::R6Class(
           indep.fea <- append( indep.fea,
                                names.corpus[[i]] )
           if ( isTRUE(verbose) ) {
-            message("[",class(self)[1],"][INFO] Column ",
+            message("[",class(self)[1],"][INFO] Column name: '",
                     names.corpus[[i]],
-                    " independent ",
+                    "' is independent ",
                     "(Actual column: ", i, ")")
           }
         } else {
           if ( isTRUE(verbose) ) {
-            message("[",class(self)[1],"][INFO] Column" ,
+            message("[",class(self)[1],"][INFO] Column name: '" ,
                     names.corpus[[i]],
-                    " dependent ",
+                    "' is dependent ",
                     "(Actual column: ", i, ")")
           }
         }
@@ -802,14 +802,14 @@ DependencyBasedStrategy <- R6::R6Class(
         indep.fea <- append( indep.fea,
                              names.corpus[[length(corpus)]] )
         if ( isTRUE(verbose) ) {
-          message("[",class(self)[1],"][INFO] Column ",
-                  names.corpus[[length(corpus)]], " independent ",
+          message("[",class(self)[1],"][INFO] Column name: '",
+                  names.corpus[[length(corpus)]], "' is independent ",
                   "(Actual column: ", length(corpus), ")")
         }
       } else {
         if ( isTRUE(verbose) ) {
-          message("[",class(self)[1],"][INFO] Column ",
-                  names.corpus[[length(corpus)]], " dependent ",
+          message("[",class(self)[1],"][INFO] Column name: '",
+                  names.corpus[[length(corpus)]], "' is dependent ",
                   "(Actual column: ", length(corpus), ")")
         }
       }

@@ -26,7 +26,7 @@ MinimizeFP <- R6::R6Class(
         stop("[", class(self)[1], "][FATAL] Prob.pred parameter must be defined ",
              "as 'list' type. Aborting...")
       }
-      if (all(!self$getRequiredMetrics() %in% names(prob.pred))) {
+      if (!all(self$getRequiredMetrics() %in% names(prob.pred))) {
         stop("[", class(self)[1], "][FATAL] Prob.pred parameter must have required metrics. ",
              paste(self$getRequiredMetrics(), collapse = " "), ". Aborting...")
       }

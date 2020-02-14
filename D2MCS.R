@@ -6,7 +6,7 @@ D2MCS <- R6::R6Class(
                           serialize=FALSE){
 
       if(is.null(dir.path) || !is.character(dir.path)) {
-        stop( "[",class(self)[1],"][FALTAL] Path to store ML models should be defined" )
+        stop( "[",class(self)[1],"][FATAL] Path to store ML models should be defined" )
       }
       dir.path <- gsub("\\/$","",dir.path)
 
@@ -17,7 +17,7 @@ D2MCS <- R6::R6Class(
       else{
         if (!file.exists(outfile)){
           dir.create(outfile, recursive = TRUE)
-          message("[",class(self)[1],"][INFO] Logs path not definded '",
+          message("[",class(self)[1],"][INFO] Logs path not defined '",
                   outfile, "' does not exist. Creating..." )
         }
       }
@@ -44,7 +44,7 @@ D2MCS <- R6::R6Class(
         message("[",class(self)[1],"][INFO] Using default number of cores (",
                 cores,"/",detectCores(),")")
       }
-      else {cores <- nCores}
+      else {cores <- num.cores}
 
       if( !socket.type %in% c("PSOCK","FORK") ){
         warning("[",class(self)[1],"][WARNING] Invalid socket type. ",

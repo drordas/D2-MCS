@@ -7,7 +7,7 @@ SimpleVoting <- R6::R6Class(
         stop("[", class(self)[1], "][FATAL] Invalid values of cutoff. Aborting...")
       }
 
-      if(any(is.null(cutoff),!is.numeric(cutoff),!(dplyr::between(cutoff,0,1)))){
+      if(is.null(cutoff) || !is.numeric(cutoff) || !(dplyr::between(cutoff,0,1))) {
         private$cutoff <- 0.5
       }else private$cutoff <- cutoff
 

@@ -17,8 +17,6 @@ DefaultModelFit <- R6::R6Class(
       recipe %>% step_zv( all_predictors()) %>%  step_nzv(all_predictors()) %>%
         step_corr(all_predictors()) %>% step_center(all_predictors()) %>%
         step_scale(all_predictors() )
-
-      rec.rec <<- recipe
     }
   )
 )

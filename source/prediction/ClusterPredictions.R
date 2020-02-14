@@ -6,7 +6,7 @@ ClusterPredictions <- R6::R6Class(
 
       if(!(positive.class %in% class.values))
         stop("[",class(self)[1],"][FATAL] Positive class not found. Should be ",
-             paste0(class.values,collapse="or "),". Aborting...")
+             paste0(unique(class.values),collapse = " or "),". Aborting...")
 
       private$positive.class <- positive.class
       private$class.values <- class.values

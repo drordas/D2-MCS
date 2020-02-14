@@ -10,7 +10,7 @@ ClassWeightedVoting <- R6::R6Class(
     getWeights = function() { private$weights },
     setWeights = function(weights) {
       if (missing(weights) || is.null(weights)) {
-        message("[", super$getName(), "][WARNING] Weights values not changed due ",
+        message("[", class(self)[1], "][WARNING] Weights values not changed due ",
                 "to inconsistency error")
       } else {
         private$weights <- data.frame(matrix(NA, nrow = 1, ncol = 0),

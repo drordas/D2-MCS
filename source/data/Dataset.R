@@ -80,6 +80,7 @@ Dataset <- R6::R6Class(
       } else {
         private$corpus <- read.csv(filepath, header= header, skip= skip,
                                    sep= sep, stringsAsFactors = string.as.factor)
+        columnNames <- colnames(private$corpus)
       }
 
       private$class.index <- class.index
@@ -112,7 +113,7 @@ Dataset <- R6::R6Class(
     getNcol = function() { ncol(private$corpus) },
     getNrow = function() { nrow(private$corpus) },
     getClassSummary = function() {
-      if(is.null(private$class.index) | is.null(private.corpus)){
+      if(is.null(private$class.index) | is.null(private$corpus)){
         stop("[",class(self)[1],"][FATAL] Dataset was not loaded. Aborting...")
       }else data.frame("N. Instances"=as.matrix(table(private$corpus[,private$class.index])))
     },
