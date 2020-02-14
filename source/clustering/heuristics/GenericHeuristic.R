@@ -10,7 +10,7 @@ GenericHeuristic <- R6::R6Class(
   ),
   private = list(
     isBinary = function(column) {
-      all(levels(factor(column)) %in% c("0","1"))
+      length(levels(factor(column))) == 2
     }
   )
 )
