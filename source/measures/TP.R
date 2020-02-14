@@ -7,13 +7,13 @@ TP <- R6::R6Class(
       super$initialize(performance.output)
     },
     compute = function(performance.output = NULL){
-      if ( is.null(super$performance) && !inherits(performance.output, c("MinResult", "ConfMatrix") ) )
-        stop("[",class(self)[1],"][FATAL] performance.output parameter must be ",
+      if ( is.null(private$performance) && !inherits(performance.output, c("MinResult", "ConfMatrix") ) )
+        stop("[",class(self)[1],"][FATAL] Performance output parameter must be ",
              "defined as 'MinResult' or 'ConfMatrix' type. Aborting...")
 
       if ( !is.null(performance.output) && inherits(performance.output, c("MinResult", "ConfMatrix")) )
         output <- as.character(performance.output$getTP())
-      else output <- as.character(super$performance$getTP())
+      else output <- as.character(private$performance$getTP())
 
       names(output) <- class(self)[1]
       output

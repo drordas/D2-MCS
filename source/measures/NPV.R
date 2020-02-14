@@ -6,14 +6,14 @@ NPV <- R6::R6Class(
     initialize = function(performance.output = NULL){
       super$initialize(performance.output)
     },
-    compute = function(performance.output){
-      if ( is.null(super$performance) && !inherits(performance.output, c("MinResult", "ConfMatrix") ) )
+    compute = function(performance.output = NULL){
+      if ( is.null(private$performance) && !inherits(performance.output, c("MinResult", "ConfMatrix") ) )
         stop("[",class(self)[1],"][FATAL] Performance output parameter must be ",
              "defined as 'MinResult' or 'ConfMatrix' type. Aborting...")
 
       if( !is.null(performance.output) && inherits(performance.output, c("MinResult", "ConfMatrix")) )
         performance.output$getConfusionMatrix()$byClass["Neg Pred Value"]
-      else super$getConfusionMatrix()$byClass["Neg Pred Value"]
+      else private$performance$getConfusionMatrix()$byClass["Neg Pred Value"]
     }
   )
 )

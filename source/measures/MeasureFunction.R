@@ -3,8 +3,8 @@ MeasureFunction <- R6::R6Class(
   portable = TRUE,
   public = list(
     initialize = function(performance = NULL){
-      if ( !is.null(performance) && !inherits(performance.output, c("MinResult", "ConfMatrix") ) )
-        stop("[",class(self)[1],"][FATAL] Performance output parameter must be ",
+      if ( !is.null(performance) && !inherits(performance, c("MinResult", "ConfMatrix") ) )
+        stop("[",class(self)[1],"][FATAL] Performance parameter must be ",
              "defined as 'MinResult' or 'ConfMatrix' type. Aborting...")
 
       private$performance <- performance
