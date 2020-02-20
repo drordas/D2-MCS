@@ -7,11 +7,17 @@ KendallHeuristic <- R6::R6Class(
     # Heuristic valid for continuous variables
     heuristic = function(col1, col2, column.names = NULL) {
       if (private$isBinary(col1) || !private$isBinary(col2)) {
-        warning("[",class(self)[1],"][WARNING] Columns must be real. ",
+        message("[",class(self)[1],"][WARNING] Columns must be real. ",
                 "Returning NA")
         NA
       } else {
-        unname(cor.test(col1, col2, method = "kendall")$estimate, force = TRUE)
+        tryCatch(
+        unname(stats::cor.test(col1, col2, method = "kendall")$estimate, force = TRUE),
+        error = function(e) {
+          message("[",class(self)[1],"][ERROR] Error occurred calculating ",
+                  "kendall heuristic: '", e, "' . Returning NA")
+          NA
+        })
       }
     }
   )

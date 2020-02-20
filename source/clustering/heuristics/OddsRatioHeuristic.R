@@ -5,12 +5,21 @@ OddsRatioHeuristic <- R6::R6Class(
   public = list(
     initialize = function() { },
     heuristic = function(col1, col2, column.names= NULL) {
-      col1 <- as.integer(col1[, 1]) - 1
       if (!private$isBinary(col1) || !private$isBinary(col2)) {
-        warning("[",class(self)[1],"][WARNING] Columns must be binary. ",
+        message("[",class(self)[1],"][WARNING] Columns must be binary. ",
                 "Returning NA")
         NA
-      } else { odds.ratio(col1, col2)$p }
+      } else {
+        # data <- as.data.frame(cbind(col1, col2))
+        # names(data) <- column.names
+        tryCatch(
+        questionr::odds.ratio(table(col1,col2))$p,
+        error = function(e) {
+          message("[",class(self)[1],"][ERROR] Error occurred calculating ",
+                  "odds.ratio heuristic: '", e, "' . Returning NA")
+          NA
+        })
+      }
     }
   )
 )
