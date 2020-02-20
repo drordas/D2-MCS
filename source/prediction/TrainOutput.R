@@ -9,11 +9,11 @@ TrainOutput <- R6::R6Class(
       }
       if ( is.null(class.values) || !is.character(class.values) && length(class.values) < 2 ) {
         stop("[", class(self)[1], "][FATAL] Class.values parameter must be defined as ",
-             "'list' character. Aborting...")
+             "'character' type. Aborting...")
       }
       if ( is.null(positive.class) || !is.character(positive.class) || !positive.class %in% class.values ) {
         stop("[", class(self)[1], "][FATAL] Positive.class parameter must be defined as ",
-             "'list' character. Aborting...")
+             "'character' type. Aborting...")
       }
       private$models <- models
       private$class.values <- class.values
@@ -21,12 +21,12 @@ TrainOutput <- R6::R6Class(
     },
     getModels = function(metric) {
       if ( is.null(metric) || is.list(metric) || !metric %in% self$getMetrics() ) {
-        stop("[",class(self)[1],"][FATAL] Metric not defined of invalid. Aborting...")
+        stop("[",class(self)[1],"][FATAL] Metric not defined or invalid. Aborting...")
       }
       private$models[[metric]]
     },
     getPerformance = function(metrics = NULL){
-      if ( is.null(metrics) && !is.character(metrics) &&
+      if ( is.null(metrics) || !is.character(metrics) ||
            !any(metrics %in% self$getMetrics()) ) {
         message("[", class(self)[1], "][INFO] Metrics not defined or invalid. ",
                 "Asuming all available metrics '",

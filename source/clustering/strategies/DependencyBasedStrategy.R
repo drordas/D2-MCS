@@ -37,11 +37,11 @@ DependencyBasedStrategy <- R6::R6Class(
       }
       if (!exists("getBinaryCutoff", configuration)) {
         stop("[",class(self)[1],"][FATAL] Configuration parameter must have ",
-             "'getCutoffBinary' method. Aborting...")
+             "'getBinaryCutoff' method. Aborting...")
       }
       if (!exists("getRealCutoff", configuration)) {
         stop("[",class(self)[1],"][FATAL] Configuration parameter must have ",
-             "'getCutoffReal' method. Aborting...")
+             "'getRealCutoff' method. Aborting...")
       }
       if (!exists("tiebreak", configuration)) {
         stop("[",class(self)[1],"][FATAL] Configuration parameter must have ",
@@ -103,7 +103,7 @@ DependencyBasedStrategy <- R6::R6Class(
             message( "[",class(self)[1],"][WARNING] ",
                      length(private$not.clus.fea[[1]])," features were incompatible with '",
                      class(private$heuristic[[1]])[1], "' heuristic" )
-            private$notDistribution[[1]] <- data.frame( cluster = 1,
+            private$not.distribution[[1]] <- data.frame( cluster = 1,
                                                         dist = I(list(private$not.clus.fea[[1]])))
           }
         } else {
@@ -156,7 +156,7 @@ DependencyBasedStrategy <- R6::R6Class(
             message( "[",class(self)[1],"][WARNING] ",
                      length(private$not.clus.fea[[2]])," features were incompatible with '",
                      class(real.heuristic)[1], "' heuristic." )
-            private$notDistribution[[2]] <- data.frame( cluster = 1,
+            private$not.distribution[[2]] <- data.frame( cluster = 1,
                                                         dist = I(list(private$not.clus.fea[[2]])) )
           }
 
@@ -242,10 +242,15 @@ DependencyBasedStrategy <- R6::R6Class(
 
       distribution <- append(distribution, c(dist.binary,dist.real) )
 
-      if ( isTRUE(include.unclustered) && nrow(private$not.distribution) ) {
-        distribution <- append(distribution, lapply(private$not.distribution$dist,
-                                                   function(x) {x} ))
+      if (isTRUE(include.unclustered)) {
+        if (!is.null(private$not.distribution[[1]]) && nrow(private$not.distribution[[1]]) > 0)
+          distribution <- append(distribution,lapply(private$not.distribution[[1]]$dist,
+                                                     function(x) {x} ))
+        if (!is.null(private$not.distribution[[2]]) && nrow(private$not.distribution[[2]]) > 0)
+          distribution <- append(distribution,lapply(private$not.distribution[[2]]$dist,
+                                                     function(x) {x} ))
       }
+
       return(distribution)
     },
     createTrain = function(subset, num.clusters = NULL, num.groups=NULL,
@@ -256,7 +261,7 @@ DependencyBasedStrategy <- R6::R6Class(
       }
 
       if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
-        stop("[",class(self)[1],"][FATAL] Clustering not done or erroneous. ",
+        stop("[",class(self)[1],"][FATAL] Clustering not done or errorneous. ",
              "Aborting...")
       }
 
@@ -315,7 +320,9 @@ DependencyBasedStrategy <- R6::R6Class(
         stop("[",class(self)[1],"][FATAL] Path not defined. Aborting...")
 
       if ( is.null(name)) {
-        name <- class(private$heuristic[[1]])[1]
+        name <- paste(class(private$heuristic[[1]])[1],
+                      class(private$heuristic[[2]])[1],
+                      sep = "-")
         message("[",class(self)[1],"][WARNING] File name not defined. Using '",
                 name,".csv'")
       }
@@ -343,7 +350,7 @@ DependencyBasedStrategy <- R6::R6Class(
       } else {
         if ( !(is.list(num.clusters) && length(num.clusters) >= 0)) {
           message( "[",class(self)[1],"][WARNING] Type of num.clusters not valid ",
-                   "(must be NULL or list ) Saving all cluster configurations" )
+                   "(must be NULL or list type). Saving all cluster configurations" )
           num.clusters <- list(list(1:max(private$all.distribution[[1]]$k)),
                                list(1:max(private$all.distribution[[2]]$k)))
         } else {
@@ -818,15 +825,23 @@ DependencyBasedStrategy <- R6::R6Class(
         private$dep.fea[[1]] <- dep.fea
         private$not.clus.fea[[1]] <- append( private$not.clus.fea[[1]],
                                              not.clus.fea )
-        names(private$dep.fea[[1]]) <- 1:length(private$dep.fea[[1]])
-        names(private$indep.fea[[1]]) <- 1:length(private$indep.fea[[1]])
+        if (length(private$dep.fea[[1]]) != 0) {
+          names(private$dep.fea[[1]]) <- 1:length(private$dep.fea[[1]])
+        }
+        if (length(private$indep.fea[[1]]) != 0) {
+          names(private$indep.fea[[1]]) <- 1:length(private$indep.fea[[1]])
+        }
       } else {
         private$indep.fea[[2]] <- indep.fea
         private$dep.fea[[2]] <- dep.fea
         private$not.clus.fea[[2]] <- append( private$not.clus.fea[[2]],
                                              not.clus.fea )
-        names(private$dep.fea[[2]]) <- 1:length(private$dep.fea[[2]])
-        names(private$indep.fea[[2]]) <- 1:length(private$indep.fea[[2]])
+        if (length(private$dep.fea[[2]]) != 0) {
+          names(private$dep.fea[[2]]) <- 1:length(private$dep.fea[[1]])
+        }
+        if (length(private$indep.fea[[2]]) != 0) {
+          names(private$indep.fea[[2]]) <- 1:length(private$indep.fea[[2]])
+        }
       }
     },
     getBinaryFeatures = function(data){

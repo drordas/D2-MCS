@@ -73,12 +73,12 @@ D2MCS <- R6::R6Class(
 
       #CHECK IF TRAIN.SET IS VALID
       if (!"TrainSet" %in% class(train.set) ) {
-        stop( "[", class(self)[1], "][FALTAL] Train set parameter must be ",
+        stop( "[", class(self)[1], "][FATAL] Train set parameter must be ",
               "defined as 'TrainSet' type. Aborting...")
       }
 
       if ( !"TrainFunction" %in% class(train.function) ) {
-        stop( "[", class(self)[1], "][FALTAL] Train function parameter must be ",
+        stop( "[", class(self)[1], "][FATAL] Train function parameter must be ",
               "defined as 'TrainFunction' type. Aborting..." )
       }
 
@@ -112,7 +112,7 @@ D2MCS <- R6::R6Class(
 
       #VERIFY IF METRIC PARAMETER IS DEFINED (AND VALID)
       if ( !all(is.character(metrics), length(metrics) > 0) ) {
-        stop("[",class(self)[1],"][FATAL] Invalid values of metrics ")
+        stop("[",class(self)[1],"][FATAL] Invalid values of metrics")
       }
 
       message("[",class(self)[1],"][INFO] Making parallel socket cluster with ",
@@ -247,11 +247,11 @@ D2MCS <- R6::R6Class(
     classify = function(train.output, subset, voting.types, positive.class = NULL) {
 
       if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][FALTAL] Train output parameter must be ",
+        stop("[", class(self)[1], "][FATAL] Train output parameter must be ",
              "defined as 'TrainOutput' type. Aborting...")
 
       if ( !inherits(subset, c("Subset","HDSubset")) )
-        stop("[", class(self)[1], "][FALTAL] Subset parameter must be defined as ",
+        stop("[", class(self)[1], "][FATAL] Subset parameter must be defined as ",
              "'Subset' or 'HDSubset' type. Aborting...")
 
       if ( missing(voting.types)) {
@@ -266,7 +266,7 @@ D2MCS <- R6::R6Class(
       if (!all(sapply(voting.types,  function(x) {
                        inherits(x, c("SingleVoting", "CombinedVoting"))
         }))){
-          stop("[", class(self)[1], "][FALTAL] Voting Schemes parameter must be ",
+          stop("[", class(self)[1], "][FATAL] Voting Schemes parameter must be ",
               "inherit from 'SingleVoting' or 'CombinedVoting' abstract classes.")
       }
 
@@ -390,15 +390,15 @@ D2MCS <- R6::R6Class(
     optimize = function(train.output, opt.set, voting.scheme, opt.algorithm, metric,
                         weights=NULL, positive.class=NULL){
       if ( !inherits(opt.set,c("Subset"))  )
-        stop("[", class(self)[1], "][FALTAL] Opt.set parameter must defined as ",
+        stop("[", class(self)[1], "][FATAL] Opt.set parameter must defined as ",
              "'Subset' type. Aborting...")
 
       if ( !inherits(train.output, "TrainOutput") )
-        stop("[", class(self)[1], "][FALTAL] Train output parameter must be ",
+        stop("[", class(self)[1], "][FATAL] Train output parameter must be ",
              "defined as 'TrainOutput' type. Aborting...")
 
       if ( !inherits(voting.scheme, "VotingScheme") )
-        stop("[", class(self)[1], "][FALTAL] Voting Scheme missing or invalid. Aborting...")
+        stop("[", class(self)[1], "][FATAL] Voting Scheme missing or invalid. Aborting...")
 
       if ( !is.list(opt.algorithm) ) opt.algorithm <- list(opt.algorithm)
 
@@ -407,17 +407,17 @@ D2MCS <- R6::R6Class(
              "from 'WeightedOptimizer' Aborting...")
 
       if ( is.list(opt.algorithm) && !all(sapply(opt.algorithm, inherits, "WeightsOptimizer")) )
-        stop("[", class(self)[1], "][FALTAL] Optimization algorithms is invalid. List elements",
+        stop("[", class(self)[1], "][FATAL] Optimization algorithms is invalid. List elements",
              " must inherit from 'WeightedOptimizer' object. Aborting...")
 
       if ( !is.null(metric) && !is.character(metric)) {
-        stop("[", class(self)[1], "][FALTAL] Metric is invalid. Must be character type",
+        stop("[", class(self)[1], "][FATAL] Metric is invalid. Must be character type",
              " Aborting...")
       }
 
       if( !identical(train.output$getPositiveClass(),
                      opt.set$getPositiveClass()) ){
-        stop("[",class(self)[1],"][FALTAL] Positive class mismatch between",
+        stop("[",class(self)[1],"][FATAL] Positive class mismatch between",
              "train.output and opt.set [",train.output$getPositiveClass(),"!=",
              opt.set$getPositiveClass(),"]. Aborting...")
       }
@@ -535,7 +535,7 @@ D2MCS <- R6::R6Class(
       model.list <- caret::getModelInfo()
 
       if(is.null(model.list)){
-        stop("[",class(self)[1],"][FALTAL] Models not found in caret library. ",
+        stop("[",class(self)[1],"][FATAL] Models not found in caret library. ",
              "Aborting...")
       }
       model.names <- names(model.list)

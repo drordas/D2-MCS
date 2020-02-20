@@ -68,7 +68,8 @@ ClassificationOutput <- R6::R6Class(
           !is.character(metrics) ||
           !all(metrics %in% self$getMetrics())) {
         message("[", class(self)[1], "][WARNING] Metrics are not defined or invalid. ",
-                "Asuming all metrics of clasification.output", self$getMetrics())
+                "Asuming all metrics of clasification.output (",
+                paste(self$getMetrics(), collapse = ","), ")")
         metrics <- self$getMetrics()
       }
       models.info <- lapply(metrics, function(metric) {
@@ -100,7 +101,7 @@ ClassificationOutput <- R6::R6Class(
         stop("[", class(self)[1], "][FATAL] Positive class values missmatch. ['",
              test.set$getPositiveClass(), "' vs '",
              private$positive.class, "'] used in classification ",
-             "and test respectively. Aborting... ")
+             "and test respectively. Aborting...")
       }
 
       real.values <- test.set$getClassValues()
@@ -231,9 +232,9 @@ ClassificationOutput <- R6::R6Class(
 
       summary <- data.frame()
       for(pos in seq_len(length(performances))){
-        path <- names(p)[pos]
+        path <- names(performances)[pos]
         split <- unlist(strsplit(path,"_"))
-        df <- data.frame("Voting"= split[3],"Cutoff"=split[2],p[[pos]])
+        df <- data.frame("Voting"= split[3],"Cutoff"=split[2],performances[[pos]])
         summary <- rbind(summary,df)
       }
       save.path <- file.path(dir.path,"Classification_Performances.csv")
@@ -287,13 +288,13 @@ ClassificationOutput <- R6::R6Class(
         type <- "raw"
       }
 
-      if( isFALSE(all.equal(type,"raw")) &&
+      if( !isTRUE(all.equal(type,"raw")) &&
           (is.null(target) || !(target %in% private$positive.class )))
       {
         message("[",class(self)[1],"][WARNING] Target value does not match with",
-                " actual target values: '",paste0(private$positive.class,
-                                                private.negative.class,
-                                                collapse=", "),"'. Assuming '",
+                " actual target values: '",paste(private$positive.class,
+                                                 private$negative.class,
+                                                 sep = ", "),"'. Assuming '",
                 private$positive.class,"' as default value")
         target <- private$positive.class
       }
@@ -389,14 +390,16 @@ ClassificationOutput <- R6::R6Class(
 
       if(length(cutoff.values) != 0){
         if(any(cutoff.values %in% private$available$cutoffs ) ){
-          aval.cutoffs <- intersect(private$available$cutoffs,cutoff.values)
+          aval.cutoffs <- intersect(cutoff.values, private$available$cutoffs)
         }else{
           message("[",class(self)[1],"][WARNING] Defined cutoffs are not ",
                   "available. Using all cutoffs")
+          aval.cutoffs <- private$available$cutoffs
         }
       }else{
         message("[",class(self)[1],"][INFO] Cutoff values not defined or invalid. ",
                 " Using all cutoffs")
+        aval.cutoffs <- private$available$cutoffs
       }
 
       if(!is.null(metric.names)){
@@ -405,22 +408,26 @@ ClassificationOutput <- R6::R6Class(
         }else {
           message("[",class(self)[1],"][WARNING] Defined metrics are not available. ",
                   "Using all metrics")
+          aval.metrics <- private$available$metrics
         }
       }else{
         message("[",class(self)[1],"][INFO] Metrics are not defined. ",
                 "Using all metrics")
+        aval.metrics <- private$available$metrics
       }
 
-      if(!is.null(private$available$votings)){
+      if(!is.null(voting.names)){
         if(any(voting.names %in% private$available$votings) ){
           aval.votings <- intersect(voting.names,private$available$votings)
         }else {
           message("[",class(self)[1],"][WARNING] Defined votings are not available. ",
                   "Using all votings")
+          aval.votings <- private$available$votings
         }
       }else{
         message("[",class(self)[1],"][INFO] Votings are not defined. ",
                 "Using all votings")
+        aval.votings <- private$available$votings
       }
 
       valid.votings <- private$getVotings(aval.metrics,aval.cutoffs,aval.votings)

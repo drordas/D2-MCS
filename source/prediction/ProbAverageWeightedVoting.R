@@ -27,7 +27,7 @@ ProbAverageWeightedVoting <- R6::R6Class(
     },
     execute = function(predictions, verbose = FALSE ) {
       if (!inherits(predictions, "ClusterPredictions")) {
-        stop("[", class(self)[1], "][FATAL] Predictions parameter must be defined",
+        stop("[", class(self)[1], "][FATAL] Predictions parameter must be defined ",
              "as 'ClusterPrediction' type. Aborting...")
       }
 

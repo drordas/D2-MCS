@@ -128,8 +128,8 @@ BinaryRealTypeStrategy <- R6::R6Class(
             message( "[",class(self)[1],"][WARNING] ",
                      length(binary.invalid)," features were incompatible with '",
                      class(private$heuristic[[1]])[1], "' heuristic" )
-            private$notDistribution[[1]] <- data.frame( cluster = 1,
-                                                        dist = I(list(binary.invalid)))
+            private$not.distribution[[1]] <- data.frame( cluster = 1,
+                                                         dist = I(list(binary.invalid)))
           }
         }else{
           message("[",class(self)[1],"][INFO] Not binary features for clustering")
@@ -215,10 +215,8 @@ BinaryRealTypeStrategy <- R6::R6Class(
           }
 
           if (length(real.invalid) > 0) {
-            real.notDistribution <- data.frame(cluster = integer(),
-                                               features = I(list()))
             message( "[",class(self)[1],"][WARNING] ",
-                     length(heuristic.invalid)," features were incompatible with '",
+                     length(real.invalid)," features were incompatible with '",
                      class(private$heuristic[[2]])[1], "' heuristic." )
             private$not.distribution[[2]] <- data.frame( cluster = 1,
                                                          dist = I(list(real.invalid)))
@@ -231,7 +229,7 @@ BinaryRealTypeStrategy <- R6::R6Class(
         }
       }else{
         message("[",class(self)[1],"][INFO] ", class(self)[1],
-                " has not heuristic to binary features. Assuming one cluster by default")
+                " has not heuristic to real features. Assuming one cluster by default")
         private$all.distribution[[2]] <- data.frame( k= 1, deltha = 0,
                                                      dist= I(list(names(real.data))))
         private$best.distribution[[2]] <- data.frame( cluster= 1,
@@ -304,9 +302,13 @@ BinaryRealTypeStrategy <- R6::R6Class(
 
       distribution <- append(distribution, c(dist.binary,dist.real) )
 
-      if( isTRUE(include.unclustered) && nrow(private$not.distribution) ){
-        distribution <- append(distribution,lapply(private$not.distribution$dist,
-                                                   function(x) {x} ))
+      if( isTRUE(include.unclustered) ){
+        if (!is.null(private$not.distribution[[1]]) && nrow(private$not.distribution[[1]]) > 0)
+          distribution <- append(distribution,lapply(private$not.distribution[[1]]$dist,
+                                                     function(x) {x} ))
+        if (!is.null(private$not.distribution[[2]]) && nrow(private$not.distribution[[2]]) > 0)
+          distribution <- append(distribution,lapply(private$not.distribution[[2]]$dist,
+                                                     function(x) {x} ))
       }
       return(distribution)
     },
@@ -318,7 +320,7 @@ BinaryRealTypeStrategy <- R6::R6Class(
       }
 
       if ( is.null(private$best.distribution) || is.null(private$all.distribution) ) {
-        stop("[",class(self)[1],"][FATAL] Clustering not done or erroneous. ",
+        stop("[",class(self)[1],"][FATAL] Clustering not done or errorneous. ",
              "Aborting...")
       }
 
@@ -345,7 +347,7 @@ BinaryRealTypeStrategy <- R6::R6Class(
                                   dispersion = private$all.distribution[[2]]$deltha,
                                   row.names = NULL )
 
-      if( nrow(binary.summary) > 0 && nrow(real.summary) > 0){
+      if( nrow(binary.summary) > 1 && nrow(real.summary) > 1){
         plot <- grid.arrange(
                       BinaryPlot$new()$plot(binary.summary) +
                        labs(title = "Binary Data") + theme_light() +
@@ -355,7 +357,7 @@ BinaryRealTypeStrategy <- R6::R6Class(
                        theme(axis.text.x = element_text(angle = 90, hjust = 0.5)),
                        nrow = 2, ncol = 1 )
       }else{
-        if(nrow(binary.summary) > 0){
+        if(nrow(binary.summary) > 1){
           plot <- BinaryPlot$new()$plot(binary.summary) +
                     labs(title = "Binary Data") + theme_light() +
                     theme(axis.text.x = element_text(angle= 90, hjust= 0.5))
@@ -387,7 +389,9 @@ BinaryRealTypeStrategy <- R6::R6Class(
         stop("[",class(self)[1],"][FATAL] Path not defined. Aborting...")
 
       if ( is.null(name) ) {
-        name <- class(private$heuristic[[1]])[1]
+        name <- paste(class(private$heuristic[[1]])[1],
+                      class(private$heuristic[[2]])[1],
+                      sep = "-")
         message("[",class(self)[1],"][WARNING] File name not defined. Using '",
                 name,".csv'")
       }
@@ -417,7 +421,7 @@ BinaryRealTypeStrategy <- R6::R6Class(
       } else {
         if ( !(is.list(num.clusters) && length(num.clusters) >= 0)) {
           message( "[",class(self)[1],"][WARNING] Type of num.clusters not valid ",
-                   "(must be NULL or list ) Saving all cluster configurations" )
+                   "(must be NULL or list type). Saving all cluster configurations" )
           num.clusters <- list(list(1:max(private$all.distribution[[1]]$k)),
                                list(1:max(private$all.distribution[[2]]$k)))
         } else {

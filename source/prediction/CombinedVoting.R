@@ -14,11 +14,11 @@ CombinedVoting <- R6::R6Class(
       }
       if (!inherits(methodology, "Methodology")) {
         stop("[", class(self)[1], "][FATAL] Methodology parameter must be ",
-             "defined as 'SimpleVoting' type. Aborting...")
+             "defined as 'Methodology' type. Aborting...")
       }
 
       if ( !all(is.character(metrics), length(metrics) >= 2) ) {
-        stop("[", class(self)[1], "][FATAL] Invalid values of metrics")
+        stop("[", class(self)[1], "][FATAL] Invalid values of metrics. Aborting...")
       }
 
       super$initialize()
@@ -68,7 +68,8 @@ CombinedVoting <- R6::R6Class(
     },
     execute = function(predictions, verbose = FALSE) {
 
-      if ( !all(sapply(predictions, function(pred) {
+      if ( is.null(predictions) || !is.vector(predictions) ||
+           !all(sapply(predictions, function(pred) {
         !inherits(pred, "ClusterPrediction") } )) ) {
         stop("[", class(self)[1], "][FATAL] Predictions parameter must be a ",
              "list comprised of 'ClusterPrediction' objects. Aborting...")
