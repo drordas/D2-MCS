@@ -10,7 +10,6 @@ SimpleStrategy <- R6::R6Class(
     },
     execute = function(verbose = FALSE, ...) {
       private$all.distribution <- data.frame(k = integer(), deltha = numeric(), dist = I(list()))
-      #class <- private$subset$getClassValues()
 
       colIndex <- which( levels(private$subset$getClassValues()) == private$subset$getPositiveClass() )
       class <- varhandle::to.dummy( private$subset$getClassValues(), private$subset$getPositiveClass() )[, colIndex]

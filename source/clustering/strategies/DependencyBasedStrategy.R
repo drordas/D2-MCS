@@ -188,8 +188,8 @@ DependencyBasedStrategy <- R6::R6Class(
       }
 
       if ( is.null(num.clusters) || !is.numeric(num.clusters) ) {
-        dist.binary <- sapply(private$best.distribution[[1]]$dist, function(x) { x })
-        dist.real <- sapply(private$best.distribution[[2]]$dist, function(x) { x })
+        dist.binary <- lapply(private$best.distribution[[1]]$dist, function(x) { x })
+        dist.real <- lapply(private$best.distribution[[2]]$dist, function(x) { x })
       } else {
         all.binary <- private$all.distribution[[1]]
         all.real <- private$all.distribution[[2]]
