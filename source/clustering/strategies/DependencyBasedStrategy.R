@@ -845,10 +845,10 @@ DependencyBasedStrategy <- R6::R6Class(
       }
     },
     getBinaryFeatures = function(data){
-      Filter( function(x) { all(levels(factor(x)) %in% c("0","1")) },  data )
+      Filter( function(x) { length(levels(factor(x))) == 2 },  data )
     },
     getRealFeatures = function(data){
-      Filter( function(x) { !all(levels(factor(x)) %in% c("0","1")) }, data )
+      Filter( function(x) { !length(levels(factor(x))) == 2 }, data )
     }
   )
 )
