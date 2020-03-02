@@ -24,7 +24,7 @@ FisherTestHeuristic <- R6::R6Class(
         else message("[", class(self)[1],"][WARNING] Column '",
                      column.names[2],"' is not binary. Returning NA")
         NA
-      }cor.test(col1, col2, method = "spearman", exact = FALSE)$p.value
+      }
     }
   )
 )
