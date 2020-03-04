@@ -70,9 +70,9 @@ CombinedVoting <- R6::R6Class(
 
       if ( is.null(predictions) || !is.vector(predictions) ||
            !all(sapply(predictions, function(pred) {
-        !inherits(pred, "ClusterPrediction") } )) ) {
+             inherits(pred, "ClusterPredictions") } )) ) {
         stop("[", class(self)[1], "][FATAL] Predictions parameter must be a ",
-             "list comprised of 'ClusterPrediction' objects. Aborting...")
+             "list comprised of 'ClusterPredictions' objects. Aborting...")
       }
 
       if ( any(sapply(predictions, function(pred) { pred$size() <= 0 } ))) {

@@ -6,7 +6,7 @@ SingleVoting <- R6::R6Class(
     initialize = function(voting.schemes, metrics) {
       if (is.null(voting.schemes) || !is.vector(voting.schemes) ||
           !all(sapply(voting.schemes, function(voting) {
-                inherits(voting, "SimpleVoting")
+            inherits(voting, "SimpleVoting")
           }))) {
         stop("[", class(self)[1], "][FATAL] Voting schemes parameter must be a ",
              "list comprised of 'SimpleVoting' objects. Aborting...")
@@ -23,8 +23,9 @@ SingleVoting <- R6::R6Class(
     },
     execute = function(predictions, verbose = FALSE) {
 
-      if (is.null(predictions) || !all(sapply(predictions, function(pred) {
-        !inherits(pred, "ClusterPrediction") } )) ) {
+      if (is.null(predictions) || !is.vector(predictions) ||
+          !all(sapply(predictions, function(pred) {
+            inherits(pred, "ClusterPredictions") } ))) {
         stop("[", class(self)[1], "][FATAL] Predictions parameter must be a ",
              "list comprised of 'ClusterPrediction' objects. Aborting...")
       }
