@@ -4,7 +4,7 @@ ProbAverageVoting <- R6::R6Class(
   inherit = SimpleVoting,
   public = list(
     initialize = function(cutoff = 0.5, class.tie = NULL, majority.class=NULL) {
-      if (all(!is.null(class.tie),!is.character(class.tie))) {
+      if (!is.null(class.tie) && (!is.character(class.tie) && !is.numeric(class.tie))) {
         stop("[", class(self)[1], "][FATAL] Invalid class tie value. Aborting...")
       }
 
@@ -87,7 +87,6 @@ ProbAverageVoting <- R6::R6Class(
     }
   ),
   private = list(
-    final.prediction = NULL,
     majority.class = NULL,
     class.tie = NULL
   )

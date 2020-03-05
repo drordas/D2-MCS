@@ -29,14 +29,11 @@ ProbBasedMethodology <- R6::R6Class(
         stop("[", class(self)[1], "][FATAL] Prob.pred parameter must have required metrics. ",
              paste(self$getRequiredMetrics(), collapse = " "), ". Aborting...")
       }
-
-      if (is.null(positive.class) || !is.character(positive.class)) {
-        stop("[", class(self)[1], "][FATAL] Positive class parameter must be defined ",
-             "as 'character' type. Aborting...")
+      if (is.null(positive.class) || (!is.character(positive.class) && !is.numeric(positive.class))) {
+        stop("[", class(self)[1], "][FATAL] Positive class parameter must be defined. Aborting...")
       }
-      if (is.null(negative.class) || !is.character(negative.class)) {
-        stop("[", class(self)[1], "][FATAL] Negative class parameter must be defined ",
-             "as 'character' type. Aborting...")
+      if (is.null(negative.class) || (!is.character(negative.class) && !is.numeric(negative.class))) {
+        stop("[", class(self)[1], "][FATAL] Negative class parameter must be defined. Aborting...")
       }
 
       Reduce(prod, prob.pred[which(names(prob.pred) %in% self$getRequiredMetrics())])

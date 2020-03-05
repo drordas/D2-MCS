@@ -52,9 +52,9 @@ CombinedVoting <- R6::R6Class(
                  }
                  if (filter) {
                    private$final.pred$getProb()[private$final.pred$getRaw() == target,
-                                                target, drop = FALSE]
+                                                as.character(target), drop = FALSE]
                  } else {
-                   private$final.pred$getProb()[, target, drop = FALSE]
+                   private$final.pred$getProb()[, as.character(target), drop = FALSE]
                  }
                },
                "raw" = {

@@ -2,34 +2,35 @@ ExecutedModels <- R6::R6Class(
   classname = "ExecutedModels",
   portable = TRUE,
   public = list(
-    initialize = function(dir.path){
-      private$dir.path <- gsub("\\/$","",dir.path)
-      if( !file.exists(private$dir.path) ){
-        dir.create(private$dir.path,recursive = TRUE)
+    initialize = function(dir.path) {
+      private$dir.path <- gsub("\\/$", "", dir.path)
+      if (!file.exists(private$dir.path)) {
+        dir.create(private$dir.path, recursive = TRUE)
         private$models <- NULL
         private$best.model <- NULL
       }
 
-      if (!file.exists(file.path(private$dir.path,".executed")) ||
-          file.info(file.path(private$dir.path,".executed"))$size <= 0){
-        file.create(file.path(private$dir.path,".executed"))
+      if (!file.exists(file.path(private$dir.path, ".executed")) ||
+          file.info(file.path(private$dir.path, ".executed"))$size <= 0) {
+        file.create(file.path(private$dir.path, ".executed"))
         private$models <- NULL
         private$best.model <- NULL
-      }else{
-        private$models <- read.csv( file=file.path(private$dir.path,".executed"),
-                                    header=TRUE,stringsAsFactors= FALSE, sep="," )
-        best.perf <- private$models[which.max(private$models$performance),]
+      } else {
+        private$models <- read.csv(file = file.path(private$dir.path, ".executed"),
+                                    header = TRUE, stringsAsFactors = FALSE, sep = ",")
 
-        if(length(which(best.perf$performance !=0 ))!=0) {
-          best.path <- file.path(private$dir.path,paste0(best.perf$model,".rds"))
-          if(file.exists(best.path) ) {
-            private$best.model <- list(model=best.perf$model,
-                                       performance= best.perf$performance,
-                                       exec.time= best.perf$exec.time,
-                                       train= readRDS(best.path)
-                                  )
-          }else{
-            message("[",class(self)[1],"][WARNING] Best model cannot be loaded.")
+        best.perf <- private$models[max(which(private$models$performance == max(private$models$performance))), ]
+
+        if (length(which(best.perf$performance != 0)) != 0) {
+          best.path <- file.path(private$dir.path, paste0(best.perf$model, ".rds"))
+          if (file.exists(best.path)) {
+            private$best.model <- list(model = best.perf$model,
+                                       performance = best.perf$performance,
+                                       exec.time = best.perf$exec.time,
+                                       train = readRDS(best.path)
+            )
+          } else {
+            message("[", class(self)[1], "][WARNING] Best model cannot be loaded.", best.path)
             private$best.model <- NULL
           }
         }
@@ -48,34 +49,36 @@ ExecutedModels <- R6::R6Class(
         NULL
       }
     },
-    add = function(model, keep.best=TRUE){
-      if(!inherits(model,"Model")){
-        message("[",class(self)[1],"][ERROR] Model parameter must be defined ",
+    add = function(model, keep.best = TRUE) {
+      if (!inherits(model, "Model")) {
+        message("[", class(self)[1], "][ERROR] Model parameter must be defined ",
                 "as 'Model' type. Model not inserted. Task not performed")
-      }else{
+      } else {
 
         private$models <- rbind(private$models,
-                                data.frame(model= model$getName(),
-                                           performance= model$getPerformance(),
-                                           exec.time= model$getExecutionTime()))
+                                data.frame(model = model$getName(),
+                                           performance = model$getPerformance(),
+                                           exec.time = model$getExecutionTime()))
 
-        if (isTRUE(keep.best)){ #SAVE ONLY BEST MODELS. REMOVE WORST
+        if (isTRUE(keep.best)) { # SAVE ONLY BEST MODELS. REMOVE WORST
 
-          if(any( is.null(private$best.model), #IS BEST MODEL
-                  model$getPerformance() > private$best.model$performance)){
-            if(!is.null(private$best.model)){
-              message("[",class(self)[1],"][INFO] Best model found. Replacing '",
-                      private$best.model$model,"' with '",
-                      model$getName(),"'")
+          if (is.null(private$best.model) || # IS BEST MODEL
+              model$getPerformance() > private$best.model$performance ||
+              isTRUE(all.equal.numeric(model$getPerformance(), private$best.model$performance))) {
+
+            if (!is.null(private$best.model)) {
+              message("[", class(self)[1], "][INFO] Best model found. Replacing '",
+                      private$best.model$model, "' with '",
+                      model$getName(), "'")
               self$delete(private$best.model$model)
             }
-            private$best.model <- list( model=model$getName(),
-                                        performance= model$getPerformance(),
-                                        exec.time= model$getExecutionTime(),
-                                        train= model$getTrainedModel() )
+            private$best.model <- list(model = model$getName(),
+                                       performance = model$getPerformance(),
+                                       exec.time = model$getExecutionTime(),
+                                       train = model$getTrainedModel())
             model$save()
           }
-        }else{ model$save() }
+        } else { model$save() }
       }
     },
     exist = function(model.name){

@@ -2,11 +2,11 @@ ClusterPredictions <- R6::R6Class(
   classname = "ClusterPredictions",
   portable = TRUE,
   public = list(
-    initialize = function(class.values,positive.class){
+    initialize = function(class.values, positive.class) {
 
-      if(!(positive.class %in% class.values))
-        stop("[",class(self)[1],"][FATAL] Positive class not found. Should be ",
-             paste0(unique(class.values),collapse = " or "),". Aborting...")
+      if (is.null(positive.class) || !(positive.class %in% class.values))
+        stop("[", class(self)[1], "][FATAL] Positive class not found. Should be ",
+             paste0(class.values, collapse = " or "), ". Aborting...")
 
       private$positive.class <- positive.class
       private$class.values <- class.values

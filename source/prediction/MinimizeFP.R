@@ -31,13 +31,11 @@ MinimizeFP <- R6::R6Class(
              paste(self$getRequiredMetrics(), collapse = " "), ". Aborting...")
       }
 
-      if (is.null(positive.class) || !is.character(positive.class)) {
-        stop("[", class(self)[1], "][FATAL] Positive class parameter must be defined ",
-             "as 'character' type. Aborting...")
+      if (is.null(positive.class) || (!is.character(positive.class) && !is.numeric(positive.class))) {
+        stop("[", class(self)[1], "][FATAL] Positive class parameter must be defined. Aborting...")
       }
-      if (is.null(negative.class) || !is.character(negative.class)) {
-        stop("[", class(self)[1], "][FATAL] Negative class parameter must be defined ",
-             "as 'character' type. Aborting...")
+      if (is.null(negative.class) || (!is.character(negative.class) && !is.numeric(negative.class))) {
+        stop("[", class(self)[1], "][FATAL] Negative class parameter must be defined. Aborting...")
       }
 
       ifelse(all(raw.pred[self$getRequiredMetrics()] == positive.class),

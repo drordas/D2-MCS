@@ -2,59 +2,59 @@ D2MCS <- R6::R6Class(
   classname = "D2MCS",
   portable = TRUE,
   public = list(
-    initialize = function(dir.path, num.cores = NULL, socket.type="PSOCK", outfile = NULL,
-                          serialize=FALSE){
+    initialize = function(dir.path, num.cores = NULL, socket.type = "PSOCK", outfile = NULL,
+                          serialize = FALSE) {
 
-      if(is.null(dir.path) || !is.character(dir.path)) {
-        stop( "[",class(self)[1],"][FATAL] Path to store ML models should be defined" )
+      if (is.null(dir.path) || !is.character(dir.path)) {
+        stop("[", class(self)[1], "][FATAL] Path to store ML models should be defined")
       }
-      dir.path <- gsub("\\/$","",dir.path)
+      dir.path <- gsub("\\/$", "", dir.path)
 
-      if(is.null(outfile)) {
-        message("[",class(self)[1],"][INFO] Path for Log file not defined")
+      if (is.null(outfile)) {
+        message("[", class(self)[1], "][INFO] Path for Log file not defined")
         outfile <- "/dev/null"
       }
-      else{
-        if (!file.exists(outfile)){
+      else {
+        if (!file.exists(outfile)) {
           dir.create(outfile, recursive = TRUE)
-          message("[",class(self)[1],"][INFO] Logs path not defined '",
-                  outfile, "' does not exist. Creating..." )
+          message("[", class(self)[1], "][INFO] Logs path not defined '",
+                  outfile, "' does not exist. Creating...")
         }
       }
 
       if (!dir.exists(dir.path)) {
         dir.create(dir.path, recursive = TRUE)
-        if(dir.exists(dir.path)) {
-          message("[",class(self)[1],"][INFO] Directory '",dir.path,
+        if (dir.exists(dir.path)) {
+          message("[", class(self)[1], "][INFO] Directory '", dir.path,
                   "' has been succesfully created")
-        }else { stop("[",class(self)[1],"][FALTAL] Cannot create directory '",
-                     dir.path,"'") }
+        } else { stop("[", class(self)[1], "][FALTAL] Cannot create directory '",
+                     dir.path, "'") }
       }
-      else { message("[",class(self)[1],"][INFO] Directory already exists") }
+      else { message("[", class(self)[1], "][INFO] Directory already exists") }
 
-      if( any(is.null(num.cores), (num.cores >= detectCores()), num.cores > 10)  ){
-        if(detectCores() > 10){
-          message("[",class(self)[1],"][WARNING] Invalid number of cores ",
+      if (any(is.null(num.cores), (num.cores >= parallel::detectCores()), num.cores > 10)) {
+        if (parallel::detectCores() > 10) {
+          message("[", class(self)[1], "][WARNING] Invalid number of cores ",
                   "(1>= num.cores <= 10)")
-        }else{
-          message("[",class(self)[1],"][WARNING] Invalid number of cores ",
-                  "(1>= num.cores < ",detectCores(),")")
+        } else {
+          message("[", class(self)[1], "][WARNING] Invalid number of cores ",
+                  "(1>= num.cores < ", parallel::detectCores(), ")")
         }
-        cores <- min(max(1,detectCores()-2),10)
-        message("[",class(self)[1],"][INFO] Using default number of cores (",
-                cores,"/",detectCores(),")")
+        cores <- min(max(1, parallel::detectCores() - 2), 10)
+        message("[", class(self)[1], "][INFO] Using default number of cores (",
+                cores, "/", parallel::detectCores(), ")")
       }
       else {cores <- num.cores}
 
-      if( !socket.type %in% c("PSOCK","FORK") ){
-        warning("[",class(self)[1],"][WARNING] Invalid socket type. ",
+      if (!socket.type %in% c("PSOCK", "FORK")) {
+        message("[", class(self)[1], "][WARNING] Invalid socket type. ",
                 "Assuming 'PSOCK' cluster")
         socket <- "PSOCK"
       }
       else { socket <- socket.type }
 
-      if(!is.logical(serialize)){
-        message("[",class(self)[1],"][WARNING] Invalid serialization ",
+      if (!is.logical(serialize)) {
+        message("[", class(self)[1], "][WARNING] Invalid serialization ",
                 "option. Assuming not serialization")
         xdr <- FALSE
       }
@@ -63,90 +63,90 @@ D2MCS <- R6::R6Class(
       private$availableModels <- private$loadAvailableModels()
       private$path <- dir.path
 
-      private$cluster.conf <- list( cores=cores, socket=socket,
-                                    outfile=outfile, xdr=xdr )
+      private$cluster.conf <- list(cores = cores, socket = socket,
+                                   outfile = outfile, xdr = xdr)
       private$cluster.obj <- NULL
     },
-    train = function(train.set, train.function, num.clusters= NULL,
-                     ex.classifiers= c(), ig.classifiers= c(),
-                     metrics= NULL, saveAllModels= FALSE ) {
+    train = function(train.set, train.function, num.clusters = NULL,
+                     ex.classifiers = c(), ig.classifiers = c(),
+                     metrics = NULL, saveAllModels = FALSE) {
 
-      #CHECK IF TRAIN.SET IS VALID
-      if (!"TrainSet" %in% class(train.set) ) {
-        stop( "[", class(self)[1], "][FATAL] Train set parameter must be ",
-              "defined as 'TrainSet' type. Aborting...")
+      # CHECK IF TRAIN.SET IS VALID
+      if (!"Trainset" %in% class(train.set)) {
+        stop("[", class(self)[1], "][FATAL] Train set parameter must be ",
+             "defined as 'Trainset' type. Aborting...")
       }
 
-      if ( !"TrainFunction" %in% class(train.function) ) {
-        stop( "[", class(self)[1], "][FATAL] Train function parameter must be ",
-              "defined as 'TrainFunction' type. Aborting..." )
+      if (!"TrainFunction" %in% class(train.function)) {
+        stop("[", class(self)[1], "][FATAL] Train function parameter must be ",
+             "defined as 'TrainFunction' type. Aborting...")
       }
 
-      if (any( is.null(num.clusters),!is.numeric(num.clusters),
-               !is.vector(num.clusters) )) {
-        message("[",class(self)[1],"][WARNING] Number of clusters not set ",
+      if (any(is.null(num.clusters), !is.numeric(num.clusters),
+              !is.vector(num.clusters))) {
+        message("[", class(self)[1], "][WARNING] Number of clusters not set ",
                 "(must be numeric or vector). Using all clusters")
         num.clusters <- c(1:train.set$getNumClusters())
       } else {
-        if (all(is.numeric(num.clusters), num.clusters > train.set$getNumClusters()) ) {
-          message("[",class(self)[1],"][WARNING] Number of clusters ",
+        if (all(is.numeric(num.clusters), num.clusters > train.set$getNumClusters())) {
+          message("[", class(self)[1], "][WARNING] Number of clusters ",
                   "is higher than number of existing clusters. ",
                   "Using all clusters")
           num.clusters <- c(1:train.set$getNumClusters())
         } else num.clusters <- c(1:num.clusters)
       }
 
-      #VERIFY IF EX.CLASSIFIERS PARAMETER IS DEFINED (AND VALID)
-      if ( all(is.character(ex.classifiers),length(ex.classifiers) > 0) ) {
+      # VERIFY IF EX.CLASSIFIERS PARAMETER IS DEFINED (AND VALID)
+      if (all(is.character(ex.classifiers), length(ex.classifiers) > 0)) {
         usedModels <- ex.classifiers
       } else { usedModels <- private$availableModels$name }
 
-      #VERIFY IF IG.CLASSIFIERS PARAMETER IS DEFINED (AND VALID)
-      if ( all(is.character(ig.classifiers), length(ig.classifiers) > 0) ) {
-        message("[",class(self)[1],"][INFO] Ignoring '",
-                length(ig.classifiers),"' M.L models")
-        usedModels <- setdiff(usedModels,ig.classifiers)
-        message("[",class(self)[1],"][INFO] Still '",length(usedModels),
+      # VERIFY IF IG.CLASSIFIERS PARAMETER IS DEFINED (AND VALID)
+      if (all(is.character(ig.classifiers), length(ig.classifiers) > 0)) {
+        message("[", class(self)[1], "][INFO] Ignoring '",
+                length(ig.classifiers), "' M.L models")
+        usedModels <- setdiff(usedModels, ig.classifiers)
+        message("[", class(self)[1], "][INFO] Still '", length(usedModels),
                 "' M.L models available")
       }
 
-      #VERIFY IF METRIC PARAMETER IS DEFINED (AND VALID)
-      if ( !all(is.character(metrics), length(metrics) > 0) ) {
-        stop("[",class(self)[1],"][FATAL] Invalid values of metrics")
+      # VERIFY IF METRIC PARAMETER IS DEFINED (AND VALID)
+      if (!all(is.character(metrics), length(metrics) > 0)) {
+        stop("[", class(self)[1], "][FATAL] Invalid values of metrics")
       }
 
-      message("[",class(self)[1],"][INFO] Making parallel socket cluster with ",
-              private$cluster.conf$cores," cores")
+      message("[", class(self)[1], "][INFO] Making parallel socket cluster with ",
+              private$cluster.conf$cores, " cores")
 
-      private$cluster.obj <- makeCluster( private$cluster.conf$cores,
-                                          type= private$cluster.conf$socket,
-                                          outfile= private$cluster.conf$outfile,
-                                          useXDR=private$cluster.conf$xdr )
+      private$cluster.obj <- parallel::makeCluster(private$cluster.conf$cores,
+                                                   type = private$cluster.conf$socket,
+                                                   outfile = private$cluster.conf$outfile,
+                                                   useXDR = private$cluster.conf$xdr)
 
       cluster.models <- lapply(metrics, function(x) vector(mode = "list",
-                                                           length = train.set$getNumClusters()) )
+                                                           length = train.set$getNumClusters()))
       names(cluster.models) <- metrics
       available.models <- private$availableModels[(private$availableModels$name %in% usedModels), ]
-      #START TRAINING PROCESS
+      # START TRAINING PROCESS
       for (row in 1:nrow(available.models)) {
-        current.model <- available.models[row,]
-        message("[",class(self)[1],"][INFO][", current.model$name, "]",
+        current.model <- available.models[row, ]
+        message("[", class(self)[1], "][INFO][", current.model$name, "]",
                 " ***********************************************************************")
-        message("[",class(self)[1],"][INFO][", current.model$name, "] ",
+        message("[", class(self)[1], "][INFO][", current.model$name, "] ",
                 "'Model [", row, "-", nrow(available.models), "]': Start training")
         message("[", class(self)[1], "][INFO][", current.model$name, "]",
                 " ***********************************************************************")
         loaded.packages <- FALSE
 
         for (current.metric in metrics) {
-          message("[",class(self)[1],"][INFO][", current.model$name, "] ",
+          message("[", class(self)[1], "][INFO][", current.model$name, "] ",
                   "----------------------------------------------------------------------")
-          message("[",class(self)[1],"][INFO][", current.model$name, "] ",
+          message("[", class(self)[1], "][INFO][", current.model$name, "] ",
                   "'Metric [", which(current.metric == metrics), "-", length(metrics), "]': ",
                   "Training model for metric '", current.metric, "'")
 
-          for ( current.cluster in 1:train.set$getNumClusters() ) {
-            #DELETE IMCOMPATIBLE MODELS
+          for (current.cluster in 1:train.set$getNumClusters()) {
+            # DELETE IMCOMPATIBLE MODELS
             # if ( abs(mean(cor(train.set$getFeatureValues(current.cluster),
             #                   as.numeric(train.set$getClassValues()) ),
             #               na.rm = TRUE) ) < 0.3 &
@@ -158,24 +158,24 @@ D2MCS <- R6::R6Class(
             #           "' on the cluster '", current.cluster, "'")
             #   next
             # }
-            model.path <- file.path( private$path, current.metric,
-                                     paste0("C[", current.cluster, "-",
-                                            train.set$getNumClusters(), "]") )
+            model.path <- file.path(private$path, current.metric,
+                                    paste0("C[", current.cluster, "-",
+                                           train.set$getNumClusters(), "]"))
             executed.models <- ExecutedModels$new(model.path)
 
-            if ( !executed.models$exist(current.model$name) ) {
+            if (!executed.models$exist(current.model$name)) {
 
-              message("[",class(self)[1],"][INFO][", current.model$name, "]",
+              message("[", class(self)[1], "][INFO][", current.model$name, "]",
                       " ----------------------------------------------------------------------")
-              message("[",class(self)[1],"][INFO][", current.model$name, "]",
+              message("[", class(self)[1], "][INFO][", current.model$name, "]",
                       " Training on cluster 'C[", current.cluster, "-", train.set$getNumClusters(), "]'")
-              message("[", class(self)[1],"][INFO][", current.model$name, "]",
+              message("[", class(self)[1], "][INFO][", current.model$name, "]",
                       " ----------------------------------------------------------------------")
-              #LOAD REQUIRED PACKAGES
-              if ( !loaded.packages ) {
-                if ( !is.null(current.model$model.libs) &&
-                     !is.na(current.model$model.libs) &&
-                     !current.model$model.libs %in% "NA" ) {
+              # LOAD REQUIRED PACKAGES
+              if (!loaded.packages) {
+                if (!is.null(current.model$model.libs) &&
+                    !is.na(current.model$model.libs) &&
+                    !current.model$model.libs %in% "NA") {
                   len.init.packages <- length(.packages())
                   len.init.DLLs <- length(.dynLibs())
                   message("[", class(self)[1], "][INFO][", current.model$name, "] ",
@@ -188,19 +188,25 @@ D2MCS <- R6::R6Class(
               ifelse(isTRUE(current.model$prob),
                      train.function$create(UseProbability$new(),
                                            search.method = "random",
-                                           class.probs = TRUE ),
+                                           class.probs = TRUE),
                      train.function$create(NoProbability$new(),
                                            search.method = "random",
                                            class.probs = FALSE)
               )
 
               model.instances <- train.set$getInstances(current.cluster)
+
+              class.values <- relevel(x = factor(make.names(model.instances[[train.set$getClassName()]])),
+                                      levels = unique(make.names(model.instances[[train.set$getClassName()]])),
+                                      ref = as.character(make.names(train.set$getPositiveClass())))
+              model.instances[[train.set$getClassName()]] <- class.values
+
               model.recipe <- DefaultModelFit$new(model.instances,
                                                   train.set$getClassName())$createRecipe()
               model.type <- Model$new(dir = model.path, model = current.model)
               model.type$train(train.set = model.instances, fitting = model.recipe,
                                trFunction = train.function, metric = current.metric)
-              if ( model.type$isTrained() ) {
+              if (model.type$isTrained()) {
                 message("[", class(self)[1], "][INFO][", current.model$name, "] ",
                         "Model has been succesfully trained")
                 executed.models$add(model.type, keep.best = !isTRUE(saveAllModels))
@@ -214,29 +220,29 @@ D2MCS <- R6::R6Class(
             } else {
               message("[", class(self)[1], "][INFO][", current.model$name, "] ",
                       "'Cluster[", current.cluster, "-", train.set$getNumClusters(), "]': ",
-                      "Model  has been previously trained. Skipping...")
+                      "Model has been previously trained. Skipping...")
             }
             cluster.models[[current.metric]][[current.cluster]] <- executed.models$getBest()$train
           }
         }
         # UNLOAD REQUIRED PACKAGES
-        if ( loaded.packages && !is.null(current.model$model.libs) &&
-             !is.na(current.model$model.libs) &&
-             !current.model$model.libs %in% "NA" ) {
+        if (loaded.packages && !is.null(current.model$model.libs) &&
+            !is.na(current.model$model.libs) &&
+            !current.model$model.libs %in% "NA") {
           message("[", class(self)[1], "][INFO][", current.model$name, "] ",
                   "Detaching required packages...")
           private$unloadPackages(len.init.packages, len.init.DLLs)
         }
       }
 
-      message("[",class(self)[1],"][INFO] ----------------------------------",
+      message("[", class(self)[1], "][INFO] ----------------------------------",
               "---------------------")
-      message("[",class(self)[1],"][INFO] Finished")
-      message("[",class(self)[1],"][INFO] ----------------------------------",
+      message("[", class(self)[1], "][INFO] Finished")
+      message("[", class(self)[1], "][INFO] ----------------------------------",
               "---------------------")
 
       if (!is.null(private$cluster.obj)) {
-        stopCluster(private$cluster.obj)
+        parallel::stopCluster(private$cluster.obj)
         private$cluster.obj <- NULL
       }
 
@@ -246,16 +252,16 @@ D2MCS <- R6::R6Class(
     },
     classify = function(train.output, subset, voting.types, positive.class = NULL) {
 
-      if ( !inherits(train.output, "TrainOutput") )
+      if (!inherits(train.output, "TrainOutput"))
         stop("[", class(self)[1], "][FATAL] Train output parameter must be ",
              "defined as 'TrainOutput' type. Aborting...")
 
-      if ( !inherits(subset, c("Subset","HDSubset")) )
+      if (!inherits(subset, c("Subset", "HDSubset")))
         stop("[", class(self)[1], "][FATAL] Subset parameter must be defined as ",
              "'Subset' or 'HDSubset' type. Aborting...")
 
-      if ( missing(voting.types)) {
-        stop("[", class(self)[1], "][FATAL] Voting types parameter are missing.",
+      if (is.null(voting.types)) {
+        stop("[", class(self)[1], "][FATAL] Voting types parameter is not defined. ",
              "Aborting...")
       }
 
@@ -264,36 +270,35 @@ D2MCS <- R6::R6Class(
       }
 
       if (!all(sapply(voting.types,  function(x) {
-                       inherits(x, c("SingleVoting", "CombinedVoting"))
-        }))){
-          stop("[", class(self)[1], "][FATAL] Voting Schemes parameter must be ",
-              "inherit from 'SingleVoting' or 'CombinedVoting' abstract classes.")
+        inherits(x, c("SingleVoting", "CombinedVoting"))
+      }))) {
+        stop("[", class(self)[1], "][FATAL] Voting Schemes parameter must be ",
+             "defined as 'SingleVoting' or 'CombinedVoting' types. Aborting...")
       }
 
-      class.values <- unique(train.output$getClassValues())
-      if ( is.factor(class.values) ) class.values <- levels(class.values)
+      class.values <- levels(train.output$getClassValues())
 
-      if(subset$isBlinded()){
-        if ( is.null(positive.class) ) {
+      if (subset$isBlinded()) {
+        if (is.null(positive.class)) {
           message("[", class(self)[1], "][WARNING] Positive class is not set. ",
                   "Asuming positive class value used during training stage '",
-                  train.output$getPositiveClass(),"'")
+                  train.output$getPositiveClass(), "'")
           positive.class <- train.output$getPositiveClass()
         } else {
           if (!(positive.class %in% class.values)) {
-            stop("[", class(self)[1], "][FALTAL] Positive class has ",
+            stop("[", class(self)[1], "][FATAL] Positive class has ",
                  "not being defined during training stage. Aborting...")
           }
         }
-      }else{
-        if ( is.null(positive.class) ) {
-          message("[",class(self)[1],"][WARNING] Positive class not set. ",
+      } else {
+        if (is.null(positive.class)) {
+          message("[", class(self)[1], "][WARNING] Positive class not set. ",
                   "Asuming positive class value used during training stage '",
-                  train.output$getPositiveClass(),"'")
+                  train.output$getPositiveClass(), "'")
           positive.class <- train.output$getPositiveClass()
         } else {
-          if ( !(positive.class %in% class.values) ) {
-            message("[",class(self)[1],"][WARNING] Positive class value is ",
+          if (!(positive.class %in% class.values)) {
+            message("[", class(self)[1], "][WARNING] Positive class value is ",
                     "invalid. Must be [", paste0(class.values, collapse = ", "), "].",
                     " Assuming positive class used during training stage (",
                     train.output$getPositiveClass(), ")")
@@ -302,28 +307,27 @@ D2MCS <- R6::R6Class(
         }
       }
 
-
       exec.metrics <- unique(unlist(sapply(voting.types, function(voting) {
-                                                      voting$getMetrics() } )))
+        voting$getMetrics() })))
 
       cluster.predictions <- list()
       final.votings <- list()
       final.models <- list()
 
-      for(metric in exec.metrics){
-        if (!metric %in% train.output$getMetrics() )
+      for (metric in exec.metrics) {
+        if (!metric %in% train.output$getMetrics())
         {
-          message("[",class(self)[1],"][WARNING] Models were not trained for '",
+          message("[", class(self)[1], "][WARNING] Models were not trained for '",
                   metric, "' metric. Executing next metric...")
           next
         }
-        predictions <- ClusterPredictions$new( class.values = class.values,
-                                               positive.class = positive.class )
+        predictions <- ClusterPredictions$new(class.values = class.values,
+                                              positive.class = positive.class)
         num.clusters <- length(train.output$getModels(metric))
         message("[", class(self)[1], "][INFO] ********************************",
                 "***********************")
         message("[", class(self)[1], "][INFO] Executing predictions for ",
-                metric," metric")
+                metric, " metric")
         message("[", class(self)[1], "][INFO] ********************************",
                 "***********************")
         for (cluster in seq_len(num.clusters)) {
@@ -331,13 +335,14 @@ D2MCS <- R6::R6Class(
                   "-------------------------")
           message("[", class(self)[1], "][INFO] Computing cluster '",
                   cluster, "' of '", num.clusters, "'")
-          pred <- Prediction$new(model= train.output$getModels(metric)[[cluster]],
-                                 feature.id = subset$getID() )
-          final.models <- append(final.models,list(train.output$getModels(metric)))
+
+          pred <- Prediction$new(model = train.output$getModels(metric)[[cluster]],
+                                 feature.id = subset$getID())
+          final.models <- append(final.models, list(train.output$getModels(metric)))
           names(final.models)[[length(final.models)]] <- metric
 
           iterator <- subset$getIterator(chunk.size = 10000)
-          while(!iterator$isLast()){
+          while (!iterator$isLast()) {
             instances <- iterator$getNext()
             pred$execute(instances, class.values, positive.class)
           }
@@ -350,19 +355,18 @@ D2MCS <- R6::R6Class(
         cluster.predictions[[metric]] <- predictions
       }
 
-
-      for(voting.type in voting.types){
-        valid.metrics <- intersect( voting.type$getMetrics(),
-                                    names(cluster.predictions) )
-        if(length(valid.metrics) == 0){
-          message("[D2MCS][INFO] Metrics for '",voting.type$getName(),"' were ",
+      for (voting.type in voting.types) {
+        valid.metrics <- intersect(voting.type$getMetrics(),
+                                   names(cluster.predictions))
+        if (length(valid.metrics) == 0) {
+          message("[DDMCS][INFO] Metrics for '", voting.type$getName(), "' were ",
                   "not computed. Ignoring voting type...")
           next
         }
         voting.name <- class(voting.type)[1]
         message("[", class(self)[1], "][INFO] ********************************",
                 "***********************")
-        message("[D2MCS][INFO] Computing final prediction values using '",
+        message("[DDMCS][INFO] Computing final prediction values using '",
                 voting.type$getName(), "' schemes")
         message("[", class(self)[1], "][INFO] ********************************",
                 "***********************")
@@ -378,10 +382,10 @@ D2MCS <- R6::R6Class(
         NULL
       } else {
 
-        message("[",class(self)[1],"][INFO] ----------------------------------",
+        message("[", class(self)[1], "][INFO] ----------------------------------",
                 "---------------------")
-        message("[",class(self)[1],"][INFO] Finished")
-        message("[",class(self)[1],"][INFO] ----------------------------------",
+        message("[", class(self)[1], "][INFO] Finished")
+        message("[", class(self)[1], "][INFO] ----------------------------------",
                 "---------------------")
 
         ClassificationOutput$new(voting.schemes = final.votings, models = final.models)

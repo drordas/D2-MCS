@@ -14,11 +14,11 @@ SimpleVoting <- R6::R6Class(
       private$final.pred <- FinalPred$new()
     },
     getCutoff = function() { private$cutoff },
-    getFinalPred = function(type= NULL, target = NULL, filter = NULL) {
-      if( any(is.null(type), !(type %in% c("raw","prob")) )){
+    getFinalPred = function(type = NULL, target = NULL, filter = NULL) {
+      if (any(is.null(type), !(type %in% c("raw", "prob")))) {
         private$final.pred
-      }else{
-        if(!is.logical(filter)){
+      } else {
+        if (!is.logical(filter)) {
           message("[", class(self)[1], "][WARNING] Filter parameter must be ",
                   "defined as 'logical' type. Aborting...")
           filter <- FALSE
@@ -26,27 +26,26 @@ SimpleVoting <- R6::R6Class(
         class.values <- private$final.pred$getClassValues()
 
         switch(type,
-           "prob" = {
-             if (is.null(target) || !(target %in% class.values )) {
-               message("[", class(self)[1], "][WARNING] Target not ",
-                       "specified or invalid. Using '",
-                       paste0( private$final.pred$getClassValues(),
-                               collapse = ", " ),"'")
-               target <- private$final.pred$getClassValues()
-             }
-             if (filter) {
-               private$final.pred$getProb()[private$final.pred$getRaw() == target,
-                                            target, drop = FALSE]
-             } else {
-               private$final.pred$getProb()[, target, drop = FALSE]
-             }
-           },
-           "raw" = {
-             if (filter) {
-               private$final.pred$getRaw()[private$final.pred$getRaw() == target,
-                                           ,drop = FALSE]
-             } else { private$final.pred$getRaw() }
-           }
+               "prob" = {
+                 if (is.null(target) || !(target %in% class.values)) {
+                   message("[", class(self)[1], "][WARNING] Target not ",
+                           "specified or invalid. Using '",
+                           paste0(class.values, collapse = ", "), "'")
+                   target <- class.values
+                 }
+                 if (filter) {
+                   private$final.pred$getProb()[private$final.pred$getRaw() == target,
+                                                as.character(target), drop = FALSE]
+                 } else {
+                   private$final.pred$getProb()[, as.character(target), drop = FALSE]
+                 }
+               },
+               "raw" = {
+                 if (filter) {
+                   private$final.pred$getRaw()[private$final.pred$getRaw() == target,
+                                               , drop = FALSE]
+                 } else { private$final.pred$getRaw() }
+               }
         )
       }
     },

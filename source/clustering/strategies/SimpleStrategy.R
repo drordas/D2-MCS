@@ -201,13 +201,13 @@ SimpleStrategy <- R6::R6Class(
                    "(must be NULL or list type). Saving all cluster configurations" )
           num.clusters <- list(2:max(private$all.distribution$k))
         } else {
-          if (length(num.clusters[[1]]) > max(private$all.distribution$k)) {
+          if (any(unlist(num.clusters) > max(private$all.distribution$k))) {
             message( "[",class(self)[1],"][WARNING] Number of clusters exceeds ",
                      "maximum number of clusters. Saving all cluster configurations" )
             num.clusters <- list(2:max(private$all.distribution$k))
           } else {
-            if ( !all(unlist(num.clusters) <= max(private$all.distribution$k) &&
-                      unlist(num.clusters) >= min(private$all.distribution$k)) ) {
+            if (!all(unlist(num.clusters) <= max(private$all.distribution$k),
+                     unlist(num.clusters) >= min(private$all.distribution$k))) {
               message( "[",class(self)[1],"][WARNING] Number of clusters ",
                        "exceeds the range of minimum and maximum number of ",
                        "clusters. Saving all cluster configurations" )

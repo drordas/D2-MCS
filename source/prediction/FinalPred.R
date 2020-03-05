@@ -10,33 +10,33 @@ FinalPred <- R6::R6Class(
     },
     set = function(prob, raw, class.values, positive.class) {
       if (length(positive.class) != 1 || !(positive.class %in% class.values)) {
-        stop("[",class(self)[1],"][FATAL] Positive class is invalid. ",
-             "Must be one of (",paste0(class.values,collapse = ", "),
+        stop("[", class(self)[1], "][FATAL] Positive class is invalid. ",
+             "Must be one of (", paste0(class.values, collapse = ", "),
              "). Aborting...")
       }
 
-      if(any(is.null(prob), is.null(raw), nrow(prob)==0,
-             ncol(row)==0, length(raw)==0) ){
-        stop("[",class(self)[1],"][FATAL] Predictions were not computed. ",
+      if (any(is.null(prob), is.null(raw), nrow(prob) == 0,
+             ncol(row) == 0, length(raw) == 0)) {
+        stop("[", class(self)[1], "][FATAL] Predictions were not computed. ",
              "Aborting...")
       }
 
-      private$negative.class <- setdiff(class.values,positive.class)
+      private$negative.class <- setdiff(class.values, positive.class)
       private$positive.class <- positive.class
 
       private$prob <- prob
 
-      if (!is.factor(raw) ){
-        private$raw <- factor(raw,levels = union( private$positive.class,
-                                                  private$negative.class) )
-        private$raw <- relevel(private$raw, ref = private$positive.class)
-      }else{
+      if (!is.factor(raw)) {
+        private$raw <- factor(raw, levels = union(private$positive.class,
+                                                  private$negative.class))
+        private$raw <- relevel(private$raw, ref = as.character(private$positive.class))
+      } else {
         private$raw <- raw
         private$prob <- prob
       }
 
-      if( any(is.na(private$raw)) ){
-        stop("[",class(self)[1],"][FATAL] Class values contains NA's. ",
+      if (any(is.na(private$raw))) {
+        stop("[", class(self)[1], "][FATAL] Class values contains NA's. ",
              "Aborting...")
       }
 
