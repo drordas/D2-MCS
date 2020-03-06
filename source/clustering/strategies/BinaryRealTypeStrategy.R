@@ -1,6 +1,6 @@
 BinaryRealTypeStrategy <- R6::R6Class(
   classname = "BinaryRealTypeStrategy",
-  inherit = ClusteringStrategy,
+  inherit = GenericClusteringStrategy,
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new() ) {

@@ -24,7 +24,7 @@ HDSubset <- R6::R6Class(
         private$start.at <- 0
       }else private$start.at <- start.at
     },
-    getFeatureNames = function() { private$feature.names },
+    getColumnNames = function() { private$feature.names },
     getNcol = function() {length(private$feature.names)},
     getID = function() {private$feature.names[private$feature.id] },
     getIterator = function(chunk.size=private$chunk.size,verbose=FALSE) {
@@ -43,7 +43,7 @@ HDSubset <- R6::R6Class(
       it.params <- list( file.path=private$file.path,
                          feature.names=private$feature.names,
                          start=private$start.at, sep=private$sep,
-                         col.names= self$getFeatureNames())
+                         col.names= self$getColumnNames())
       FIterator$new(it.params, chunk.size, verbose=verbose)
     },
     finalize = function() {

@@ -1,5 +1,5 @@
-MaximizeFN <- R6::R6Class(
-  classname = "MaximizeFN",
+MinimizeFN <- R6::R6Class(
+  classname = "MinimizeFN",
   portable = TRUE,
   inherit = CombinedMetrics,
   public = list(

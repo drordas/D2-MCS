@@ -54,7 +54,7 @@ Subset <- R6::R6Class(
       private$feature.id <- feature.id
       private$class.values <- class.values
     },
-    getFeatureNames = function() { private$feature.names },
+    getColumnNames = function() { private$feature.names },
     getFeatures = function(feature.names = NULL) {
       if (is.vector(feature.names) && length(feature.names) > 0) {
         if (is.null(private$class.index)) {

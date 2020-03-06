@@ -47,7 +47,7 @@ HDDataset <- R6::R6Class(
 
       message("[",class(self)[1],"][INFO] Finish!")
     },
-    getFeatureNames = function() { names(private$corpus) },
+    getColumnNames = function() { names(private$corpus) },
     getNcol = function() { ncol(private$corpus) },
     createSubset = function(column.id=FALSE,chunk.size=100000){
       if(!all.equal(chunk.size, as.integer(chunk.size))){

@@ -1,5 +1,5 @@
-ClusteringStrategy <- R6::R6Class(
-  classname = "ClusteringStrategy",
+GenericClusteringStrategy <- R6::R6Class(
+  classname = "GenericClusteringStrategy",
   public = list(
     initialize = function( subset, heuristic, description, configuration) {
 

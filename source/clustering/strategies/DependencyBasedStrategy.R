@@ -1,6 +1,6 @@
 DependencyBasedStrategy <- R6::R6Class(
   classname = "DependencyBasedStrategy",
-  inherit = ClusteringStrategy,
+  inherit = GenericClusteringStrategy,
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, configuration = DependencyBasedStrategyConfiguration$new()) {

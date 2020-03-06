@@ -51,7 +51,7 @@ subset.4 <- data$createSubset( num.folds = 4,
 trFunction <- TwoClass$new( method = "cv", number = 10, savePredictions = "final", 
                             classProbs = TRUE, allowParallel = TRUE, verboseIter = FALSE)
   
-cluster.binary <- SimpleStrategy$new( subset = subset.1_2,
+cluster.binary <- SimpleClusteringStrategy$new( subset = subset.1_2,
                                       heuristic = FisherTestHeuristic$new() )
 cluster.binary$execute(verbose = FALSE)
 binaryTrain <- cluster.binary$createTrain(subset = subset.2_3,

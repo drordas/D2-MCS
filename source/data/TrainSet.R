@@ -27,7 +27,7 @@ TrainSet <- R6::R6Class(
     getPositiveClass = function() { private$positive.class },
     getClassName = function() { private$class.name },
     getClassValues = function() { private$class.values },
-    getFeatureNames = function(num.cluster) {
+    getColumnNames = function(num.cluster) {
       if (any(!is.numeric(num.cluster),
                 !num.cluster %in% c(1:length(private$clusters)))) {
         stop("[", class(self)[1], "][FATAL] Position not defined or incorrect. ",

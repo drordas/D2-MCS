@@ -1,6 +1,6 @@
-SimpleStrategy <- R6::R6Class(
-  classname = "SimpleStrategy",
-  inherit = ClusteringStrategy,
+SimpleClusteringStrategy <- R6::R6Class(
+  classname = "SimpleClusteringStrategy",
+  inherit = GenericClusteringStrategy,
   portable = TRUE,
   public = list(
     initialize = function(subset, heuristic, configuration = StrategyConfiguration$new()) {
